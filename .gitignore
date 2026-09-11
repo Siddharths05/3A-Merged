@@ -1,0 +1,33 @@
+# Python Virtual Environments (Crucial: prevents pushing thousands of library files)
+.venv/
+venv/
+ENV/
+env/
+
+# Python caching and compiled files
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
+
+# Development environments & IDEs
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Environment variables & secrets (Never push passwords or API keys!)
+.env
+.env.local
+.env.*
+*.env
+
+# Operating System specific files
+Thumbs.db
+desktop.ini
+.DS_Store
+
+# Databases & local sqlite
+*.sqlite3
+*.db

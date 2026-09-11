@@ -1,0 +1,171 @@
+@import "tailwindcss";
+
+
+/* ==================================================
+   TAILWIND THEME TOKENS
+================================================== */
+
+@theme inline {
+
+  --color-background: var(--erp-background);
+
+  --color-card: var(--erp-card);
+
+  --color-theme-border: var(--erp-border);
+
+  --color-theme-text: var(--erp-text);
+
+  --color-theme-muted: var(--erp-text-muted);
+
+  --color-theme-faint: var(--erp-text-faint);
+
+  --color-theme-primary: var(--erp-primary);
+
+  --color-theme-primary-soft: var(--erp-primary-soft);
+
+  --color-theme-danger: var(--erp-danger);
+
+  --color-theme-danger-soft: var(--erp-danger-soft);
+
+  --color-theme-amber: var(--erp-amber);
+
+  --color-theme-amber-soft: var(--erp-amber-soft);
+
+}
+
+
+/* ==================================================
+   LIGHT MODE
+================================================== */
+
+:root {
+
+  --erp-background: #FFFFFF;
+
+  --erp-card: #FFFFFF;
+
+  --erp-border: #ECE6F9;
+
+  --erp-text: #1A1523;
+
+  --erp-text-muted: #6B6478;
+
+  --erp-text-faint: #A79FB8;
+
+  --erp-primary: #A64DFF;
+
+  --erp-primary-soft: #F2E6FF;
+
+  --erp-danger: #DC2626;
+
+  --erp-danger-soft: #FDECEC;
+
+  --erp-amber: #D97706;
+
+  --erp-amber-soft: #FEF3E2;
+
+}
+
+
+/* ==================================================
+   DARK MODE
+================================================== */
+
+.dark {
+
+  --erp-background: #000000;
+
+  --erp-card: #150F1D;
+
+  --erp-border: #2B2136;
+
+  --erp-text: #F5F2FA;
+
+  --erp-text-muted: #B4A9C4;
+
+  --erp-text-faint: #847893;
+
+  --erp-primary: #7A1FCB;
+
+  --erp-primary-soft: #241333;
+
+  --erp-danger: #F87171;
+
+  --erp-danger-soft: #3A1B1B;
+
+  --erp-amber: #FBBF24;
+
+  --erp-amber-soft: #3A2E12;
+
+}
+
+
+/* ==================================================
+   MASTERS MODULE THEME
+================================================== */
+
+/*
+   Masters gets its own scoped purple theme.
+
+   Any component inside .masters-theme that uses:
+
+   bg-theme-primary
+   text-theme-primary
+   bg-theme-primary-soft
+
+   will automatically use these Masters colors.
+*/
+
+.masters-theme {
+
+  --erp-primary: #7C3AED;
+
+  --erp-primary-soft: #F3E8FF;
+
+}
+
+
+.dark .masters-theme {
+
+  --erp-primary: #8B5CF6;
+
+  --erp-primary-soft: #2E1A47;
+
+}
+
+
+/* ==================================================
+   GLOBAL STYLES
+================================================== */
+
+html {
+
+  background: var(--erp-background);
+
+}
+
+
+body {
+
+  margin: 0;
+
+  min-width: 320px;
+
+  min-height: 100vh;
+
+  background: var(--erp-background);
+
+  color: var(--erp-text);
+
+  transition:
+    background-color 0.25s ease,
+    color 0.25s ease;
+
+}
+
+
+#root {
+
+  min-height: 100vh;
+
+}
