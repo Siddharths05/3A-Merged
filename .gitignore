@@ -31,3 +31,6 @@ desktop.ini
 # Databases & local sqlite
 *.sqlite3
 *.db
+
+
+#end of file
