@@ -1,57 +1,268 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
-import { ClipboardList } from "lucide-react";
+import {
+  ClipboardList,
+  AlertCircle,
+  CheckCircle2,
+  Pencil,
+  Trash2,
+  X,
+} from "lucide-react";
+
+import { usePermissions } from "../../components/Permissions";
+
+
+const API_BASE_URL = "http://127.0.0.1:8000/api";
 
 
 export default function Requirements() {
 
   // ==================================================
+  // PERMISSIONS
+  // Admin bypasses entirely; everyone else is gated on
+  // the "requirement" module rights, same pattern
+  // Header.jsx uses for the Masters dropdown.
+  // ==================================================
+
+  const { role, can } = usePermissions();
+
+  const isAllowed = (action) =>
+    role === "admin" || can("requirement", action);
+
+
+  // ==================================================
   // STATE
   // ==================================================
 
-  const [requirement, setRequirement] =
-    useState("");
+  const [requirement, setRequirement] = useState("");
 
-  const [requirements, setRequirements] =
-    useState([]);
+  const [requirements, setRequirements] = useState([]);
+
+  const [editingId, setEditingId] = useState(null);
+
+  const [loading, setLoading] = useState(true);
+
+  const [saving, setSaving] = useState(false);
+
+  const [deletingId, setDeletingId] = useState(null);
+
+  const [error, setError] = useState("");
+
+  const [success, setSuccess] = useState("");
 
 
   // ==================================================
-  // SAVE REQUIREMENT
+  // GET AUTH TOKEN
   // ==================================================
 
-  const handleSave = () => {
+  const getToken = () => {
+    return localStorage.getItem("access_token");
+  };
 
-    const value =
-      requirement.trim();
 
+  // ==================================================
+  // GET ERROR MESSAGE
+  // ==================================================
+
+  const getErrorMessage = async (response) => {
+    try {
+      const data = await response.json();
+
+      return (
+        data.detail ||
+        data.message ||
+        "Something went wrong"
+      );
+    } catch {
+      return "Something went wrong";
+    }
+  };
+
+
+  // ==================================================
+  // LOAD REQUIREMENTS
+  // ==================================================
+
+  const fetchRequirements = async () => {
+    try {
+      setLoading(true);
+
+      setError("");
+
+      const token = getToken();
+
+      if (!token) {
+        throw new Error(
+          "Authentication token not found. Please login again."
+        );
+      }
+
+      const response = await fetch(
+        `${API_BASE_URL}/requirements`,
+        {
+          method: "GET",
+
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+
+      if (!response.ok) {
+        throw new Error(
+          "Failed to load requirements."
+        );
+      }
+
+      const data = await response.json();
+
+      setRequirements(
+        Array.isArray(data.requirements)
+          ? data.requirements
+          : []
+      );
+    } catch (err) {
+      console.error(
+        "Fetch requirements error:",
+        err
+      );
+
+      if (err instanceof TypeError) {
+        setError(
+          "Failed to connect to the server. Please make sure the backend is running."
+        );
+      } else {
+        setError(err.message);
+      }
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchRequirements();
+  }, []);
+
+
+  // ==================================================
+  // HANDLE INPUT CHANGE
+  // ==================================================
+
+  const handleChange = (e) => {
+    setRequirement(e.target.value);
+  };
+
+
+  // ==================================================
+  // START EDITING A ROW
+  // ==================================================
+
+  const handleEditClick = (item) => {
+    setEditingId(item.pkRId);
+
+    setRequirement(item.Requirement);
+
+    setError("");
+
+    setSuccess("");
+  };
+
+
+  // ==================================================
+  // CANCEL EDITING
+  // ==================================================
+
+  const handleCancelEdit = () => {
+    setEditingId(null);
+
+    setRequirement("");
+
+    setError("");
+  };
+
+
+  // ==================================================
+  // SAVE (CREATE OR UPDATE)
+  // ==================================================
+
+  const handleSave = async () => {
+    const value = requirement.trim();
 
     if (!value) {
       return;
     }
 
+    try {
+      setSaving(true);
 
-    const alreadyExists =
-      requirements.some(
-        (item) =>
-          item.toLowerCase() ===
-          value.toLowerCase()
+      setError("");
+
+      setSuccess("");
+
+      const token = getToken();
+
+      if (!token) {
+        throw new Error(
+          "Authentication token not found. Please login again."
+        );
+      }
+
+      const isEditing = editingId !== null;
+
+      const url = isEditing
+        ? `${API_BASE_URL}/requirements/${editingId}`
+        : `${API_BASE_URL}/requirements`;
+
+      const response = await fetch(url, {
+        method: isEditing ? "PUT" : "POST",
+
+        headers: {
+          "Content-Type": "application/json",
+
+          Authorization: `Bearer ${token}`,
+        },
+
+        body: JSON.stringify({
+          requirement: value,
+        }),
+      });
+
+      if (!response.ok) {
+        const message = await getErrorMessage(response);
+
+        throw new Error(message);
+      }
+
+      const data = await response.json();
+
+      setSuccess(
+        data.message ||
+          (isEditing
+            ? "Requirement updated successfully."
+            : "Requirement created successfully.")
       );
 
+      setRequirement("");
 
-    if (alreadyExists) {
-      return;
+      setEditingId(null);
+
+      await fetchRequirements();
+    } catch (err) {
+      console.error(
+        "Save requirement error:",
+        err
+      );
+
+      if (err instanceof TypeError) {
+        setError(
+          "Failed to connect to the server. Please make sure the backend is running."
+        );
+      } else {
+        setError(err.message);
+      }
+    } finally {
+      setSaving(false);
     }
-
-
-    setRequirements([
-      ...requirements,
-      value,
-    ]);
-
-
-    setRequirement("");
-
   };
 
 
@@ -60,13 +271,89 @@ export default function Requirements() {
   // ==================================================
 
   const handleKeyDown = (e) => {
-
     if (e.key === "Enter") {
+      e.preventDefault();
 
       handleSave();
+    }
+  };
 
+
+  // ==================================================
+  // DELETE
+  // ==================================================
+
+  const handleDelete = async (item) => {
+    const confirmed = window.confirm(
+      `Delete "${item.Requirement}"? This cannot be undone.`
+    );
+
+    if (!confirmed) {
+      return;
     }
 
+    try {
+      setDeletingId(item.pkRId);
+
+      setError("");
+
+      setSuccess("");
+
+      const token = getToken();
+
+      if (!token) {
+        throw new Error(
+          "Authentication token not found. Please login again."
+        );
+      }
+
+      const response = await fetch(
+        `${API_BASE_URL}/requirements/${item.pkRId}`,
+        {
+          method: "DELETE",
+
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+
+      if (!response.ok) {
+        const message = await getErrorMessage(response);
+
+        throw new Error(message);
+      }
+
+      const data = await response.json();
+
+      setSuccess(
+        data.message || "Requirement deleted successfully."
+      );
+
+      // If the deleted row was mid-edit, clear the form.
+      if (editingId === item.pkRId) {
+        setEditingId(null);
+
+        setRequirement("");
+      }
+
+      await fetchRequirements();
+    } catch (err) {
+      console.error(
+        "Delete requirement error:",
+        err
+      );
+
+      if (err instanceof TypeError) {
+        setError(
+          "Failed to connect to the server. Please make sure the backend is running."
+        );
+      } else {
+        setError(err.message);
+      }
+    } finally {
+      setDeletingId(null);
+    }
   };
 
 
@@ -111,214 +398,314 @@ export default function Requirements() {
       </div>
 
 
+      {/* ERROR */}
 
-      {/* ==================================================
-          ADD REQUIREMENT
-      ================================================== */}
-
-      <div
-        className="
-          overflow-hidden
-          rounded-2xl
-          border
-          border-theme-border
-          bg-card
-          shadow-sm
-        "
-      >
-
-
-        {/* CARD HEADER */}
-
+      {error && (
         <div
           className="
             flex
-            items-center
-            justify-between
-            gap-4
-            border-b
-            border-theme-border
-            px-6
-            py-5
+            items-start
+            gap-3
+            rounded-xl
+            border
+            border-theme-danger/30
+            bg-theme-danger-soft
+            px-4
+            py-3
+            text-sm
+            text-theme-danger
           "
         >
+          <AlertCircle size={18} className="mt-0.5 shrink-0" />
 
-
-          <div>
-
-            <h2
-              className="
-                text-lg
-                font-semibold
-                text-theme-text
-              "
-            >
-              Add Requirement
-            </h2>
-
-
-            <p
-              className="
-                mt-1
-                text-sm
-                text-theme-muted
-              "
-            >
-              Enter a new requirement to add it to the master list.
-            </p>
-
-          </div>
-
-
-
-          {/* ICON */}
-
-          <div
-            className="
-              flex
-              h-11
-              w-11
-              shrink-0
-              items-center
-              justify-center
-              rounded-xl
-              bg-theme-primary-soft
-              text-theme-primary
-            "
-          >
-
-            <ClipboardList size={21} />
-
-          </div>
-
-
+          <span>{error}</span>
         </div>
+      )}
 
 
+      {/* SUCCESS */}
 
-        {/* ==================================================
-            FORM
-        ================================================== */}
+      {success && (
+        <div
+          className="
+            flex
+            items-start
+            gap-3
+            rounded-xl
+            border
+            border-emerald-500/20
+            bg-emerald-500/10
+            px-4
+            py-3
+            text-sm
+            text-emerald-600
+            dark:text-emerald-400
+          "
+        >
+          <CheckCircle2 size={18} className="mt-0.5 shrink-0" />
+
+          <span>{success}</span>
+        </div>
+      )}
+
+
+      {/* ==================================================
+          ADD / EDIT REQUIREMENT
+          Hidden entirely for a user with neither add nor
+          edit rights on this module — matches the read-only
+          treatment the rest of the app gives non-permitted
+          users, rather than showing a form that will just
+          403 on submit.
+      ================================================== */}
+
+      {(isAllowed("add") || isAllowed("edit")) && (
 
         <div
           className="
-            space-y-6
-            p-6
+            overflow-hidden
+            rounded-2xl
+            border
+            border-theme-border
+            bg-card
+            shadow-sm
           "
         >
 
 
-          <div className="max-w-xl">
-
-
-            <label
-              htmlFor="requirement"
-              className="
-                mb-2
-                block
-                text-sm
-                font-semibold
-                text-theme-text
-              "
-            >
-              Requirement
-            </label>
-
-
-
-            <input
-              id="requirement"
-              type="text"
-              value={requirement}
-              onChange={(e) =>
-                setRequirement(e.target.value)
-              }
-              onKeyDown={handleKeyDown}
-              maxLength={30}
-              placeholder="Enter requirement"
-              className="
-                h-12
-                w-full
-                rounded-xl
-                border
-                border-theme-border
-                bg-[var(--erp-background)]
-                px-4
-                text-sm
-                text-theme-text
-                outline-none
-                transition-all
-                placeholder:text-theme-faint
-                focus:border-theme-primary
-                focus:ring-2
-                focus:ring-theme-primary-soft
-              "
-            />
-
-
-            <p
-              className="
-                mt-2
-                text-xs
-                text-theme-faint
-              "
-            >
-              Maximum 30 characters.
-            </p>
-
-
-          </div>
-
-
-
-          {/* ==================================================
-              ACTIONS
-          ================================================== */}
+          {/* CARD HEADER */}
 
           <div
             className="
               flex
-              flex-wrap
               items-center
-              gap-3
-              border-t
+              justify-between
+              gap-4
+              border-b
               border-theme-border
-              pt-6
+              px-6
+              py-5
             "
           >
 
 
-            <button
-              type="button"
-              onClick={handleSave}
+            <div>
+
+              <h2
+                className="
+                  text-lg
+                  font-semibold
+                  text-theme-text
+                "
+              >
+                {editingId !== null
+                  ? "Edit Requirement"
+                  : "Add Requirement"}
+              </h2>
+
+
+              <p
+                className="
+                  mt-1
+                  text-sm
+                  text-theme-muted
+                "
+              >
+                {editingId !== null
+                  ? "Update the selected requirement."
+                  : "Enter a new requirement to add it to the master list."}
+              </p>
+
+            </div>
+
+
+
+            {/* ICON */}
+
+            <div
               className="
-                inline-flex
+                flex
                 h-11
+                w-11
+                shrink-0
                 items-center
                 justify-center
                 rounded-xl
-                bg-theme-primary
-                px-5
-                text-sm
-                font-semibold
-                text-white
-                shadow-sm
-                transition-all
-                duration-200
-                hover:opacity-90
-                hover:shadow-md
+                bg-theme-primary-soft
+                text-theme-primary
               "
             >
-              Save Requirement
-            </button>
 
+              <ClipboardList size={21} />
+
+            </div>
 
           </div>
 
 
+
+          {/* FORM */}
+
+          <div
+            className="
+              space-y-6
+              p-6
+            "
+          >
+
+
+            <div className="max-w-xl">
+
+
+              {/* LABEL */}
+
+              <label
+                htmlFor="requirement"
+                className="
+                  mb-2
+                  block
+                  text-sm
+                  font-semibold
+                  text-theme-text
+                "
+              >
+                Requirement
+              </label>
+
+
+
+              {/* INPUT */}
+
+              <input
+                id="requirement"
+                type="text"
+                value={requirement}
+                onChange={handleChange}
+                onKeyDown={handleKeyDown}
+                maxLength={300}
+                placeholder="Enter requirement"
+                className="
+                  h-12
+                  w-full
+                  rounded-xl
+                  border
+                  border-theme-border
+                  bg-[var(--erp-background)]
+                  px-4
+                  text-sm
+                  text-theme-text
+                  outline-none
+                  transition-all
+                  placeholder:text-theme-faint
+                  focus:border-theme-primary
+                  focus:ring-2
+                  focus:ring-theme-primary-soft
+                "
+              />
+
+
+              <p
+                className="
+                  mt-2
+                  text-xs
+                  text-theme-faint
+                "
+              >
+                Maximum 300 characters.
+              </p>
+
+
+            </div>
+
+
+
+            {/* ACTIONS */}
+
+            <div
+              className="
+                flex
+                flex-wrap
+                items-center
+                gap-3
+                border-t
+                border-theme-border
+                pt-6
+              "
+            >
+
+
+              <button
+                type="button"
+                onClick={handleSave}
+                disabled={saving || !requirement.trim()}
+                className="
+                  inline-flex
+                  h-11
+                  items-center
+                  justify-center
+                  rounded-xl
+                  bg-theme-primary
+                  px-5
+                  text-sm
+                  font-semibold
+                  text-white
+                  shadow-sm
+                  transition-all
+                  duration-200
+                  hover:opacity-90
+                  hover:shadow-md
+                  disabled:cursor-not-allowed
+                  disabled:opacity-60
+                "
+              >
+                {saving
+                  ? "Saving..."
+                  : editingId !== null
+                  ? "Update Requirement"
+                  : "Save Requirement"}
+              </button>
+
+
+              {editingId !== null && (
+
+                <button
+                  type="button"
+                  onClick={handleCancelEdit}
+                  disabled={saving}
+                  className="
+                    inline-flex
+                    h-11
+                    items-center
+                    justify-center
+                    gap-2
+                    rounded-xl
+                    border
+                    border-theme-border
+                    px-5
+                    text-sm
+                    font-semibold
+                    text-theme-muted
+                    transition-all
+                    duration-200
+                    hover:bg-theme-primary-soft
+                    hover:text-theme-text
+                    disabled:cursor-not-allowed
+                    disabled:opacity-60
+                  "
+                >
+                  <X size={16} />
+                  Cancel
+                </button>
+
+              )}
+
+
+            </div>
+
+          </div>
+
         </div>
 
-      </div>
+      )}
 
 
 
@@ -338,9 +725,7 @@ export default function Requirements() {
       >
 
 
-        {/* ==================================================
-            TABLE HEADER
-        ================================================== */}
+        {/* TABLE HEADER */}
 
         <div
           className="
@@ -403,16 +788,33 @@ export default function Requirements() {
 
           </div>
 
-
         </div>
 
 
 
-        {/* ==================================================
-            EMPTY STATE
-        ================================================== */}
+        {/* LOADING STATE */}
 
-        {requirements.length === 0 && (
+        {loading && (
+
+          <div
+            className="
+              px-6
+              py-12
+              text-center
+              text-sm
+              text-theme-muted
+            "
+          >
+            Loading requirements...
+          </div>
+
+        )}
+
+
+
+        {/* EMPTY STATE */}
+
+        {!loading && requirements.length === 0 && (
 
           <div
             className="
@@ -444,7 +846,6 @@ export default function Requirements() {
             </div>
 
 
-
             <p
               className="
                 mt-4
@@ -454,7 +855,6 @@ export default function Requirements() {
             >
               No requirements found
             </p>
-
 
 
             <p
@@ -474,19 +874,15 @@ export default function Requirements() {
 
 
 
-        {/* ==================================================
-            TABLE
-        ================================================== */}
+        {/* TABLE */}
 
-        {requirements.length > 0 && (
+        {!loading && requirements.length > 0 && (
 
           <div className="overflow-x-auto">
 
 
             <table className="w-full">
 
-
-              {/* TABLE HEAD */}
 
               <thead>
 
@@ -515,7 +911,6 @@ export default function Requirements() {
                   </th>
 
 
-
                   <th
                     className="
                       px-6
@@ -532,13 +927,31 @@ export default function Requirements() {
                   </th>
 
 
+                  {(isAllowed("edit") || isAllowed("delete")) && (
+
+                    <th
+                      className="
+                        px-6
+                        py-4
+                        text-right
+                        text-xs
+                        font-semibold
+                        uppercase
+                        tracking-wider
+                        text-theme-muted
+                      "
+                    >
+                      Actions
+                    </th>
+
+                  )}
+
+
                 </tr>
 
               </thead>
 
 
-
-              {/* TABLE BODY */}
 
               <tbody
                 className="
@@ -547,19 +960,16 @@ export default function Requirements() {
                 "
               >
 
-
                 {requirements.map((item, index) => (
 
                   <tr
-                    key={`${item}-${index}`}
+                    key={item.pkRId}
                     className="
                       transition-colors
                       hover:bg-theme-primary-soft/40
                     "
                   >
 
-
-                    {/* ID */}
 
                     <td
                       className="
@@ -573,9 +983,6 @@ export default function Requirements() {
                     </td>
 
 
-
-                    {/* REQUIREMENT */}
-
                     <td
                       className="
                         px-6
@@ -585,25 +992,100 @@ export default function Requirements() {
                         text-theme-text
                       "
                     >
-                      {item}
+                      {item.Requirement}
                     </td>
+
+
+                    {(isAllowed("edit") || isAllowed("delete")) && (
+
+                      <td
+                        className="
+                          px-6
+                          py-4
+                          text-right
+                        "
+                      >
+
+                        <div
+                          className="
+                            flex
+                            items-center
+                            justify-end
+                            gap-2
+                          "
+                        >
+
+                          {isAllowed("edit") && (
+
+                            <button
+                              type="button"
+                              onClick={() => handleEditClick(item)}
+                              title="Edit"
+                              className="
+                                flex
+                                h-8
+                                w-8
+                                items-center
+                                justify-center
+                                rounded-lg
+                                text-theme-muted
+                                transition
+                                hover:bg-theme-primary-soft
+                                hover:text-theme-primary
+                              "
+                            >
+                              <Pencil size={16} />
+                            </button>
+
+                          )}
+
+
+                          {isAllowed("delete") && (
+
+                            <button
+                              type="button"
+                              onClick={() => handleDelete(item)}
+                              disabled={deletingId === item.pkRId}
+                              title="Delete"
+                              className="
+                                flex
+                                h-8
+                                w-8
+                                items-center
+                                justify-center
+                                rounded-lg
+                                text-theme-muted
+                                transition
+                                hover:bg-theme-danger-soft
+                                hover:text-theme-danger
+                                disabled:cursor-not-allowed
+                                disabled:opacity-60
+                              "
+                            >
+                              <Trash2 size={16} />
+                            </button>
+
+                          )}
+
+                        </div>
+
+                      </td>
+
+                    )}
 
 
                   </tr>
 
                 ))}
 
-
               </tbody>
 
 
             </table>
 
-
           </div>
 
         )}
-
 
       </div>
 

@@ -307,6 +307,533 @@ class AnnouncementType(Base):
 
 
 # ==================================================
+# OFFICE LEVEL SQLALCHEMY MODEL
+# MAPPED TO REAL TABLE: hrofficelevel
+# REAL COLUMNS (confirmed by user via pgAdmin):
+#   pkolid (PK, integer), officelevel (varchar 200),
+#   updated_at, deleted_at
+# ==================================================
+
+class OfficeLevel(Base):
+
+    __tablename__ = "hrofficelevel"
+
+
+    pkOLId = Column(
+        "pkolid",
+        Integer,
+        primary_key=True,
+        index=True,
+    )
+
+
+    OfficeLevel = Column(
+        "officelevel",
+        String(200),
+        nullable=False,
+        unique=True,
+    )
+
+
+    updated_at = Column(
+        "updated_at",
+        DateTime,
+        nullable=True,
+        server_default=func.now(),
+        onupdate=func.now(),
+    )
+
+
+    deleted_at = Column(
+        "deleted_at",
+        DateTime,
+        nullable=True,
+        default=None,
+    )
+
+
+# ==================================================
+# MEETING TYPE SQLALCHEMY MODEL
+# MAPPED TO REAL TABLE: hrmeetingtype
+# REAL COLUMNS (confirmed by user via pgAdmin):
+#   pkmtid (PK, integer), meetingtype (varchar 200),
+#   updated_at, deleted_at
+# ==================================================
+
+class MeetingType(Base):
+
+    __tablename__ = "hrmeetingtype"
+
+
+    pkMTId = Column(
+        "pkmtid",
+        Integer,
+        primary_key=True,
+        index=True,
+    )
+
+
+    MeetingType = Column(
+        "meetingtype",
+        String(200),
+        nullable=False,
+        unique=True,
+    )
+
+
+    updated_at = Column(
+        "updated_at",
+        DateTime,
+        nullable=True,
+        server_default=func.now(),
+        onupdate=func.now(),
+    )
+
+
+    deleted_at = Column(
+        "deleted_at",
+        DateTime,
+        nullable=True,
+        default=None,
+    )
+
+
+# ==================================================
+# LANGUAGE SQLALCHEMY MODEL
+# MAPPED TO REAL TABLE: hrlanguage
+# REAL COLUMNS (per user):
+#   pklid (PK, integer), language (varchar 200),
+#   updated_at, deleted_at
+# ==================================================
+
+class Language(Base):
+
+    __tablename__ = "hrlanguage"
+
+
+    pkLId = Column(
+        "pklid",
+        Integer,
+        primary_key=True,
+        index=True,
+    )
+
+
+    Language = Column(
+        "language",
+        String(200),
+        nullable=False,
+        unique=True,
+    )
+
+
+    updated_at = Column(
+        "updated_at",
+        DateTime,
+        nullable=True,
+        server_default=func.now(),
+        onupdate=func.now(),
+    )
+
+
+    deleted_at = Column(
+        "deleted_at",
+        DateTime,
+        nullable=True,
+        default=None,
+    )
+
+
+# ==================================================
+# REQUIREMENT SQLALCHEMY MODEL
+# MAPPED TO REAL TABLE: hrrequirement
+# REAL COLUMNS (per user):
+#   pkrid (PK, integer), requirement (varchar 300),
+#   updated_at, deleted_at
+# ==================================================
+
+class Requirement(Base):
+
+    __tablename__ = "hrrequirement"
+
+
+    pkRId = Column(
+        "pkrid",
+        Integer,
+        primary_key=True,
+        index=True,
+    )
+
+
+    Requirement = Column(
+        "requirement",
+        String(300),
+        nullable=False,
+        unique=True,
+    )
+
+
+    updated_at = Column(
+        "updated_at",
+        DateTime,
+        nullable=True,
+        server_default=func.now(),
+        onupdate=func.now(),
+    )
+
+
+    deleted_at = Column(
+        "deleted_at",
+        DateTime,
+        nullable=True,
+        default=None,
+    )
+
+
+# ==================================================
+# ADVERTISING MEDIA SQLALCHEMY MODEL
+# MAPPED TO REAL TABLE: hradvertisingmedia
+# REAL COLUMNS (per user):
+#   pkamid (PK, integer), advertisingmedia (varchar 200),
+#   updated_at, deleted_at
+# ==================================================
+
+class AdvertisingMedia(Base):
+
+    __tablename__ = "hradvertisingmedia"
+
+
+    pkAMId = Column(
+        "pkamid",
+        Integer,
+        primary_key=True,
+        index=True,
+    )
+
+
+    AdvertisingMedia = Column(
+        "advertisingmedia",
+        String(200),
+        nullable=False,
+        unique=True,
+    )
+
+
+    updated_at = Column(
+        "updated_at",
+        DateTime,
+        nullable=True,
+        server_default=func.now(),
+        onupdate=func.now(),
+    )
+
+
+    deleted_at = Column(
+        "deleted_at",
+        DateTime,
+        nullable=True,
+        default=None,
+    )
+
+
+
+# ==================================================
+# ADVERTISING PURPOSE SQLALCHEMY MODEL
+# MAPPED TO REAL TABLE: hradvertisingpurpose
+# REAL COLUMNS (per user):
+#   pkapid (PK, integer), advertisingpurpose (varchar 200),
+#   updated_at, deleted_at
+# ==================================================
+
+class AdvertisingPurpose(Base):
+
+    __tablename__ = "hradvertisingpurpose"
+
+
+    pkAPId = Column(
+        "pkapid",
+        Integer,
+        primary_key=True,
+        index=True,
+    )
+
+
+    AdvertisingPurpose = Column(
+        "advertisingpurpose",
+        String(200),
+        nullable=False,
+        unique=True,
+    )
+
+
+    updated_at = Column(
+        "updated_at",
+        DateTime,
+        nullable=True,
+        server_default=func.now(),
+        onupdate=func.now(),
+    )
+
+
+    deleted_at = Column(
+        "deleted_at",
+        DateTime,
+        nullable=True,
+        default=None,
+    )
+
+
+
+# ==================================================
+# OFFICE TYPE SQLALCHEMY MODEL
+# MAPPED TO REAL TABLE: hrofficetype
+# REAL COLUMNS (per user):
+#   pkotid (PK, integer), officetype (varchar 200),
+#   updated_at, deleted_at
+# ==================================================
+
+class OfficeType(Base):
+
+    __tablename__ = "hrofficetype"
+
+
+    pkOTId = Column(
+        "pkotid",
+        Integer,
+        primary_key=True,
+        index=True,
+    )
+
+
+    OfficeType = Column(
+        "officetype",
+        String(200),
+        nullable=False,
+        unique=True,
+    )
+
+
+    updated_at = Column(
+        "updated_at",
+        DateTime,
+        nullable=True,
+        server_default=func.now(),
+        onupdate=func.now(),
+    )
+
+
+    deleted_at = Column(
+        "deleted_at",
+        DateTime,
+        nullable=True,
+        default=None,
+    )
+
+
+
+# ==================================================
+# MEETING LOCATION SQLALCHEMY MODEL
+# MAPPED TO REAL TABLE: hrmeetinglocation
+# REAL COLUMNS (per user):
+#   pkmlid (PK, integer), meetinglocation (varchar 200),
+#   updated_at, deleted_at
+# ==================================================
+
+class MeetingLocation(Base):
+
+    __tablename__ = "hrmeetinglocation"
+
+
+    pkMLId = Column(
+        "pkmlid",
+        Integer,
+        primary_key=True,
+        index=True,
+    )
+
+
+    MeetingLocation = Column(
+        "meetinglocation",
+        String(200),
+        nullable=False,
+        unique=True,
+    )
+
+
+    updated_at = Column(
+        "updated_at",
+        DateTime,
+        nullable=True,
+        server_default=func.now(),
+        onupdate=func.now(),
+    )
+
+
+    deleted_at = Column(
+        "deleted_at",
+        DateTime,
+        nullable=True,
+        default=None,
+    )
+
+
+
+# ==================================================
+# KSA SQLALCHEMY MODEL
+# MAPPED TO REAL TABLE: hrksa
+# REAL COLUMNS (per user pgAdmin):
+#   pkksaid (PK, integer), ksa (varchar 300),
+#   updated_at, deleted_at
+# ==================================================
+
+class KSA(Base):
+
+    __tablename__ = "hrksa"
+
+
+    pkKSAId = Column(
+        "pkksaid",
+        Integer,
+        primary_key=True,
+        index=True,
+    )
+
+
+    KSA = Column(
+        "ksa",
+        String(300),
+        nullable=False,
+        unique=True,
+    )
+
+
+    updated_at = Column(
+        "updated_at",
+        DateTime,
+        nullable=True,
+        server_default=func.now(),
+        onupdate=func.now(),
+    )
+
+
+    deleted_at = Column(
+        "deleted_at",
+        DateTime,
+        nullable=True,
+        default=None,
+    )
+
+
+
+# ==================================================
+# KSA CATEGORY SQLALCHEMY MODEL
+# MAPPED TO REAL TABLE: hrksacategory
+# REAL COLUMNS (per user):
+#   pkksacid (PK, integer), ksacategory (varchar 200),
+#   updated_at, deleted_at
+# ==================================================
+
+class KSACategory(Base):
+
+    __tablename__ = "hrksacategory"
+
+
+    pkKSACId = Column(
+        "pkksacid",
+        Integer,
+        primary_key=True,
+        index=True,
+    )
+
+
+    KSACategory = Column(
+        "ksacategory",
+        String(200),
+        nullable=False,
+        unique=True,
+    )
+
+
+    updated_at = Column(
+        "updated_at",
+        DateTime,
+        nullable=True,
+        server_default=func.now(),
+        onupdate=func.now(),
+    )
+
+
+    deleted_at = Column(
+        "deleted_at",
+        DateTime,
+        nullable=True,
+        default=None,
+    )
+
+
+
+# ==================================================
+# POSITION GRADE SQLALCHEMY MODEL
+# MAPPED TO REAL TABLE: hrpositiongrade
+# REAL COLUMNS (per user):
+#   pkpgid (PK, integer), positiongrade (varchar 200),
+#   minimumpay numeric(15,2), maximumpay numeric(15,2),
+#   updated_at, deleted_at
+# ==================================================
+
+class PositionGrade(Base):
+
+    __tablename__ = "hrpositiongrade"
+
+
+    pkPGId = Column(
+        "pkpgid",
+        Integer,
+        primary_key=True,
+        index=True,
+    )
+
+
+    PositionGrade = Column(
+        "positiongrade",
+        String(200),
+        nullable=False,
+        unique=True,
+    )
+
+
+    MinimumPay = Column(
+        "minimumpay",
+        Float,
+        nullable=False,
+    )
+
+
+    MaximumPay = Column(
+        "maximumpay",
+        Float,
+        nullable=False,
+    )
+
+
+    updated_at = Column(
+        "updated_at",
+        DateTime,
+        nullable=True,
+        server_default=func.now(),
+        onupdate=func.now(),
+    )
+
+
+    deleted_at = Column(
+        "deleted_at",
+        DateTime,
+        nullable=True,
+        default=None,
+    )
+
+
+# ==================================================
 # SALARY EMPLOYEE SQLALCHEMY MODEL
 # ==================================================
 
@@ -2955,6 +3482,3035 @@ def deactivate_announcement_type(
         db.commit()
 
         db.refresh(announcement_type)
+
+        return True
+
+
+    except Exception:
+
+        db.rollback()
+
+        raise
+
+
+# ==================================================
+# OFFICE LEVEL SERIALIZER
+# ==================================================
+
+def office_level_to_dict(office_level):
+
+    if not office_level:
+
+        return None
+
+
+    return {
+
+        "pkOLId": office_level.pkOLId,
+
+        "OfficeLevel": office_level.OfficeLevel,
+
+        "updated_at": (
+            office_level.updated_at.isoformat()
+            if office_level.updated_at
+            else None
+        ),
+
+        "deleted_at": (
+            office_level.deleted_at.isoformat()
+            if office_level.deleted_at
+            else None
+        ),
+
+    }
+
+
+# ==================================================
+# OFFICE LEVEL FUNCTIONS
+# ==================================================
+
+def get_office_levels(
+
+    db: Session,
+
+):
+
+    return (
+
+        db.query(OfficeLevel)
+
+        .filter(
+
+            OfficeLevel.deleted_at.is_(None),
+
+        )
+
+        .order_by(OfficeLevel.pkOLId)
+
+        .all()
+
+    )
+
+
+def get_office_level_by_id(
+
+    db: Session,
+
+    office_level_id: int,
+
+):
+
+    return (
+
+        db.query(OfficeLevel)
+
+        .filter(
+
+            OfficeLevel.pkOLId == office_level_id,
+
+            OfficeLevel.deleted_at.is_(None),
+
+        )
+
+        .first()
+
+    )
+
+
+def office_level_exists(
+
+    db: Session,
+
+    office_level: str,
+
+):
+
+    if not office_level:
+
+        return False
+
+
+    return (
+
+        db.query(OfficeLevel)
+
+        .filter(
+
+            func.lower(OfficeLevel.OfficeLevel)
+            == office_level.strip().lower(),
+
+            OfficeLevel.deleted_at.is_(None),
+
+        )
+
+        .first()
+
+        is not None
+
+    )
+
+
+def office_level_exists_for_other(
+
+    db: Session,
+
+    office_level: str,
+
+    office_level_id: int,
+
+):
+
+    if not office_level:
+
+        return False
+
+
+    return (
+
+        db.query(OfficeLevel)
+
+        .filter(
+
+            func.lower(OfficeLevel.OfficeLevel)
+            == office_level.strip().lower(),
+
+            OfficeLevel.pkOLId != office_level_id,
+
+            OfficeLevel.deleted_at.is_(None),
+
+        )
+
+        .first()
+
+        is not None
+
+    )
+
+
+def create_office_level(
+
+    db: Session,
+
+    office_level: str,
+
+):
+
+    new_office_level = OfficeLevel(
+
+        OfficeLevel=office_level.strip(),
+
+        deleted_at=None,
+
+    )
+
+
+    try:
+
+        db.add(new_office_level)
+
+        db.commit()
+
+        db.refresh(new_office_level)
+
+        return new_office_level
+
+
+    except Exception:
+
+        db.rollback()
+
+        raise
+
+
+def update_office_level(
+
+    db: Session,
+
+    office_level_id: int,
+
+    office_level: str,
+
+):
+
+    existing_office_level = get_office_level_by_id(
+
+        db,
+
+        office_level_id,
+
+    )
+
+
+    if not existing_office_level:
+
+        return None
+
+
+    existing_office_level.OfficeLevel = office_level.strip()
+
+
+    try:
+
+        db.commit()
+
+        db.refresh(existing_office_level)
+
+        return existing_office_level
+
+
+    except Exception:
+
+        db.rollback()
+
+        raise
+
+
+def deactivate_office_level(
+
+    db: Session,
+
+    office_level_id: int,
+
+):
+
+    office_level = get_office_level_by_id(
+
+        db,
+
+        office_level_id,
+
+    )
+
+
+    if not office_level:
+
+        return None
+
+
+    office_level.deleted_at = datetime.utcnow()
+
+
+    try:
+
+        db.commit()
+
+        db.refresh(office_level)
+
+        return True
+
+
+    except Exception:
+
+        db.rollback()
+
+        raise
+
+
+# ==================================================
+# MEETING TYPE SERIALIZER
+# ==================================================
+
+def meeting_type_to_dict(meeting_type):
+
+    if not meeting_type:
+
+        return None
+
+
+    return {
+
+        "pkMTId": meeting_type.pkMTId,
+
+        "MeetingType": meeting_type.MeetingType,
+
+        "updated_at": (
+            meeting_type.updated_at.isoformat()
+            if meeting_type.updated_at
+            else None
+        ),
+
+        "deleted_at": (
+            meeting_type.deleted_at.isoformat()
+            if meeting_type.deleted_at
+            else None
+        ),
+
+    }
+
+
+# ==================================================
+# MEETING TYPE FUNCTIONS
+# ==================================================
+
+def get_meeting_types(
+
+    db: Session,
+
+):
+
+    return (
+
+        db.query(MeetingType)
+
+        .filter(
+
+            MeetingType.deleted_at.is_(None),
+
+        )
+
+        .order_by(MeetingType.pkMTId)
+
+        .all()
+
+    )
+
+
+def get_meeting_type_by_id(
+
+    db: Session,
+
+    meeting_type_id: int,
+
+):
+
+    return (
+
+        db.query(MeetingType)
+
+        .filter(
+
+            MeetingType.pkMTId == meeting_type_id,
+
+            MeetingType.deleted_at.is_(None),
+
+        )
+
+        .first()
+
+    )
+
+
+def meeting_type_exists(
+
+    db: Session,
+
+    meeting_type: str,
+
+):
+
+    if not meeting_type:
+
+        return False
+
+
+    return (
+
+        db.query(MeetingType)
+
+        .filter(
+
+            func.lower(MeetingType.MeetingType)
+            == meeting_type.strip().lower(),
+
+            MeetingType.deleted_at.is_(None),
+
+        )
+
+        .first()
+
+        is not None
+
+    )
+
+
+def meeting_type_exists_for_other(
+
+    db: Session,
+
+    meeting_type: str,
+
+    meeting_type_id: int,
+
+):
+
+    if not meeting_type:
+
+        return False
+
+
+    return (
+
+        db.query(MeetingType)
+
+        .filter(
+
+            func.lower(MeetingType.MeetingType)
+            == meeting_type.strip().lower(),
+
+            MeetingType.pkMTId != meeting_type_id,
+
+            MeetingType.deleted_at.is_(None),
+
+        )
+
+        .first()
+
+        is not None
+
+    )
+
+
+def create_meeting_type(
+
+    db: Session,
+
+    meeting_type: str,
+
+):
+
+    new_meeting_type = MeetingType(
+
+        MeetingType=meeting_type.strip(),
+
+        deleted_at=None,
+
+    )
+
+
+    try:
+
+        db.add(new_meeting_type)
+
+        db.commit()
+
+        db.refresh(new_meeting_type)
+
+        return new_meeting_type
+
+
+    except Exception:
+
+        db.rollback()
+
+        raise
+
+
+def update_meeting_type(
+
+    db: Session,
+
+    meeting_type_id: int,
+
+    meeting_type: str,
+
+):
+
+    existing_meeting_type = get_meeting_type_by_id(
+
+        db,
+
+        meeting_type_id,
+
+    )
+
+
+    if not existing_meeting_type:
+
+        return None
+
+
+    existing_meeting_type.MeetingType = meeting_type.strip()
+
+
+    try:
+
+        db.commit()
+
+        db.refresh(existing_meeting_type)
+
+        return existing_meeting_type
+
+
+    except Exception:
+
+        db.rollback()
+
+        raise
+
+
+def deactivate_meeting_type(
+
+    db: Session,
+
+    meeting_type_id: int,
+
+):
+
+    meeting_type = get_meeting_type_by_id(
+
+        db,
+
+        meeting_type_id,
+
+    )
+
+
+    if not meeting_type:
+
+        return None
+
+
+    meeting_type.deleted_at = datetime.utcnow()
+
+
+    try:
+
+        db.commit()
+
+        db.refresh(meeting_type)
+
+        return True
+
+
+    except Exception:
+
+        db.rollback()
+
+        raise
+
+
+# ==================================================
+# LANGUAGE SERIALIZER
+# ==================================================
+
+def language_to_dict(language):
+
+    if not language:
+
+        return None
+
+
+    return {
+
+        "pkLId": language.pkLId,
+
+        "Language": language.Language,
+
+        "updated_at": (
+            language.updated_at.isoformat()
+            if language.updated_at
+            else None
+        ),
+
+        "deleted_at": (
+            language.deleted_at.isoformat()
+            if language.deleted_at
+            else None
+        ),
+
+    }
+
+
+# ==================================================
+# LANGUAGE FUNCTIONS
+# ==================================================
+
+def get_languages(
+
+    db: Session,
+
+):
+
+    return (
+
+        db.query(Language)
+
+        .filter(
+
+            Language.deleted_at.is_(None),
+
+        )
+
+        .order_by(Language.pkLId)
+
+        .all()
+
+    )
+
+
+def get_language_by_id(
+
+    db: Session,
+
+    language_id: int,
+
+):
+
+    return (
+
+        db.query(Language)
+
+        .filter(
+
+            Language.pkLId == language_id,
+
+            Language.deleted_at.is_(None),
+
+        )
+
+        .first()
+
+    )
+
+
+def language_exists(
+
+    db: Session,
+
+    language: str,
+
+):
+
+    if not language:
+
+        return False
+
+
+    return (
+
+        db.query(Language)
+
+        .filter(
+
+            func.lower(Language.Language)
+            == language.strip().lower(),
+
+            Language.deleted_at.is_(None),
+
+        )
+
+        .first()
+
+        is not None
+
+    )
+
+
+def language_exists_for_other(
+
+    db: Session,
+
+    language: str,
+
+    language_id: int,
+
+):
+
+    if not language:
+
+        return False
+
+
+    return (
+
+        db.query(Language)
+
+        .filter(
+
+            func.lower(Language.Language)
+            == language.strip().lower(),
+
+            Language.pkLId != language_id,
+
+            Language.deleted_at.is_(None),
+
+        )
+
+        .first()
+
+        is not None
+
+    )
+
+
+def create_language(
+
+    db: Session,
+
+    language: str,
+
+):
+
+    new_language = Language(
+
+        Language=language.strip(),
+
+        deleted_at=None,
+
+    )
+
+
+    try:
+
+        db.add(new_language)
+
+        db.commit()
+
+        db.refresh(new_language)
+
+        return new_language
+
+
+    except Exception:
+
+        db.rollback()
+
+        raise
+
+
+def update_language(
+
+    db: Session,
+
+    language_id: int,
+
+    language: str,
+
+):
+
+    existing_language = get_language_by_id(
+
+        db,
+
+        language_id,
+
+    )
+
+
+    if not existing_language:
+
+        return None
+
+
+    existing_language.Language = language.strip()
+
+
+    try:
+
+        db.commit()
+
+        db.refresh(existing_language)
+
+        return existing_language
+
+
+    except Exception:
+
+        db.rollback()
+
+        raise
+
+
+def deactivate_language(
+
+    db: Session,
+
+    language_id: int,
+
+):
+
+    language = get_language_by_id(
+
+        db,
+
+        language_id,
+
+    )
+
+
+    if not language:
+
+        return None
+
+
+    language.deleted_at = datetime.utcnow()
+
+
+    try:
+
+        db.commit()
+
+        db.refresh(language)
+
+        return True
+
+
+    except Exception:
+
+        db.rollback()
+
+        raise
+
+
+# ==================================================
+# REQUIREMENT SERIALIZER
+# ==================================================
+
+def requirement_to_dict(requirement):
+
+    if not requirement:
+
+        return None
+
+
+    return {
+
+        "pkRId": requirement.pkRId,
+
+        "Requirement": requirement.Requirement,
+
+        "updated_at": (
+            requirement.updated_at.isoformat()
+            if requirement.updated_at
+            else None
+        ),
+
+        "deleted_at": (
+            requirement.deleted_at.isoformat()
+            if requirement.deleted_at
+            else None
+        ),
+
+    }
+
+
+# ==================================================
+# REQUIREMENT FUNCTIONS
+# ==================================================
+
+def get_requirements(
+
+    db: Session,
+
+):
+
+    return (
+
+        db.query(Requirement)
+
+        .filter(
+
+            Requirement.deleted_at.is_(None),
+
+        )
+
+        .order_by(Requirement.pkRId)
+
+        .all()
+
+    )
+
+
+def get_requirement_by_id(
+
+    db: Session,
+
+    requirement_id: int,
+
+):
+
+    return (
+
+        db.query(Requirement)
+
+        .filter(
+
+            Requirement.pkRId == requirement_id,
+
+            Requirement.deleted_at.is_(None),
+
+        )
+
+        .first()
+
+    )
+
+
+def requirement_exists(
+
+    db: Session,
+
+    requirement: str,
+
+):
+
+    if not requirement:
+
+        return False
+
+
+    return (
+
+        db.query(Requirement)
+
+        .filter(
+
+            func.lower(Requirement.Requirement)
+            == requirement.strip().lower(),
+
+            Requirement.deleted_at.is_(None),
+
+        )
+
+        .first()
+
+        is not None
+
+    )
+
+
+def requirement_exists_for_other(
+
+    db: Session,
+
+    requirement: str,
+
+    requirement_id: int,
+
+):
+
+    if not requirement:
+
+        return False
+
+
+    return (
+
+        db.query(Requirement)
+
+        .filter(
+
+            func.lower(Requirement.Requirement)
+            == requirement.strip().lower(),
+
+            Requirement.pkRId != requirement_id,
+
+            Requirement.deleted_at.is_(None),
+
+        )
+
+        .first()
+
+        is not None
+
+    )
+
+
+def create_requirement(
+
+    db: Session,
+
+    requirement: str,
+
+):
+
+    new_requirement = Requirement(
+
+        Requirement=requirement.strip(),
+
+        deleted_at=None,
+
+    )
+
+
+    try:
+
+        db.add(new_requirement)
+
+        db.commit()
+
+        db.refresh(new_requirement)
+
+        return new_requirement
+
+
+    except Exception:
+
+        db.rollback()
+
+        raise
+
+
+def update_requirement(
+
+    db: Session,
+
+    requirement_id: int,
+
+    requirement: str,
+
+):
+
+    existing_requirement = get_requirement_by_id(
+
+        db,
+
+        requirement_id,
+
+    )
+
+
+    if not existing_requirement:
+
+        return None
+
+
+    existing_requirement.Requirement = requirement.strip()
+
+
+    try:
+
+        db.commit()
+
+        db.refresh(existing_requirement)
+
+        return existing_requirement
+
+
+    except Exception:
+
+        db.rollback()
+
+        raise
+
+
+def deactivate_requirement(
+
+    db: Session,
+
+    requirement_id: int,
+
+):
+
+    requirement = get_requirement_by_id(
+
+        db,
+
+        requirement_id,
+
+    )
+
+
+    if not requirement:
+
+        return None
+
+
+    requirement.deleted_at = datetime.utcnow()
+
+
+    try:
+
+        db.commit()
+
+        db.refresh(requirement)
+
+        return True
+
+
+    except Exception:
+
+        db.rollback()
+
+        raise
+
+
+# ==================================================
+# ADVERTISING MEDIA SERIALIZER
+# ==================================================
+
+def advertising_media_to_dict(advertising_media):
+
+    if not advertising_media:
+
+        return None
+
+
+    return {
+
+        "pkAMId": advertising_media.pkAMId,
+
+        "AdvertisingMedia": advertising_media.AdvertisingMedia,
+
+        "updated_at": (
+            advertising_media.updated_at.isoformat()
+            if advertising_media.updated_at
+            else None
+        ),
+
+        "deleted_at": (
+            advertising_media.deleted_at.isoformat()
+            if advertising_media.deleted_at
+            else None
+        ),
+
+    }
+
+
+# ==================================================
+# ADVERTISING MEDIA FUNCTIONS
+# ==================================================
+
+def get_advertising_medias(
+
+    db: Session,
+
+):
+
+    return (
+
+        db.query(AdvertisingMedia)
+
+        .filter(
+
+            AdvertisingMedia.deleted_at.is_(None),
+
+        )
+
+        .order_by(AdvertisingMedia.pkAMId)
+
+        .all()
+
+    )
+
+
+def get_advertising_media_by_id(
+
+    db: Session,
+
+    advertising_media_id: int,
+
+):
+
+    return (
+
+        db.query(AdvertisingMedia)
+
+        .filter(
+
+            AdvertisingMedia.pkAMId == advertising_media_id,
+
+            AdvertisingMedia.deleted_at.is_(None),
+
+        )
+
+        .first()
+
+    )
+
+
+def advertising_media_exists(
+
+    db: Session,
+
+    advertising_media: str,
+
+):
+
+    if not advertising_media:
+
+        return False
+
+
+    return (
+
+        db.query(AdvertisingMedia)
+
+        .filter(
+
+            func.lower(AdvertisingMedia.AdvertisingMedia)
+            == advertising_media.strip().lower(),
+
+            AdvertisingMedia.deleted_at.is_(None),
+
+        )
+
+        .first()
+
+        is not None
+
+    )
+
+
+def advertising_media_exists_for_other(
+
+    db: Session,
+
+    advertising_media: str,
+
+    advertising_media_id: int,
+
+):
+
+    if not advertising_media:
+
+        return False
+
+
+    return (
+
+        db.query(AdvertisingMedia)
+
+        .filter(
+
+            func.lower(AdvertisingMedia.AdvertisingMedia)
+            == advertising_media.strip().lower(),
+
+            AdvertisingMedia.pkAMId != advertising_media_id,
+
+            AdvertisingMedia.deleted_at.is_(None),
+
+        )
+
+        .first()
+
+        is not None
+
+    )
+
+
+def create_advertising_media(
+
+    db: Session,
+
+    advertising_media: str,
+
+):
+
+    new_advertising_media = AdvertisingMedia(
+
+        AdvertisingMedia=advertising_media.strip(),
+
+        deleted_at=None,
+
+    )
+
+
+    try:
+
+        db.add(new_advertising_media)
+
+        db.commit()
+
+        db.refresh(new_advertising_media)
+
+        return new_advertising_media
+
+
+    except Exception:
+
+        db.rollback()
+
+        raise
+
+
+def update_advertising_media(
+
+    db: Session,
+
+    advertising_media_id: int,
+
+    advertising_media: str,
+
+):
+
+    existing_advertising_media = get_advertising_media_by_id(
+
+        db,
+
+        advertising_media_id,
+
+    )
+
+
+    if not existing_advertising_media:
+
+        return None
+
+
+    existing_advertising_media.AdvertisingMedia = advertising_media.strip()
+
+
+    try:
+
+        db.commit()
+
+        db.refresh(existing_advertising_media)
+
+        return existing_advertising_media
+
+
+    except Exception:
+
+        db.rollback()
+
+        raise
+
+
+def deactivate_advertising_media(
+
+    db: Session,
+
+    advertising_media_id: int,
+
+):
+
+    advertising_media = get_advertising_media_by_id(
+
+        db,
+
+        advertising_media_id,
+
+    )
+
+
+    if not advertising_media:
+
+        return None
+
+
+    advertising_media.deleted_at = datetime.utcnow()
+
+
+    try:
+
+        db.commit()
+
+        db.refresh(advertising_media)
+
+        return True
+
+
+    except Exception:
+
+        db.rollback()
+
+        raise
+
+
+
+# ==================================================
+# ADVERTISING PURPOSE SERIALIZER
+# ==================================================
+
+def advertising_purpose_to_dict(advertising_purpose):
+
+    if not advertising_purpose:
+
+        return None
+
+
+    return {
+
+        "pkAPId": advertising_purpose.pkAPId,
+
+        "AdvertisingPurpose": advertising_purpose.AdvertisingPurpose,
+
+        "updated_at": (
+            advertising_purpose.updated_at.isoformat()
+            if advertising_purpose.updated_at
+            else None
+        ),
+
+        "deleted_at": (
+            advertising_purpose.deleted_at.isoformat()
+            if advertising_purpose.deleted_at
+            else None
+        ),
+
+    }
+
+
+# ==================================================
+# ADVERTISING PURPOSE FUNCTIONS
+# ==================================================
+
+def get_advertising_purposes(
+
+    db: Session,
+
+):
+
+    return (
+
+        db.query(AdvertisingPurpose)
+
+        .filter(
+
+            AdvertisingPurpose.deleted_at.is_(None),
+
+        )
+
+        .order_by(AdvertisingPurpose.pkAPId)
+
+        .all()
+
+    )
+
+
+def get_advertising_purpose_by_id(
+
+    db: Session,
+
+    advertising_purpose_id: int,
+
+):
+
+    return (
+
+        db.query(AdvertisingPurpose)
+
+        .filter(
+
+            AdvertisingPurpose.pkAPId == advertising_purpose_id,
+
+            AdvertisingPurpose.deleted_at.is_(None),
+
+        )
+
+        .first()
+
+    )
+
+
+def advertising_purpose_exists(
+
+    db: Session,
+
+    advertising_purpose: str,
+
+):
+
+    if not advertising_purpose:
+
+        return False
+
+
+    return (
+
+        db.query(AdvertisingPurpose)
+
+        .filter(
+
+            func.lower(AdvertisingPurpose.AdvertisingPurpose)
+            == advertising_purpose.strip().lower(),
+
+            AdvertisingPurpose.deleted_at.is_(None),
+
+        )
+
+        .first()
+
+        is not None
+
+    )
+
+
+def advertising_purpose_exists_for_other(
+
+    db: Session,
+
+    advertising_purpose: str,
+
+    advertising_purpose_id: int,
+
+):
+
+    if not advertising_purpose:
+
+        return False
+
+
+    return (
+
+        db.query(AdvertisingPurpose)
+
+        .filter(
+
+            func.lower(AdvertisingPurpose.AdvertisingPurpose)
+            == advertising_purpose.strip().lower(),
+
+            AdvertisingPurpose.pkAPId != advertising_purpose_id,
+
+            AdvertisingPurpose.deleted_at.is_(None),
+
+        )
+
+        .first()
+
+        is not None
+
+    )
+
+
+def create_advertising_purpose(
+
+    db: Session,
+
+    advertising_purpose: str,
+
+):
+
+    new_advertising_purpose = AdvertisingPurpose(
+
+        AdvertisingPurpose=advertising_purpose.strip(),
+
+        deleted_at=None,
+
+    )
+
+
+    try:
+
+        db.add(new_advertising_purpose)
+
+        db.commit()
+
+        db.refresh(new_advertising_purpose)
+
+        return new_advertising_purpose
+
+
+    except Exception:
+
+        db.rollback()
+
+        raise
+
+
+def update_advertising_purpose(
+
+    db: Session,
+
+    advertising_purpose_id: int,
+
+    advertising_purpose: str,
+
+):
+
+    existing_advertising_purpose = get_advertising_purpose_by_id(
+
+        db,
+
+        advertising_purpose_id,
+
+    )
+
+
+    if not existing_advertising_purpose:
+
+        return None
+
+
+    existing_advertising_purpose.AdvertisingPurpose = advertising_purpose.strip()
+
+
+    try:
+
+        db.commit()
+
+        db.refresh(existing_advertising_purpose)
+
+        return existing_advertising_purpose
+
+
+    except Exception:
+
+        db.rollback()
+
+        raise
+
+
+def deactivate_advertising_purpose(
+
+    db: Session,
+
+    advertising_purpose_id: int,
+
+):
+
+    advertising_purpose = get_advertising_purpose_by_id(
+
+        db,
+
+        advertising_purpose_id,
+
+    )
+
+
+    if not advertising_purpose:
+
+        return None
+
+
+    advertising_purpose.deleted_at = datetime.utcnow()
+
+
+    try:
+
+        db.commit()
+
+        db.refresh(advertising_purpose)
+
+        return True
+
+
+    except Exception:
+
+        db.rollback()
+
+        raise
+
+
+
+# ==================================================
+# OFFICE TYPE SERIALIZER
+# ==================================================
+
+def office_type_to_dict(office_type):
+
+    if not office_type:
+
+        return None
+
+
+    return {
+
+        "pkOTId": office_type.pkOTId,
+
+        "OfficeType": office_type.OfficeType,
+
+        "updated_at": (
+            office_type.updated_at.isoformat()
+            if office_type.updated_at
+            else None
+        ),
+
+        "deleted_at": (
+            office_type.deleted_at.isoformat()
+            if office_type.deleted_at
+            else None
+        ),
+
+    }
+
+
+# ==================================================
+# OFFICE TYPE FUNCTIONS
+# ==================================================
+
+def get_office_types(
+
+    db: Session,
+
+):
+
+    return (
+
+        db.query(OfficeType)
+
+        .filter(
+
+            OfficeType.deleted_at.is_(None),
+
+        )
+
+        .order_by(OfficeType.pkOTId)
+
+        .all()
+
+    )
+
+
+def get_office_type_by_id(
+
+    db: Session,
+
+    office_type_id: int,
+
+):
+
+    return (
+
+        db.query(OfficeType)
+
+        .filter(
+
+            OfficeType.pkOTId == office_type_id,
+
+            OfficeType.deleted_at.is_(None),
+
+        )
+
+        .first()
+
+    )
+
+
+def office_type_exists(
+
+    db: Session,
+
+    office_type: str,
+
+):
+
+    if not office_type:
+
+        return False
+
+
+    return (
+
+        db.query(OfficeType)
+
+        .filter(
+
+            func.lower(OfficeType.OfficeType)
+            == office_type.strip().lower(),
+
+            OfficeType.deleted_at.is_(None),
+
+        )
+
+        .first()
+
+        is not None
+
+    )
+
+
+def office_type_exists_for_other(
+
+    db: Session,
+
+    office_type: str,
+
+    office_type_id: int,
+
+):
+
+    if not office_type:
+
+        return False
+
+
+    return (
+
+        db.query(OfficeType)
+
+        .filter(
+
+            func.lower(OfficeType.OfficeType)
+            == office_type.strip().lower(),
+
+            OfficeType.pkOTId != office_type_id,
+
+            OfficeType.deleted_at.is_(None),
+
+        )
+
+        .first()
+
+        is not None
+
+    )
+
+
+def create_office_type(
+
+    db: Session,
+
+    office_type: str,
+
+):
+
+    new_office_type = OfficeType(
+
+        OfficeType=office_type.strip(),
+
+        deleted_at=None,
+
+    )
+
+
+    try:
+
+        db.add(new_office_type)
+
+        db.commit()
+
+        db.refresh(new_office_type)
+
+        return new_office_type
+
+
+    except Exception:
+
+        db.rollback()
+
+        raise
+
+
+def update_office_type(
+
+    db: Session,
+
+    office_type_id: int,
+
+    office_type: str,
+
+):
+
+    existing_office_type = get_office_type_by_id(
+
+        db,
+
+        office_type_id,
+
+    )
+
+
+    if not existing_office_type:
+
+        return None
+
+
+    existing_office_type.OfficeType = office_type.strip()
+
+
+    try:
+
+        db.commit()
+
+        db.refresh(existing_office_type)
+
+        return existing_office_type
+
+
+    except Exception:
+
+        db.rollback()
+
+        raise
+
+
+def deactivate_office_type(
+
+    db: Session,
+
+    office_type_id: int,
+
+):
+
+    office_type = get_office_type_by_id(
+
+        db,
+
+        office_type_id,
+
+    )
+
+
+    if not office_type:
+
+        return None
+
+
+    office_type.deleted_at = datetime.utcnow()
+
+
+    try:
+
+        db.commit()
+
+        db.refresh(office_type)
+
+        return True
+
+
+    except Exception:
+
+        db.rollback()
+
+        raise
+
+
+
+# ==================================================
+# MEETING LOCATION SERIALIZER
+# ==================================================
+
+def meeting_location_to_dict(meeting_location):
+
+    if not meeting_location:
+
+        return None
+
+
+    return {
+
+        "pkMLId": meeting_location.pkMLId,
+
+        "MeetingLocation": meeting_location.MeetingLocation,
+
+        "updated_at": (
+            meeting_location.updated_at.isoformat()
+            if meeting_location.updated_at
+            else None
+        ),
+
+        "deleted_at": (
+            meeting_location.deleted_at.isoformat()
+            if meeting_location.deleted_at
+            else None
+        ),
+
+    }
+
+
+# ==================================================
+# MEETING LOCATION FUNCTIONS
+# ==================================================
+
+def get_meeting_locations(
+
+    db: Session,
+
+):
+
+    return (
+
+        db.query(MeetingLocation)
+
+        .filter(
+
+            MeetingLocation.deleted_at.is_(None),
+
+        )
+
+        .order_by(MeetingLocation.pkMLId)
+
+        .all()
+
+    )
+
+
+def get_meeting_location_by_id(
+
+    db: Session,
+
+    meeting_location_id: int,
+
+):
+
+    return (
+
+        db.query(MeetingLocation)
+
+        .filter(
+
+            MeetingLocation.pkMLId == meeting_location_id,
+
+            MeetingLocation.deleted_at.is_(None),
+
+        )
+
+        .first()
+
+    )
+
+
+def meeting_location_exists(
+
+    db: Session,
+
+    meeting_location: str,
+
+):
+
+    if not meeting_location:
+
+        return False
+
+
+    return (
+
+        db.query(MeetingLocation)
+
+        .filter(
+
+            func.lower(MeetingLocation.MeetingLocation)
+            == meeting_location.strip().lower(),
+
+            MeetingLocation.deleted_at.is_(None),
+
+        )
+
+        .first()
+
+        is not None
+
+    )
+
+
+def meeting_location_exists_for_other(
+
+    db: Session,
+
+    meeting_location: str,
+
+    meeting_location_id: int,
+
+):
+
+    if not meeting_location:
+
+        return False
+
+
+    return (
+
+        db.query(MeetingLocation)
+
+        .filter(
+
+            func.lower(MeetingLocation.MeetingLocation)
+            == meeting_location.strip().lower(),
+
+            MeetingLocation.pkMLId != meeting_location_id,
+
+            MeetingLocation.deleted_at.is_(None),
+
+        )
+
+        .first()
+
+        is not None
+
+    )
+
+
+def create_meeting_location(
+
+    db: Session,
+
+    meeting_location: str,
+
+):
+
+    new_meeting_location = MeetingLocation(
+
+        MeetingLocation=meeting_location.strip(),
+
+        deleted_at=None,
+
+    )
+
+
+    try:
+
+        db.add(new_meeting_location)
+
+        db.commit()
+
+        db.refresh(new_meeting_location)
+
+        return new_meeting_location
+
+
+    except Exception:
+
+        db.rollback()
+
+        raise
+
+
+def update_meeting_location(
+
+    db: Session,
+
+    meeting_location_id: int,
+
+    meeting_location: str,
+
+):
+
+    existing_meeting_location = get_meeting_location_by_id(
+
+        db,
+
+        meeting_location_id,
+
+    )
+
+
+    if not existing_meeting_location:
+
+        return None
+
+
+    existing_meeting_location.MeetingLocation = meeting_location.strip()
+
+
+    try:
+
+        db.commit()
+
+        db.refresh(existing_meeting_location)
+
+        return existing_meeting_location
+
+
+    except Exception:
+
+        db.rollback()
+
+        raise
+
+
+def deactivate_meeting_location(
+
+    db: Session,
+
+    meeting_location_id: int,
+
+):
+
+    meeting_location = get_meeting_location_by_id(
+
+        db,
+
+        meeting_location_id,
+
+    )
+
+
+    if not meeting_location:
+
+        return None
+
+
+    meeting_location.deleted_at = datetime.utcnow()
+
+
+    try:
+
+        db.commit()
+
+        db.refresh(meeting_location)
+
+        return True
+
+
+    except Exception:
+
+        db.rollback()
+
+        raise
+
+
+
+# ==================================================
+# KSA SERIALIZER
+# ==================================================
+
+def ksa_to_dict(ksa):
+
+    if not ksa:
+
+        return None
+
+
+    return {
+
+        "pkKSAId": ksa.pkKSAId,
+
+        "KSA": ksa.KSA,
+
+        "updated_at": (
+            ksa.updated_at.isoformat()
+            if ksa.updated_at
+            else None
+        ),
+
+        "deleted_at": (
+            ksa.deleted_at.isoformat()
+            if ksa.deleted_at
+            else None
+        ),
+
+    }
+
+
+# ==================================================
+# KSA FUNCTIONS
+# ==================================================
+
+def get_ksas(
+
+    db: Session,
+
+):
+
+    return (
+
+        db.query(KSA)
+
+        .filter(
+
+            KSA.deleted_at.is_(None),
+
+        )
+
+        .order_by(KSA.pkKSAId)
+
+        .all()
+
+    )
+
+
+def get_ksa_by_id(
+
+    db: Session,
+
+    ksa_id: int,
+
+):
+
+    return (
+
+        db.query(KSA)
+
+        .filter(
+
+            KSA.pkKSAId == ksa_id,
+
+            KSA.deleted_at.is_(None),
+
+        )
+
+        .first()
+
+    )
+
+
+def ksa_exists(
+
+    db: Session,
+
+    ksa: str,
+
+):
+
+    if not ksa:
+
+        return False
+
+
+    return (
+
+        db.query(KSA)
+
+        .filter(
+
+            func.lower(KSA.KSA)
+            == ksa.strip().lower(),
+
+            KSA.deleted_at.is_(None),
+
+        )
+
+        .first()
+
+        is not None
+
+    )
+
+
+def ksa_exists_for_other(
+
+    db: Session,
+
+    ksa: str,
+
+    ksa_id: int,
+
+):
+
+    if not ksa:
+
+        return False
+
+
+    return (
+
+        db.query(KSA)
+
+        .filter(
+
+            func.lower(KSA.KSA)
+            == ksa.strip().lower(),
+
+            KSA.pkKSAId != ksa_id,
+
+            KSA.deleted_at.is_(None),
+
+        )
+
+        .first()
+
+        is not None
+
+    )
+
+
+def create_ksa(
+
+    db: Session,
+
+    ksa: str,
+
+):
+
+    new_ksa = KSA(
+
+        KSA=ksa.strip(),
+
+        deleted_at=None,
+
+    )
+
+
+    try:
+
+        db.add(new_ksa)
+
+        db.commit()
+
+        db.refresh(new_ksa)
+
+        return new_ksa
+
+
+    except Exception:
+
+        db.rollback()
+
+        raise
+
+
+def update_ksa(
+
+    db: Session,
+
+    ksa_id: int,
+
+    ksa: str,
+
+):
+
+    existing_ksa = get_ksa_by_id(
+
+        db,
+
+        ksa_id,
+
+    )
+
+
+    if not existing_ksa:
+
+        return None
+
+
+    existing_ksa.KSA = ksa.strip()
+
+
+    try:
+
+        db.commit()
+
+        db.refresh(existing_ksa)
+
+        return existing_ksa
+
+
+    except Exception:
+
+        db.rollback()
+
+        raise
+
+
+def deactivate_ksa(
+
+    db: Session,
+
+    ksa_id: int,
+
+):
+
+    ksa = get_ksa_by_id(
+
+        db,
+
+        ksa_id,
+
+    )
+
+
+    if not ksa:
+
+        return None
+
+
+    ksa.deleted_at = datetime.utcnow()
+
+
+    try:
+
+        db.commit()
+
+        db.refresh(ksa)
+
+        return True
+
+
+    except Exception:
+
+        db.rollback()
+
+        raise
+
+
+
+# ==================================================
+# KSA CATEGORY SERIALIZER
+# ==================================================
+
+def ksa_category_to_dict(ksa_category):
+
+    if not ksa_category:
+
+        return None
+
+
+    return {
+
+        "pkKSACId": ksa_category.pkKSACId,
+
+        "KSACategory": ksa_category.KSACategory,
+
+        "updated_at": (
+            ksa_category.updated_at.isoformat()
+            if ksa_category.updated_at
+            else None
+        ),
+
+        "deleted_at": (
+            ksa_category.deleted_at.isoformat()
+            if ksa_category.deleted_at
+            else None
+        ),
+
+    }
+
+
+# ==================================================
+# KSA CATEGORY FUNCTIONS
+# ==================================================
+
+def get_ksa_categories(
+
+    db: Session,
+
+):
+
+    return (
+
+        db.query(KSACategory)
+
+        .filter(
+
+            KSACategory.deleted_at.is_(None),
+
+        )
+
+        .order_by(KSACategory.pkKSACId)
+
+        .all()
+
+    )
+
+
+def get_ksa_category_by_id(
+
+    db: Session,
+
+    ksa_category_id: int,
+
+):
+
+    return (
+
+        db.query(KSACategory)
+
+        .filter(
+
+            KSACategory.pkKSACId == ksa_category_id,
+
+            KSACategory.deleted_at.is_(None),
+
+        )
+
+        .first()
+
+    )
+
+
+def ksa_category_exists(
+
+    db: Session,
+
+    ksa_category: str,
+
+):
+
+    if not ksa_category:
+
+        return False
+
+
+    return (
+
+        db.query(KSACategory)
+
+        .filter(
+
+            func.lower(KSACategory.KSACategory)
+            == ksa_category.strip().lower(),
+
+            KSACategory.deleted_at.is_(None),
+
+        )
+
+        .first()
+
+        is not None
+
+    )
+
+
+def ksa_category_exists_for_other(
+
+    db: Session,
+
+    ksa_category: str,
+
+    ksa_category_id: int,
+
+):
+
+    if not ksa_category:
+
+        return False
+
+
+    return (
+
+        db.query(KSACategory)
+
+        .filter(
+
+            func.lower(KSACategory.KSACategory)
+            == ksa_category.strip().lower(),
+
+            KSACategory.pkKSACId != ksa_category_id,
+
+            KSACategory.deleted_at.is_(None),
+
+        )
+
+        .first()
+
+        is not None
+
+    )
+
+
+def create_ksa_category(
+
+    db: Session,
+
+    ksa_category: str,
+
+):
+
+    new_ksa_category = KSACategory(
+
+        KSACategory=ksa_category.strip(),
+
+        deleted_at=None,
+
+    )
+
+
+    try:
+
+        db.add(new_ksa_category)
+
+        db.commit()
+
+        db.refresh(new_ksa_category)
+
+        return new_ksa_category
+
+
+    except Exception:
+
+        db.rollback()
+
+        raise
+
+
+def update_ksa_category(
+
+    db: Session,
+
+    ksa_category_id: int,
+
+    ksa_category: str,
+
+):
+
+    existing_ksa_category = get_ksa_category_by_id(
+
+        db,
+
+        ksa_category_id,
+
+    )
+
+
+    if not existing_ksa_category:
+
+        return None
+
+
+    existing_ksa_category.KSACategory = ksa_category.strip()
+
+
+    try:
+
+        db.commit()
+
+        db.refresh(existing_ksa_category)
+
+        return existing_ksa_category
+
+
+    except Exception:
+
+        db.rollback()
+
+        raise
+
+
+def deactivate_ksa_category(
+
+    db: Session,
+
+    ksa_category_id: int,
+
+):
+
+    ksa_category = get_ksa_category_by_id(
+
+        db,
+
+        ksa_category_id,
+
+    )
+
+
+    if not ksa_category:
+
+        return None
+
+
+    ksa_category.deleted_at = datetime.utcnow()
+
+
+    try:
+
+        db.commit()
+
+        db.refresh(ksa_category)
+
+        return True
+
+
+    except Exception:
+
+        db.rollback()
+
+        raise
+
+
+
+# ==================================================
+# POSITION GRADE SERIALIZER
+# ==================================================
+
+def position_grade_to_dict(position_grade):
+
+    if not position_grade:
+
+        return None
+
+
+    return {
+
+        "pkPGId": position_grade.pkPGId,
+
+        "PositionGrade": position_grade.PositionGrade,
+
+        "MinimumPay": position_grade.MinimumPay,
+
+        "MaximumPay": position_grade.MaximumPay,
+
+        "updated_at": (
+            position_grade.updated_at.isoformat()
+            if position_grade.updated_at
+            else None
+        ),
+
+        "deleted_at": (
+            position_grade.deleted_at.isoformat()
+            if position_grade.deleted_at
+            else None
+        ),
+
+    }
+
+
+# ==================================================
+# POSITION GRADE FUNCTIONS
+# ==================================================
+
+def get_position_grades(
+
+    db: Session,
+
+):
+
+    return (
+
+        db.query(PositionGrade)
+
+        .filter(
+
+            PositionGrade.deleted_at.is_(None),
+
+        )
+
+        .order_by(PositionGrade.pkPGId)
+
+        .all()
+
+    )
+
+
+def get_position_grade_by_id(
+
+    db: Session,
+
+    position_grade_id: int,
+
+):
+
+    return (
+
+        db.query(PositionGrade)
+
+        .filter(
+
+            PositionGrade.pkPGId == position_grade_id,
+
+            PositionGrade.deleted_at.is_(None),
+
+        )
+
+        .first()
+
+    )
+
+
+def position_grade_exists(
+
+    db: Session,
+
+    position_grade: str,
+
+):
+
+    if not position_grade:
+
+        return False
+
+
+    return (
+
+        db.query(PositionGrade)
+
+        .filter(
+
+            func.lower(PositionGrade.PositionGrade)
+            == position_grade.strip().lower(),
+
+            PositionGrade.deleted_at.is_(None),
+
+        )
+
+        .first()
+
+        is not None
+
+    )
+
+
+def position_grade_exists_for_other(
+
+    db: Session,
+
+    position_grade: str,
+
+    position_grade_id: int,
+
+):
+
+    if not position_grade:
+
+        return False
+
+
+    return (
+
+        db.query(PositionGrade)
+
+        .filter(
+
+            func.lower(PositionGrade.PositionGrade)
+            == position_grade.strip().lower(),
+
+            PositionGrade.pkPGId != position_grade_id,
+
+            PositionGrade.deleted_at.is_(None),
+
+        )
+
+        .first()
+
+        is not None
+
+    )
+
+
+def create_position_grade(
+
+    db: Session,
+
+    position_grade: str,
+
+    minimum_pay: float,
+
+    maximum_pay: float,
+
+):
+
+    new_position_grade = PositionGrade(
+
+        PositionGrade=position_grade.strip(),
+
+        MinimumPay=minimum_pay,
+
+        MaximumPay=maximum_pay,
+
+        deleted_at=None,
+
+    )
+
+
+    try:
+
+        db.add(new_position_grade)
+
+        db.commit()
+
+        db.refresh(new_position_grade)
+
+        return new_position_grade
+
+
+    except Exception:
+
+        db.rollback()
+
+        raise
+
+
+def update_position_grade(
+
+    db: Session,
+
+    position_grade_id: int,
+
+    position_grade: str,
+
+    minimum_pay: float,
+
+    maximum_pay: float,
+
+):
+
+    existing = get_position_grade_by_id(
+
+        db,
+
+        position_grade_id,
+
+    )
+
+
+    if not existing:
+
+        return None
+
+
+    existing.PositionGrade = position_grade.strip()
+
+    existing.MinimumPay = minimum_pay
+
+    existing.MaximumPay = maximum_pay
+
+
+    try:
+
+        db.commit()
+
+        db.refresh(existing)
+
+        return existing
+
+
+    except Exception:
+
+        db.rollback()
+
+        raise
+
+
+def deactivate_position_grade(
+
+    db: Session,
+
+    position_grade_id: int,
+
+):
+
+    position_grade = get_position_grade_by_id(
+
+        db,
+
+        position_grade_id,
+
+    )
+
+
+    if not position_grade:
+
+        return None
+
+
+    position_grade.deleted_at = datetime.utcnow()
+
+
+    try:
+
+        db.commit()
+
+        db.refresh(position_grade)
 
         return True
 

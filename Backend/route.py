@@ -13,28 +13,78 @@ from model import (
     ability_exists,
     ability_exists_for_other,
     ability_to_dict,
+    advertising_media_exists,
+    advertising_media_exists_for_other,
+    advertising_media_to_dict,
+    advertising_purpose_exists,
+    advertising_purpose_exists_for_other,
+    advertising_purpose_to_dict,
     announcement_type_exists,
     announcement_type_exists_for_other,
     announcement_type_to_dict,
     create_ability,
+    create_advertising_media,
+    create_advertising_purpose,
     create_announcement_type,
     create_hobby,
+    create_ksa,
+    create_ksa_category,
+    create_position_grade,
+    create_language,
     create_location,
+    create_meeting_location,
+    create_meeting_type,
+    create_office_level,
+    create_office_type,
+    create_requirement,
     create_user,
     deactivate_ability,
+    deactivate_advertising_media,
+    deactivate_advertising_purpose,
     deactivate_announcement_type,
     deactivate_hobby,
+    deactivate_ksa,
+    deactivate_ksa_category,
+    deactivate_position_grade,
+    deactivate_language,
     deactivate_location,
+    deactivate_meeting_location,
+    deactivate_meeting_type,
+    deactivate_office_level,
+    deactivate_office_type,
+    deactivate_requirement,
     get_abilities,
     get_ability_by_id,
     get_active_user_count,
     get_active_users,
+    get_advertising_media_by_id,
+    get_advertising_medias,
+    get_advertising_purpose_by_id,
+    get_advertising_purposes,
     get_announcement_type_by_id,
     get_announcement_types,
     get_hobbies,
     get_hobby_by_id,
+    get_ksa_by_id,
+    get_ksa_categories,
+    get_ksa_category_by_id,
+    get_position_grade_by_id,
+    get_position_grades,
+    get_ksas,
+    get_language_by_id,
+    get_languages,
     get_location_by_id,
     get_locations,
+    get_meeting_location_by_id,
+    get_meeting_locations,
+    get_meeting_type_by_id,
+    get_meeting_types,
+    get_office_level_by_id,
+    get_office_levels,
+    get_office_type_by_id,
+    get_office_types,
+    get_requirement_by_id,
+    get_requirements,
     get_user_by_email,
     get_user_by_full_name,
     get_user_by_id,
@@ -42,15 +92,53 @@ from model import (
     hobby_exists,
     hobby_exists_for_other,
     hobby_to_dict,
+    ksa_category_exists,
+    ksa_category_exists_for_other,
+    ksa_category_to_dict,
+    position_grade_exists,
+    position_grade_exists_for_other,
+    position_grade_to_dict,
+    ksa_exists,
+    ksa_exists_for_other,
+    ksa_to_dict,
+    language_exists,
+    language_exists_for_other,
+    language_to_dict,
     location_exists,
     location_exists_for_other,
     location_to_dict,
+    meeting_location_exists,
+    meeting_location_exists_for_other,
+    meeting_location_to_dict,
+    meeting_type_exists,
+    meeting_type_exists_for_other,
+    meeting_type_to_dict,
+    office_level_exists,
+    office_level_exists_for_other,
+    office_level_to_dict,
+    office_type_exists,
+    office_type_exists_for_other,
+    office_type_to_dict,
+    requirement_exists,
+    requirement_exists_for_other,
+    requirement_to_dict,
     set_user_rights_bulk,
     soft_delete_user,
     update_ability,
+    update_advertising_media,
+    update_advertising_purpose,
     update_announcement_type,
     update_hobby,
+    update_ksa,
+    update_ksa_category,
+    update_position_grade,
+    update_language,
     update_location,
+    update_meeting_location,
+    update_meeting_type,
+    update_office_level,
+    update_office_type,
+    update_requirement,
     update_user,
     user_right_to_dict,
 )
@@ -58,15 +146,37 @@ from model import (
 from schema import (
     AbilityCreateRequest,
     AbilityUpdateRequest,
+    AdvertisingMediaCreateRequest,
+    AdvertisingMediaUpdateRequest,
+    AdvertisingPurposeCreateRequest,
+    AdvertisingPurposeUpdateRequest,
     AnnouncementTypeCreateRequest,
     AnnouncementTypeUpdateRequest,
     CreateUserRequest,
     HobbyCreateRequest,
     HobbyUpdateRequest,
+    KSACategoryCreateRequest,
+    KSACategoryUpdateRequest,
+    PositionGradeCreateRequest,
+    PositionGradeUpdateRequest,
+    KSACreateRequest,
+    KSAUpdateRequest,
+    LanguageCreateRequest,
+    LanguageUpdateRequest,
     LocationCreateRequest,
     LocationUpdateRequest,
     LoginRequest,
+    MeetingLocationCreateRequest,
+    MeetingLocationUpdateRequest,
+    MeetingTypeCreateRequest,
+    MeetingTypeUpdateRequest,
+    OfficeLevelCreateRequest,
+    OfficeLevelUpdateRequest,
+    OfficeTypeCreateRequest,
+    OfficeTypeUpdateRequest,
     RegisterRequest,
+    RequirementCreateRequest,
+    RequirementUpdateRequest,
     SetUserRightsRequest,
     UpdateUserRequest,
     UpdateUserStatusRequest,
@@ -1740,6 +1850,2405 @@ def delete_announcement_type(
     return {
 
         "message": "Announcement type deleted successfully",
+    }
+
+
+# ==================================================
+# GET OFFICE LEVELS
+# ==================================================
+
+@router.get(
+    "/office-levels",
+)
+def list_office_levels(
+
+    db: Session = Depends(get_db),
+
+    current_user: dict = Depends(
+        get_current_user
+    ),
+):
+
+    office_levels = get_office_levels(
+        db
+    )
+
+    return {
+
+        "total": len(office_levels),
+
+        "office_levels": [
+
+            office_level_to_dict(office_level)
+
+            for office_level in office_levels
+        ],
+    }
+
+
+# ==================================================
+# GET OFFICE LEVEL BY ID
+# ==================================================
+
+@router.get(
+    "/office-levels/{office_level_id}",
+)
+def get_office_level(
+
+    office_level_id: int,
+
+    db: Session = Depends(get_db),
+
+    current_user: dict = Depends(
+        get_current_user
+    ),
+):
+
+    office_level = get_office_level_by_id(
+        db,
+        office_level_id,
+    )
+
+    if not office_level:
+
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Office level not found",
+        )
+
+    return {
+
+        "office_level": office_level_to_dict(office_level),
+    }
+
+
+# ==================================================
+# CREATE OFFICE LEVEL
+# REQUIRES: office_level / add
+# ==================================================
+
+@router.post(
+    "/office-levels",
+    status_code=status.HTTP_201_CREATED,
+)
+def create_new_office_level(
+
+    request: OfficeLevelCreateRequest,
+
+    db: Session = Depends(get_db),
+
+    current_user: dict = Depends(
+        require_permission("office_level", "add")
+    ),
+):
+
+    if office_level_exists(
+        db,
+        request.office_level,
+    ):
+
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Office level already exists",
+        )
+
+    office_level = create_office_level(
+        db,
+        request.office_level,
+    )
+
+    return {
+
+        "message": "Office level created successfully",
+
+        "office_level": office_level_to_dict(office_level),
+    }
+
+
+# ==================================================
+# UPDATE OFFICE LEVEL
+# REQUIRES: office_level / edit
+# ==================================================
+
+@router.put(
+    "/office-levels/{office_level_id}",
+)
+def update_existing_office_level(
+
+    office_level_id: int,
+
+    request: OfficeLevelUpdateRequest,
+
+    db: Session = Depends(get_db),
+
+    current_user: dict = Depends(
+        require_permission("office_level", "edit")
+    ),
+):
+
+    existing = get_office_level_by_id(
+        db,
+        office_level_id,
+    )
+
+    if not existing:
+
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Office level not found",
+        )
+
+    if office_level_exists_for_other(
+        db,
+        request.office_level,
+        office_level_id,
+    ):
+
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Office level already exists",
+        )
+
+    office_level = update_office_level(
+        db,
+        office_level_id,
+        request.office_level,
+    )
+
+    return {
+
+        "message": "Office level updated successfully",
+
+        "office_level": office_level_to_dict(office_level),
+    }
+
+
+# ==================================================
+# DELETE OFFICE LEVEL
+# REQUIRES: office_level / delete
+# ==================================================
+
+@router.delete(
+    "/office-levels/{office_level_id}",
+)
+def delete_office_level(
+
+    office_level_id: int,
+
+    db: Session = Depends(get_db),
+
+    current_user: dict = Depends(
+        require_permission("office_level", "delete")
+    ),
+):
+
+    existing = get_office_level_by_id(
+        db,
+        office_level_id,
+    )
+
+    if not existing:
+
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Office level not found",
+        )
+
+    deactivate_office_level(
+        db,
+        office_level_id,
+    )
+
+    return {
+
+        "message": "Office level deleted successfully",
+    }
+
+
+# ==================================================
+# GET MEETING TYPES
+# ==================================================
+
+@router.get(
+    "/meeting-types",
+)
+def list_meeting_types(
+
+    db: Session = Depends(get_db),
+
+    current_user: dict = Depends(
+        get_current_user
+    ),
+):
+
+    meeting_types = get_meeting_types(
+        db
+    )
+
+    return {
+
+        "total": len(meeting_types),
+
+        "meeting_types": [
+
+            meeting_type_to_dict(meeting_type)
+
+            for meeting_type in meeting_types
+        ],
+    }
+
+
+# ==================================================
+# GET MEETING TYPE BY ID
+# ==================================================
+
+@router.get(
+    "/meeting-types/{meeting_type_id}",
+)
+def get_meeting_type(
+
+    meeting_type_id: int,
+
+    db: Session = Depends(get_db),
+
+    current_user: dict = Depends(
+        get_current_user
+    ),
+):
+
+    meeting_type = get_meeting_type_by_id(
+        db,
+        meeting_type_id,
+    )
+
+    if not meeting_type:
+
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Meeting type not found",
+        )
+
+    return {
+
+        "meeting_type": meeting_type_to_dict(meeting_type),
+    }
+
+
+# ==================================================
+# CREATE MEETING TYPE
+# REQUIRES: meeting_type / add
+# ==================================================
+
+@router.post(
+    "/meeting-types",
+    status_code=status.HTTP_201_CREATED,
+)
+def create_new_meeting_type(
+
+    request: MeetingTypeCreateRequest,
+
+    db: Session = Depends(get_db),
+
+    current_user: dict = Depends(
+        require_permission("meeting_type", "add")
+    ),
+):
+
+    if meeting_type_exists(
+        db,
+        request.meeting_type,
+    ):
+
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Meeting type already exists",
+        )
+
+    meeting_type = create_meeting_type(
+        db,
+        request.meeting_type,
+    )
+
+    return {
+
+        "message": "Meeting type created successfully",
+
+        "meeting_type": meeting_type_to_dict(meeting_type),
+    }
+
+
+# ==================================================
+# UPDATE MEETING TYPE
+# REQUIRES: meeting_type / edit
+# ==================================================
+
+@router.put(
+    "/meeting-types/{meeting_type_id}",
+)
+def update_existing_meeting_type(
+
+    meeting_type_id: int,
+
+    request: MeetingTypeUpdateRequest,
+
+    db: Session = Depends(get_db),
+
+    current_user: dict = Depends(
+        require_permission("meeting_type", "edit")
+    ),
+):
+
+    existing = get_meeting_type_by_id(
+        db,
+        meeting_type_id,
+    )
+
+    if not existing:
+
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Meeting type not found",
+        )
+
+    if meeting_type_exists_for_other(
+        db,
+        request.meeting_type,
+        meeting_type_id,
+    ):
+
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Meeting type already exists",
+        )
+
+    meeting_type = update_meeting_type(
+        db,
+        meeting_type_id,
+        request.meeting_type,
+    )
+
+    return {
+
+        "message": "Meeting type updated successfully",
+
+        "meeting_type": meeting_type_to_dict(meeting_type),
+    }
+
+
+# ==================================================
+# DELETE MEETING TYPE
+# REQUIRES: meeting_type / delete
+# ==================================================
+
+@router.delete(
+    "/meeting-types/{meeting_type_id}",
+)
+def delete_meeting_type(
+
+    meeting_type_id: int,
+
+    db: Session = Depends(get_db),
+
+    current_user: dict = Depends(
+        require_permission("meeting_type", "delete")
+    ),
+):
+
+    existing = get_meeting_type_by_id(
+        db,
+        meeting_type_id,
+    )
+
+    if not existing:
+
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Meeting type not found",
+        )
+
+    deactivate_meeting_type(
+        db,
+        meeting_type_id,
+    )
+
+    return {
+
+        "message": "Meeting type deleted successfully",
+    }
+
+
+# ==================================================
+# GET LANGUAGES
+# ==================================================
+
+@router.get(
+    "/languages",
+)
+def list_languages(
+
+    db: Session = Depends(get_db),
+
+    current_user: dict = Depends(
+        get_current_user
+    ),
+):
+
+    languages = get_languages(
+        db
+    )
+
+    return {
+
+        "total": len(languages),
+
+        "languages": [
+
+            language_to_dict(language)
+
+            for language in languages
+        ],
+    }
+
+
+# ==================================================
+# GET LANGUAGE BY ID
+# ==================================================
+
+@router.get(
+    "/languages/{language_id}",
+)
+def get_language(
+
+    language_id: int,
+
+    db: Session = Depends(get_db),
+
+    current_user: dict = Depends(
+        get_current_user
+    ),
+):
+
+    language = get_language_by_id(
+        db,
+        language_id,
+    )
+
+    if not language:
+
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Language not found",
+        )
+
+    return {
+
+        "language": language_to_dict(language),
+    }
+
+
+# ==================================================
+# CREATE LANGUAGE
+# REQUIRES: language / add
+# ==================================================
+
+@router.post(
+    "/languages",
+    status_code=status.HTTP_201_CREATED,
+)
+def create_new_language(
+
+    request: LanguageCreateRequest,
+
+    db: Session = Depends(get_db),
+
+    current_user: dict = Depends(
+        require_permission("language", "add")
+    ),
+):
+
+    if language_exists(
+        db,
+        request.language,
+    ):
+
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Language already exists",
+        )
+
+    language = create_language(
+        db,
+        request.language,
+    )
+
+    return {
+
+        "message": "Language created successfully",
+
+        "language": language_to_dict(language),
+    }
+
+
+# ==================================================
+# UPDATE LANGUAGE
+# REQUIRES: language / edit
+# ==================================================
+
+@router.put(
+    "/languages/{language_id}",
+)
+def update_existing_language(
+
+    language_id: int,
+
+    request: LanguageUpdateRequest,
+
+    db: Session = Depends(get_db),
+
+    current_user: dict = Depends(
+        require_permission("language", "edit")
+    ),
+):
+
+    existing = get_language_by_id(
+        db,
+        language_id,
+    )
+
+    if not existing:
+
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Language not found",
+        )
+
+    if language_exists_for_other(
+        db,
+        request.language,
+        language_id,
+    ):
+
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Language already exists",
+        )
+
+    language = update_language(
+        db,
+        language_id,
+        request.language,
+    )
+
+    return {
+
+        "message": "Language updated successfully",
+
+        "language": language_to_dict(language),
+    }
+
+
+# ==================================================
+# DELETE LANGUAGE
+# REQUIRES: language / delete
+# ==================================================
+
+@router.delete(
+    "/languages/{language_id}",
+)
+def delete_language(
+
+    language_id: int,
+
+    db: Session = Depends(get_db),
+
+    current_user: dict = Depends(
+        require_permission("language", "delete")
+    ),
+):
+
+    existing = get_language_by_id(
+        db,
+        language_id,
+    )
+
+    if not existing:
+
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Language not found",
+        )
+
+    deactivate_language(
+        db,
+        language_id,
+    )
+
+    return {
+
+        "message": "Language deleted successfully",
+    }
+
+
+# ==================================================
+# GET REQUIREMENTS
+# ==================================================
+
+@router.get(
+    "/requirements",
+)
+def list_requirements(
+
+    db: Session = Depends(get_db),
+
+    current_user: dict = Depends(
+        get_current_user
+    ),
+):
+
+    requirements = get_requirements(
+        db
+    )
+
+    return {
+
+        "total": len(requirements),
+
+        "requirements": [
+
+            requirement_to_dict(requirement)
+
+            for requirement in requirements
+        ],
+    }
+
+
+# ==================================================
+# GET REQUIREMENT BY ID
+# ==================================================
+
+@router.get(
+    "/requirements/{requirement_id}",
+)
+def get_requirement(
+
+    requirement_id: int,
+
+    db: Session = Depends(get_db),
+
+    current_user: dict = Depends(
+        get_current_user
+    ),
+):
+
+    requirement = get_requirement_by_id(
+        db,
+        requirement_id,
+    )
+
+    if not requirement:
+
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Requirement not found",
+        )
+
+    return {
+
+        "requirement": requirement_to_dict(requirement),
+    }
+
+
+# ==================================================
+# CREATE REQUIREMENT
+# REQUIRES: requirement / add
+# ==================================================
+
+@router.post(
+    "/requirements",
+    status_code=status.HTTP_201_CREATED,
+)
+def create_new_requirement(
+
+    request: RequirementCreateRequest,
+
+    db: Session = Depends(get_db),
+
+    current_user: dict = Depends(
+        require_permission("requirement", "add")
+    ),
+):
+
+    if requirement_exists(
+        db,
+        request.requirement,
+    ):
+
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Requirement already exists",
+        )
+
+    requirement = create_requirement(
+        db,
+        request.requirement,
+    )
+
+    return {
+
+        "message": "Requirement created successfully",
+
+        "requirement": requirement_to_dict(requirement),
+    }
+
+
+# ==================================================
+# UPDATE REQUIREMENT
+# REQUIRES: requirement / edit
+# ==================================================
+
+@router.put(
+    "/requirements/{requirement_id}",
+)
+def update_existing_requirement(
+
+    requirement_id: int,
+
+    request: RequirementUpdateRequest,
+
+    db: Session = Depends(get_db),
+
+    current_user: dict = Depends(
+        require_permission("requirement", "edit")
+    ),
+):
+
+    existing = get_requirement_by_id(
+        db,
+        requirement_id,
+    )
+
+    if not existing:
+
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Requirement not found",
+        )
+
+    if requirement_exists_for_other(
+        db,
+        request.requirement,
+        requirement_id,
+    ):
+
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Requirement already exists",
+        )
+
+    requirement = update_requirement(
+        db,
+        requirement_id,
+        request.requirement,
+    )
+
+    return {
+
+        "message": "Requirement updated successfully",
+
+        "requirement": requirement_to_dict(requirement),
+    }
+
+
+# ==================================================
+# DELETE REQUIREMENT
+# REQUIRES: requirement / delete
+# ==================================================
+
+@router.delete(
+    "/requirements/{requirement_id}",
+)
+def delete_requirement(
+
+    requirement_id: int,
+
+    db: Session = Depends(get_db),
+
+    current_user: dict = Depends(
+        require_permission("requirement", "delete")
+    ),
+):
+
+    existing = get_requirement_by_id(
+        db,
+        requirement_id,
+    )
+
+    if not existing:
+
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Requirement not found",
+        )
+
+    deactivate_requirement(
+        db,
+        requirement_id,
+    )
+
+    return {
+
+        "message": "Requirement deleted successfully",
+    }
+
+
+
+# ==================================================
+# GET ADVERTISING MEDIAS
+# ==================================================
+
+@router.get(
+    "/advertising-medias",
+)
+def list_advertising_medias(
+
+    db: Session = Depends(get_db),
+
+    current_user: dict = Depends(
+        get_current_user
+    ),
+):
+
+    advertising_medias = get_advertising_medias(
+        db
+    )
+
+    return {
+
+        "total": len(advertising_medias),
+
+        "advertising_medias": [
+
+            advertising_media_to_dict(item)
+
+            for item in advertising_medias
+        ],
+    }
+
+
+# ==================================================
+# GET ADVERTISING MEDIA BY ID
+# ==================================================
+
+@router.get(
+    "/advertising-medias/{advertising_media_id}",
+)
+def get_advertising_media(
+
+    advertising_media_id: int,
+
+    db: Session = Depends(get_db),
+
+    current_user: dict = Depends(
+        get_current_user
+    ),
+):
+
+    advertising_media = get_advertising_media_by_id(
+        db,
+        advertising_media_id,
+    )
+
+    if not advertising_media:
+
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Advertising media not found",
+        )
+
+    return {
+
+        "advertising_media": advertising_media_to_dict(
+            advertising_media
+        ),
+    }
+
+
+# ==================================================
+# CREATE ADVERTISING MEDIA
+# REQUIRES: advertising_media / add
+# ==================================================
+
+@router.post(
+    "/advertising-medias",
+    status_code=status.HTTP_201_CREATED,
+)
+def create_new_advertising_media(
+
+    request: AdvertisingMediaCreateRequest,
+
+    db: Session = Depends(get_db),
+
+    current_user: dict = Depends(
+        require_permission("advertising_media", "add")
+    ),
+):
+
+    if advertising_media_exists(
+        db,
+        request.advertising_media,
+    ):
+
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Advertising media already exists",
+        )
+
+    advertising_media = create_advertising_media(
+        db,
+        request.advertising_media,
+    )
+
+    return {
+
+        "message": "Advertising media created successfully",
+
+        "advertising_media": advertising_media_to_dict(
+            advertising_media
+        ),
+    }
+
+
+# ==================================================
+# UPDATE ADVERTISING MEDIA
+# REQUIRES: advertising_media / edit
+# ==================================================
+
+@router.put(
+    "/advertising-medias/{advertising_media_id}",
+)
+def update_existing_advertising_media(
+
+    advertising_media_id: int,
+
+    request: AdvertisingMediaUpdateRequest,
+
+    db: Session = Depends(get_db),
+
+    current_user: dict = Depends(
+        require_permission("advertising_media", "edit")
+    ),
+):
+
+    existing = get_advertising_media_by_id(
+        db,
+        advertising_media_id,
+    )
+
+    if not existing:
+
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Advertising media not found",
+        )
+
+    if advertising_media_exists_for_other(
+        db,
+        request.advertising_media,
+        advertising_media_id,
+    ):
+
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Advertising media already exists",
+        )
+
+    advertising_media = update_advertising_media(
+        db,
+        advertising_media_id,
+        request.advertising_media,
+    )
+
+    return {
+
+        "message": "Advertising media updated successfully",
+
+        "advertising_media": advertising_media_to_dict(
+            advertising_media
+        ),
+    }
+
+
+# ==================================================
+# DELETE ADVERTISING MEDIA
+# REQUIRES: advertising_media / delete
+# ==================================================
+
+@router.delete(
+    "/advertising-medias/{advertising_media_id}",
+)
+def delete_advertising_media(
+
+    advertising_media_id: int,
+
+    db: Session = Depends(get_db),
+
+    current_user: dict = Depends(
+        require_permission("advertising_media", "delete")
+    ),
+):
+
+    existing = get_advertising_media_by_id(
+        db,
+        advertising_media_id,
+    )
+
+    if not existing:
+
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Advertising media not found",
+        )
+
+    deactivate_advertising_media(
+        db,
+        advertising_media_id,
+    )
+
+    return {
+
+        "message": "Advertising media deleted successfully",
+    }
+
+
+
+# ==================================================
+# GET ADVERTISING PURPOSES
+# ==================================================
+
+@router.get(
+    "/advertising-purposes",
+)
+def list_advertising_purposes(
+
+    db: Session = Depends(get_db),
+
+    current_user: dict = Depends(
+        get_current_user
+    ),
+):
+
+    advertising_purposes = get_advertising_purposes(
+        db
+    )
+
+    return {
+
+        "total": len(advertising_purposes),
+
+        "advertising_purposes": [
+
+            advertising_purpose_to_dict(item)
+
+            for item in advertising_purposes
+        ],
+    }
+
+
+# ==================================================
+# GET ADVERTISING PURPOSE BY ID
+# ==================================================
+
+@router.get(
+    "/advertising-purposes/{advertising_purpose_id}",
+)
+def get_advertising_purpose(
+
+    advertising_purpose_id: int,
+
+    db: Session = Depends(get_db),
+
+    current_user: dict = Depends(
+        get_current_user
+    ),
+):
+
+    advertising_purpose = get_advertising_purpose_by_id(
+        db,
+        advertising_purpose_id,
+    )
+
+    if not advertising_purpose:
+
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Advertising purpose not found",
+        )
+
+    return {
+
+        "advertising_purpose": advertising_purpose_to_dict(
+            advertising_purpose
+        ),
+    }
+
+
+# ==================================================
+# CREATE ADVERTISING PURPOSE
+# REQUIRES: advertising_purpose / add
+# ==================================================
+
+@router.post(
+    "/advertising-purposes",
+    status_code=status.HTTP_201_CREATED,
+)
+def create_new_advertising_purpose(
+
+    request: AdvertisingPurposeCreateRequest,
+
+    db: Session = Depends(get_db),
+
+    current_user: dict = Depends(
+        require_permission("advertising_purpose", "add")
+    ),
+):
+
+    if advertising_purpose_exists(
+        db,
+        request.advertising_purpose,
+    ):
+
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Advertising purpose already exists",
+        )
+
+    advertising_purpose = create_advertising_purpose(
+        db,
+        request.advertising_purpose,
+    )
+
+    return {
+
+        "message": "Advertising purpose created successfully",
+
+        "advertising_purpose": advertising_purpose_to_dict(
+            advertising_purpose
+        ),
+    }
+
+
+# ==================================================
+# UPDATE ADVERTISING PURPOSE
+# REQUIRES: advertising_purpose / edit
+# ==================================================
+
+@router.put(
+    "/advertising-purposes/{advertising_purpose_id}",
+)
+def update_existing_advertising_purpose(
+
+    advertising_purpose_id: int,
+
+    request: AdvertisingPurposeUpdateRequest,
+
+    db: Session = Depends(get_db),
+
+    current_user: dict = Depends(
+        require_permission("advertising_purpose", "edit")
+    ),
+):
+
+    existing = get_advertising_purpose_by_id(
+        db,
+        advertising_purpose_id,
+    )
+
+    if not existing:
+
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Advertising purpose not found",
+        )
+
+    if advertising_purpose_exists_for_other(
+        db,
+        request.advertising_purpose,
+        advertising_purpose_id,
+    ):
+
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Advertising purpose already exists",
+        )
+
+    advertising_purpose = update_advertising_purpose(
+        db,
+        advertising_purpose_id,
+        request.advertising_purpose,
+    )
+
+    return {
+
+        "message": "Advertising purpose updated successfully",
+
+        "advertising_purpose": advertising_purpose_to_dict(
+            advertising_purpose
+        ),
+    }
+
+
+# ==================================================
+# DELETE ADVERTISING PURPOSE
+# REQUIRES: advertising_purpose / delete
+# ==================================================
+
+@router.delete(
+    "/advertising-purposes/{advertising_purpose_id}",
+)
+def delete_advertising_purpose(
+
+    advertising_purpose_id: int,
+
+    db: Session = Depends(get_db),
+
+    current_user: dict = Depends(
+        require_permission("advertising_purpose", "delete")
+    ),
+):
+
+    existing = get_advertising_purpose_by_id(
+        db,
+        advertising_purpose_id,
+    )
+
+    if not existing:
+
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Advertising purpose not found",
+        )
+
+    deactivate_advertising_purpose(
+        db,
+        advertising_purpose_id,
+    )
+
+    return {
+
+        "message": "Advertising purpose deleted successfully",
+    }
+
+
+
+# ==================================================
+# GET OFFICE TYPES
+# ==================================================
+
+@router.get(
+    "/office-types",
+)
+def list_office_types(
+
+    db: Session = Depends(get_db),
+
+    current_user: dict = Depends(
+        get_current_user
+    ),
+):
+
+    office_types = get_office_types(
+        db
+    )
+
+    return {
+
+        "total": len(office_types),
+
+        "office_types": [
+
+            office_type_to_dict(item)
+
+            for item in office_types
+        ],
+    }
+
+
+# ==================================================
+# GET OFFICE TYPE BY ID
+# ==================================================
+
+@router.get(
+    "/office-types/{office_type_id}",
+)
+def get_office_type(
+
+    office_type_id: int,
+
+    db: Session = Depends(get_db),
+
+    current_user: dict = Depends(
+        get_current_user
+    ),
+):
+
+    office_type = get_office_type_by_id(
+        db,
+        office_type_id,
+    )
+
+    if not office_type:
+
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Office type not found",
+        )
+
+    return {
+
+        "office_type": office_type_to_dict(
+            office_type
+        ),
+    }
+
+
+# ==================================================
+# CREATE OFFICE TYPE
+# REQUIRES: office_type / add
+# ==================================================
+
+@router.post(
+    "/office-types",
+    status_code=status.HTTP_201_CREATED,
+)
+def create_new_office_type(
+
+    request: OfficeTypeCreateRequest,
+
+    db: Session = Depends(get_db),
+
+    current_user: dict = Depends(
+        require_permission("office_type", "add")
+    ),
+):
+
+    if office_type_exists(
+        db,
+        request.office_type,
+    ):
+
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Office type already exists",
+        )
+
+    office_type = create_office_type(
+        db,
+        request.office_type,
+    )
+
+    return {
+
+        "message": "Office type created successfully",
+
+        "office_type": office_type_to_dict(
+            office_type
+        ),
+    }
+
+
+# ==================================================
+# UPDATE OFFICE TYPE
+# REQUIRES: office_type / edit
+# ==================================================
+
+@router.put(
+    "/office-types/{office_type_id}",
+)
+def update_existing_office_type(
+
+    office_type_id: int,
+
+    request: OfficeTypeUpdateRequest,
+
+    db: Session = Depends(get_db),
+
+    current_user: dict = Depends(
+        require_permission("office_type", "edit")
+    ),
+):
+
+    existing = get_office_type_by_id(
+        db,
+        office_type_id,
+    )
+
+    if not existing:
+
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Office type not found",
+        )
+
+    if office_type_exists_for_other(
+        db,
+        request.office_type,
+        office_type_id,
+    ):
+
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Office type already exists",
+        )
+
+    office_type = update_office_type(
+        db,
+        office_type_id,
+        request.office_type,
+    )
+
+    return {
+
+        "message": "Office type updated successfully",
+
+        "office_type": office_type_to_dict(
+            office_type
+        ),
+    }
+
+
+# ==================================================
+# DELETE OFFICE TYPE
+# REQUIRES: office_type / delete
+# ==================================================
+
+@router.delete(
+    "/office-types/{office_type_id}",
+)
+def delete_office_type(
+
+    office_type_id: int,
+
+    db: Session = Depends(get_db),
+
+    current_user: dict = Depends(
+        require_permission("office_type", "delete")
+    ),
+):
+
+    existing = get_office_type_by_id(
+        db,
+        office_type_id,
+    )
+
+    if not existing:
+
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Office type not found",
+        )
+
+    deactivate_office_type(
+        db,
+        office_type_id,
+    )
+
+    return {
+
+        "message": "Office type deleted successfully",
+    }
+
+
+
+# ==================================================
+# GET MEETING LOCATIONS
+# ==================================================
+
+@router.get(
+    "/meeting-locations",
+)
+def list_meeting_locations(
+
+    db: Session = Depends(get_db),
+
+    current_user: dict = Depends(
+        get_current_user
+    ),
+):
+
+    meeting_locations = get_meeting_locations(
+        db
+    )
+
+    return {
+
+        "total": len(meeting_locations),
+
+        "meeting_locations": [
+
+            meeting_location_to_dict(item)
+
+            for item in meeting_locations
+        ],
+    }
+
+
+# ==================================================
+# GET MEETING LOCATION BY ID
+# ==================================================
+
+@router.get(
+    "/meeting-locations/{meeting_location_id}",
+)
+def get_meeting_location(
+
+    meeting_location_id: int,
+
+    db: Session = Depends(get_db),
+
+    current_user: dict = Depends(
+        get_current_user
+    ),
+):
+
+    meeting_location = get_meeting_location_by_id(
+        db,
+        meeting_location_id,
+    )
+
+    if not meeting_location:
+
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Meeting location not found",
+        )
+
+    return {
+
+        "meeting_location": meeting_location_to_dict(
+            meeting_location
+        ),
+    }
+
+
+# ==================================================
+# CREATE MEETING LOCATION
+# REQUIRES: meeting_location / add
+# ==================================================
+
+@router.post(
+    "/meeting-locations",
+    status_code=status.HTTP_201_CREATED,
+)
+def create_new_meeting_location(
+
+    request: MeetingLocationCreateRequest,
+
+    db: Session = Depends(get_db),
+
+    current_user: dict = Depends(
+        require_permission("meeting_location", "add")
+    ),
+):
+
+    if meeting_location_exists(
+        db,
+        request.meeting_location,
+    ):
+
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Meeting location already exists",
+        )
+
+    meeting_location = create_meeting_location(
+        db,
+        request.meeting_location,
+    )
+
+    return {
+
+        "message": "Meeting location created successfully",
+
+        "meeting_location": meeting_location_to_dict(
+            meeting_location
+        ),
+    }
+
+
+# ==================================================
+# UPDATE MEETING LOCATION
+# REQUIRES: meeting_location / edit
+# ==================================================
+
+@router.put(
+    "/meeting-locations/{meeting_location_id}",
+)
+def update_existing_meeting_location(
+
+    meeting_location_id: int,
+
+    request: MeetingLocationUpdateRequest,
+
+    db: Session = Depends(get_db),
+
+    current_user: dict = Depends(
+        require_permission("meeting_location", "edit")
+    ),
+):
+
+    existing = get_meeting_location_by_id(
+        db,
+        meeting_location_id,
+    )
+
+    if not existing:
+
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Meeting location not found",
+        )
+
+    if meeting_location_exists_for_other(
+        db,
+        request.meeting_location,
+        meeting_location_id,
+    ):
+
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Meeting location already exists",
+        )
+
+    meeting_location = update_meeting_location(
+        db,
+        meeting_location_id,
+        request.meeting_location,
+    )
+
+    return {
+
+        "message": "Meeting location updated successfully",
+
+        "meeting_location": meeting_location_to_dict(
+            meeting_location
+        ),
+    }
+
+
+# ==================================================
+# DELETE MEETING LOCATION
+# REQUIRES: meeting_location / delete
+# ==================================================
+
+@router.delete(
+    "/meeting-locations/{meeting_location_id}",
+)
+def delete_meeting_location(
+
+    meeting_location_id: int,
+
+    db: Session = Depends(get_db),
+
+    current_user: dict = Depends(
+        require_permission("meeting_location", "delete")
+    ),
+):
+
+    existing = get_meeting_location_by_id(
+        db,
+        meeting_location_id,
+    )
+
+    if not existing:
+
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Meeting location not found",
+        )
+
+    deactivate_meeting_location(
+        db,
+        meeting_location_id,
+    )
+
+    return {
+
+        "message": "Meeting location deleted successfully",
+    }
+
+
+
+# ==================================================
+# GET KSAs
+# ==================================================
+
+@router.get(
+    "/ksas",
+)
+def list_ksas(
+
+    db: Session = Depends(get_db),
+
+    current_user: dict = Depends(
+        get_current_user
+    ),
+):
+
+    ksas = get_ksas(
+        db
+    )
+
+    return {
+
+        "total": len(ksas),
+
+        "ksas": [
+
+            ksa_to_dict(item)
+
+            for item in ksas
+        ],
+    }
+
+
+# ==================================================
+# GET KSA BY ID
+# ==================================================
+
+@router.get(
+    "/ksas/{ksa_id}",
+)
+def get_ksa(
+
+    ksa_id: int,
+
+    db: Session = Depends(get_db),
+
+    current_user: dict = Depends(
+        get_current_user
+    ),
+):
+
+    ksa = get_ksa_by_id(
+        db,
+        ksa_id,
+    )
+
+    if not ksa:
+
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="KSA not found",
+        )
+
+    return {
+
+        "ksa": ksa_to_dict(
+            ksa
+        ),
+    }
+
+
+# ==================================================
+# CREATE KSA
+# REQUIRES: ksa / add
+# ==================================================
+
+@router.post(
+    "/ksas",
+    status_code=status.HTTP_201_CREATED,
+)
+def create_new_ksa(
+
+    request: KSACreateRequest,
+
+    db: Session = Depends(get_db),
+
+    current_user: dict = Depends(
+        require_permission("ksa", "add")
+    ),
+):
+
+    if ksa_exists(
+        db,
+        request.ksa,
+    ):
+
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="KSA already exists",
+        )
+
+    ksa = create_ksa(
+        db,
+        request.ksa,
+    )
+
+    return {
+
+        "message": "KSA created successfully",
+
+        "ksa": ksa_to_dict(
+            ksa
+        ),
+    }
+
+
+# ==================================================
+# UPDATE KSA
+# REQUIRES: ksa / edit
+# ==================================================
+
+@router.put(
+    "/ksas/{ksa_id}",
+)
+def update_existing_ksa(
+
+    ksa_id: int,
+
+    request: KSAUpdateRequest,
+
+    db: Session = Depends(get_db),
+
+    current_user: dict = Depends(
+        require_permission("ksa", "edit")
+    ),
+):
+
+    existing = get_ksa_by_id(
+        db,
+        ksa_id,
+    )
+
+    if not existing:
+
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="KSA not found",
+        )
+
+    if ksa_exists_for_other(
+        db,
+        request.ksa,
+        ksa_id,
+    ):
+
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="KSA already exists",
+        )
+
+    ksa = update_ksa(
+        db,
+        ksa_id,
+        request.ksa,
+    )
+
+    return {
+
+        "message": "KSA updated successfully",
+
+        "ksa": ksa_to_dict(
+            ksa
+        ),
+    }
+
+
+# ==================================================
+# DELETE KSA
+# REQUIRES: ksa / delete
+# ==================================================
+
+@router.delete(
+    "/ksas/{ksa_id}",
+)
+def delete_ksa(
+
+    ksa_id: int,
+
+    db: Session = Depends(get_db),
+
+    current_user: dict = Depends(
+        require_permission("ksa", "delete")
+    ),
+):
+
+    existing = get_ksa_by_id(
+        db,
+        ksa_id,
+    )
+
+    if not existing:
+
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="KSA not found",
+        )
+
+    deactivate_ksa(
+        db,
+        ksa_id,
+    )
+
+    return {
+
+        "message": "KSA deleted successfully",
+    }
+
+
+
+# ==================================================
+# GET KSA CATEGORIES
+# ==================================================
+
+@router.get(
+    "/ksa-categories",
+)
+def list_ksa_categories(
+
+    db: Session = Depends(get_db),
+
+    current_user: dict = Depends(
+        get_current_user
+    ),
+):
+
+    ksa_categories = get_ksa_categories(
+        db
+    )
+
+    return {
+
+        "total": len(ksa_categories),
+
+        "ksa_categories": [
+
+            ksa_category_to_dict(item)
+
+            for item in ksa_categories
+        ],
+    }
+
+
+# ==================================================
+# GET KSA CATEGORY BY ID
+# ==================================================
+
+@router.get(
+    "/ksa-categories/{ksa_category_id}",
+)
+def get_ksa_category(
+
+    ksa_category_id: int,
+
+    db: Session = Depends(get_db),
+
+    current_user: dict = Depends(
+        get_current_user
+    ),
+):
+
+    ksa_category = get_ksa_category_by_id(
+        db,
+        ksa_category_id,
+    )
+
+    if not ksa_category:
+
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="KSA category not found",
+        )
+
+    return {
+
+        "ksa_category": ksa_category_to_dict(
+            ksa_category
+        ),
+    }
+
+
+# ==================================================
+# CREATE KSA CATEGORY
+# REQUIRES: ksa_category / add
+# ==================================================
+
+@router.post(
+    "/ksa-categories",
+    status_code=status.HTTP_201_CREATED,
+)
+def create_new_ksa_category(
+
+    request: KSACategoryCreateRequest,
+
+    db: Session = Depends(get_db),
+
+    current_user: dict = Depends(
+        require_permission("ksa_category", "add")
+    ),
+):
+
+    if ksa_category_exists(
+        db,
+        request.ksa_category,
+    ):
+
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="KSA category already exists",
+        )
+
+    ksa_category = create_ksa_category(
+        db,
+        request.ksa_category,
+    )
+
+    return {
+
+        "message": "KSA category created successfully",
+
+        "ksa_category": ksa_category_to_dict(
+            ksa_category
+        ),
+    }
+
+
+# ==================================================
+# UPDATE KSA CATEGORY
+# REQUIRES: ksa_category / edit
+# ==================================================
+
+@router.put(
+    "/ksa-categories/{ksa_category_id}",
+)
+def update_existing_ksa_category(
+
+    ksa_category_id: int,
+
+    request: KSACategoryUpdateRequest,
+
+    db: Session = Depends(get_db),
+
+    current_user: dict = Depends(
+        require_permission("ksa_category", "edit")
+    ),
+):
+
+    existing = get_ksa_category_by_id(
+        db,
+        ksa_category_id,
+    )
+
+    if not existing:
+
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="KSA category not found",
+        )
+
+    if ksa_category_exists_for_other(
+        db,
+        request.ksa_category,
+        ksa_category_id,
+    ):
+
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="KSA category already exists",
+        )
+
+    ksa_category = update_ksa_category(
+        db,
+        ksa_category_id,
+        request.ksa_category,
+    )
+
+    return {
+
+        "message": "KSA category updated successfully",
+
+        "ksa_category": ksa_category_to_dict(
+            ksa_category
+        ),
+    }
+
+
+# ==================================================
+# DELETE KSA CATEGORY
+# REQUIRES: ksa_category / delete
+# ==================================================
+
+@router.delete(
+    "/ksa-categories/{ksa_category_id}",
+)
+def delete_ksa_category(
+
+    ksa_category_id: int,
+
+    db: Session = Depends(get_db),
+
+    current_user: dict = Depends(
+        require_permission("ksa_category", "delete")
+    ),
+):
+
+    existing = get_ksa_category_by_id(
+        db,
+        ksa_category_id,
+    )
+
+    if not existing:
+
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="KSA category not found",
+        )
+
+    deactivate_ksa_category(
+        db,
+        ksa_category_id,
+    )
+
+    return {
+
+        "message": "KSA category deleted successfully",
+    }
+
+
+
+# ==================================================
+# GET POSITION GRADES
+# ==================================================
+
+@router.get(
+    "/position-grades",
+)
+def list_position_grades(
+
+    db: Session = Depends(get_db),
+
+    current_user: dict = Depends(
+        get_current_user
+    ),
+):
+
+    position_grades = get_position_grades(
+        db
+    )
+
+    return {
+
+        "total": len(position_grades),
+
+        "position_grades": [
+
+            position_grade_to_dict(item)
+
+            for item in position_grades
+        ],
+    }
+
+
+# ==================================================
+# GET POSITION GRADE BY ID
+# ==================================================
+
+@router.get(
+    "/position-grades/{position_grade_id}",
+)
+def get_position_grade(
+
+    position_grade_id: int,
+
+    db: Session = Depends(get_db),
+
+    current_user: dict = Depends(
+        get_current_user
+    ),
+):
+
+    position_grade = get_position_grade_by_id(
+        db,
+        position_grade_id,
+    )
+
+    if not position_grade:
+
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Position grade not found",
+        )
+
+    return {
+
+        "position_grade": position_grade_to_dict(
+            position_grade
+        ),
+    }
+
+
+# ==================================================
+# CREATE POSITION GRADE
+# REQUIRES: position_grade / add
+# ==================================================
+
+@router.post(
+    "/position-grades",
+    status_code=status.HTTP_201_CREATED,
+)
+def create_new_position_grade(
+
+    request: PositionGradeCreateRequest,
+
+    db: Session = Depends(get_db),
+
+    current_user: dict = Depends(
+        require_permission("position_grade", "add")
+    ),
+):
+
+    if request.minimum_pay > request.maximum_pay:
+
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Minimum pay cannot be greater than maximum pay",
+        )
+
+    if position_grade_exists(
+        db,
+        request.position_grade,
+    ):
+
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Position grade already exists",
+        )
+
+    position_grade = create_position_grade(
+        db,
+        request.position_grade,
+        request.minimum_pay,
+        request.maximum_pay,
+    )
+
+    return {
+
+        "message": "Position grade created successfully",
+
+        "position_grade": position_grade_to_dict(
+            position_grade
+        ),
+    }
+
+
+# ==================================================
+# UPDATE POSITION GRADE
+# REQUIRES: position_grade / edit
+# ==================================================
+
+@router.put(
+    "/position-grades/{position_grade_id}",
+)
+def update_existing_position_grade(
+
+    position_grade_id: int,
+
+    request: PositionGradeUpdateRequest,
+
+    db: Session = Depends(get_db),
+
+    current_user: dict = Depends(
+        require_permission("position_grade", "edit")
+    ),
+):
+
+    existing = get_position_grade_by_id(
+        db,
+        position_grade_id,
+    )
+
+    if not existing:
+
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Position grade not found",
+        )
+
+    if request.minimum_pay > request.maximum_pay:
+
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Minimum pay cannot be greater than maximum pay",
+        )
+
+    if position_grade_exists_for_other(
+        db,
+        request.position_grade,
+        position_grade_id,
+    ):
+
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Position grade already exists",
+        )
+
+    position_grade = update_position_grade(
+        db,
+        position_grade_id,
+        request.position_grade,
+        request.minimum_pay,
+        request.maximum_pay,
+    )
+
+    return {
+
+        "message": "Position grade updated successfully",
+
+        "position_grade": position_grade_to_dict(
+            position_grade
+        ),
+    }
+
+
+# ==================================================
+# DELETE POSITION GRADE
+# REQUIRES: position_grade / delete
+# ==================================================
+
+@router.delete(
+    "/position-grades/{position_grade_id}",
+)
+def delete_position_grade(
+
+    position_grade_id: int,
+
+    db: Session = Depends(get_db),
+
+    current_user: dict = Depends(
+        require_permission("position_grade", "delete")
+    ),
+):
+
+    existing = get_position_grade_by_id(
+        db,
+        position_grade_id,
+    )
+
+    if not existing:
+
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Position grade not found",
+        )
+
+    deactivate_position_grade(
+        db,
+        position_grade_id,
+    )
+
+    return {
+
+        "message": "Position grade deleted successfully",
     }
 
 

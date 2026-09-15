@@ -580,8 +580,8 @@ def require_permission(
 
 
 # ==================================================
-# TODO — PENDING DECISION (confirming with manager,
-# per conversation with user):
+
+
 #
 # Should GET routes (list_abilities, get_ability, etc.)
 # require can_view specifically via require_permission(module,

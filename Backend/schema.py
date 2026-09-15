@@ -240,6 +240,263 @@ class AnnouncementTypeUpdateRequest(BaseModel):
 
 
 # ==================================================
+# OFFICE LEVEL MASTER
+# Real column is `officelevel` varchar(200) — max_length
+# matches the DB column exactly, per the user's pgAdmin check.
+# ==================================================
+
+class OfficeLevelCreateRequest(BaseModel):
+
+    office_level: str = Field(
+        min_length=1,
+        max_length=200,
+    )
+
+
+class OfficeLevelUpdateRequest(BaseModel):
+
+    office_level: str = Field(
+        min_length=1,
+        max_length=200,
+    )
+
+
+# ==================================================
+# MEETING TYPE MASTER
+# Real column is `meetingtype` varchar(200) — max_length
+# matches the DB column exactly, per the user's pgAdmin check.
+# ==================================================
+
+class MeetingTypeCreateRequest(BaseModel):
+
+    meeting_type: str = Field(
+        min_length=1,
+        max_length=200,
+    )
+
+
+class MeetingTypeUpdateRequest(BaseModel):
+
+    meeting_type: str = Field(
+        min_length=1,
+        max_length=200,
+    )
+
+
+# ==================================================
+# LANGUAGE MASTER
+# Real column is `language` varchar(200), table hrlanguage,
+# PK pklid — per the user.
+# ==================================================
+
+class LanguageCreateRequest(BaseModel):
+
+    language: str = Field(
+        min_length=1,
+        max_length=200,
+    )
+
+
+class LanguageUpdateRequest(BaseModel):
+
+    language: str = Field(
+        min_length=1,
+        max_length=200,
+    )
+
+
+# ==================================================
+# REQUIREMENT MASTER
+# Real column is `requirement` varchar(300), table
+# hrrequirement, PK pkrid — per the user.
+# ==================================================
+
+class RequirementCreateRequest(BaseModel):
+
+    requirement: str = Field(
+        min_length=1,
+        max_length=300,
+    )
+
+
+class RequirementUpdateRequest(BaseModel):
+
+    requirement: str = Field(
+        min_length=1,
+        max_length=300,
+    )
+
+
+# ==================================================
+# ADVERTISING MEDIA MASTER
+# Real column is `advertisingmedia` varchar(200), table
+# hradvertisingmedia, PK pkamid — per the user.
+# ==================================================
+
+class AdvertisingMediaCreateRequest(BaseModel):
+
+    advertising_media: str = Field(
+        min_length=1,
+        max_length=200,
+    )
+
+
+class AdvertisingMediaUpdateRequest(BaseModel):
+
+    advertising_media: str = Field(
+        min_length=1,
+        max_length=200,
+    )
+
+
+
+# ==================================================
+# ADVERTISING PURPOSE MASTER
+# Real column is `advertisingpurpose` varchar(200), table
+# hradvertisingpurpose, PK pkapid — per the user.
+# ==================================================
+
+class AdvertisingPurposeCreateRequest(BaseModel):
+
+    advertising_purpose: str = Field(
+        min_length=1,
+        max_length=200,
+    )
+
+
+class AdvertisingPurposeUpdateRequest(BaseModel):
+
+    advertising_purpose: str = Field(
+        min_length=1,
+        max_length=200,
+    )
+
+
+
+# ==================================================
+# OFFICE TYPE MASTER
+# Real column is `officetype` varchar(200), table
+# hrofficetype, PK pkotid — per the user.
+# ==================================================
+
+class OfficeTypeCreateRequest(BaseModel):
+
+    office_type: str = Field(
+        min_length=1,
+        max_length=200,
+    )
+
+
+class OfficeTypeUpdateRequest(BaseModel):
+
+    office_type: str = Field(
+        min_length=1,
+        max_length=200,
+    )
+
+
+
+# ==================================================
+# MEETING LOCATION MASTER
+# Real column is `meetinglocation` varchar(200), table
+# hrmeetinglocation, PK pkmlid — per the user.
+# ==================================================
+
+class MeetingLocationCreateRequest(BaseModel):
+
+    meeting_location: str = Field(
+        min_length=1,
+        max_length=200,
+    )
+
+
+class MeetingLocationUpdateRequest(BaseModel):
+
+    meeting_location: str = Field(
+        min_length=1,
+        max_length=200,
+    )
+
+
+
+# ==================================================
+# KSA MASTER
+# Real column is `ksa` varchar(300), table hrksa,
+# PK pksaid — per the user pgAdmin.
+# ==================================================
+
+class KSACreateRequest(BaseModel):
+
+    ksa: str = Field(
+        min_length=1,
+        max_length=300,
+    )
+
+
+class KSAUpdateRequest(BaseModel):
+
+    ksa: str = Field(
+        min_length=1,
+        max_length=300,
+    )
+
+
+
+# ==================================================
+# KSA CATEGORY MASTER
+# Real column is `ksacategory` varchar(200), table
+# hrksacategory, PK pkksacid — per the user.
+# ==================================================
+
+class KSACategoryCreateRequest(BaseModel):
+
+    ksa_category: str = Field(
+        min_length=1,
+        max_length=200,
+    )
+
+
+class KSACategoryUpdateRequest(BaseModel):
+
+    ksa_category: str = Field(
+        min_length=1,
+        max_length=200,
+    )
+
+
+
+# ==================================================
+# POSITION GRADE MASTER
+# Real columns: positiongrade varchar(200), minimumpay
+# numeric(15,2), maximumpay numeric(15,2), table
+# hrpositiongrade, PK pkpgid — per the user.
+# ==================================================
+
+class PositionGradeCreateRequest(BaseModel):
+
+    position_grade: str = Field(
+        min_length=1,
+        max_length=200,
+    )
+
+    minimum_pay: float = Field(ge=0)
+
+    maximum_pay: float = Field(ge=0)
+
+
+class PositionGradeUpdateRequest(BaseModel):
+
+    position_grade: str = Field(
+        min_length=1,
+        max_length=200,
+    )
+
+    minimum_pay: float = Field(ge=0)
+
+    maximum_pay: float = Field(ge=0)
+
+
+# ==================================================
 # ANNOUNCEMENT
 # ==================================================
 

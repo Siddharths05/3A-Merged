@@ -1,153 +1,243 @@
-import { useState } from "react";
-
+import { useState, useEffect } from "react";
 import {
   Target,
   AlertCircle,
   CheckCircle2,
+  Pencil,
+  Trash2,
 } from "lucide-react";
+import { usePermissions } from "../../components/Permissions";
 
+const API_BASE_URL = "http://127.0.0.1:8000/api";
+
+function getToken() {
+  return localStorage.getItem("access_token") || "";
+}
+
+function getErrorMessage(data, fallback) {
+  if (!data) return fallback;
+  if (typeof data.detail === "string") return data.detail;
+  if (Array.isArray(data.detail) && data.detail[0]?.msg) {
+    return data.detail[0].msg;
+  }
+  return fallback;
+}
 
 export default function AdvertisingPurpose() {
+  // ==================================================
+  // PERMISSIONS
+  // ==================================================
+
+  const { role, can } = usePermissions();
+
+  const isAllowed = (action) =>
+    role === "admin" || can("advertising_purpose", action);
 
   // ==================================================
   // STATE
   // ==================================================
 
-  const [
-    advertisingPurpose,
-    setAdvertisingPurpose,
-  ] = useState("");
-
-  const [
-    advertisingPurposes,
-    setAdvertisingPurposes,
-  ] = useState([]);
-
-  const [error, setError] =
-    useState("");
-
-  const [success, setSuccess] =
-    useState("");
-
+  const [advertisingPurpose, setAdvertisingPurpose] = useState("");
+  const [advertisingPurposes, setAdvertisingPurposes] = useState([]);
+  const [editingId, setEditingId] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
+  const [deletingId, setDeletingId] = useState(null);
+  const [error, setError] = useState("");
+  const [success, setSuccess] = useState("");
 
   // ==================================================
-  // HANDLE INPUT CHANGE
+  // FETCH
   // ==================================================
 
-  const handleChange = (e) => {
-
-    setAdvertisingPurpose(e.target.value);
-
+  const fetchAdvertisingPurposes = async () => {
+    setLoading(true);
     setError("");
 
-    setSuccess("");
+    try {
+      const res = await fetch(`${API_BASE_URL}/advertising-purposes`, {
+        headers: {
+          Authorization: `Bearer ${getToken()}`,
+        },
+      });
 
+      const data = await res.json().catch(() => ({}));
+
+      if (!res.ok) {
+        throw new Error(
+          getErrorMessage(data, "Failed to load advertising purposes")
+        );
+      }
+
+      setAdvertisingPurposes(data.advertising_purposes || []);
+    } catch (err) {
+      setError(err.message || "Failed to load advertising purposes");
+    } finally {
+      setLoading(false);
+    }
   };
 
+  useEffect(() => {
+    fetchAdvertisingPurposes();
+  }, []);
 
   // ==================================================
-  // SAVE ADVERTISING PURPOSE
+  // HELPERS
   // ==================================================
 
-  const handleSave = () => {
+  const clearMessages = () => {
+    setError("");
+    setSuccess("");
+  };
 
-    const value =
-      advertisingPurpose.trim();
+  const resetForm = () => {
+    setAdvertisingPurpose("");
+    setEditingId(null);
+  };
 
+  // ==================================================
+  // SAVE (CREATE / UPDATE)
+  // ==================================================
 
-    // ================================================
-    // EMPTY VALIDATION
-    // ================================================
+  const handleSave = async () => {
+    const value = advertisingPurpose.trim();
 
     if (!value) {
-
-      setError(
-        "Please enter an advertising purpose."
-      );
-
+      setError("Please enter an advertising purpose.");
       return;
-
     }
 
-
-    // ================================================
-    // DUPLICATE VALIDATION
-    // ================================================
-
-    const alreadyExists =
-      advertisingPurposes.some(
-        (item) =>
-          item.toLowerCase() ===
-          value.toLowerCase()
-      );
-
-
-    if (alreadyExists) {
-
-      setError(
-        "This advertising purpose already exists."
-      );
-
+    if (value.length > 200) {
+      setError("Advertising purpose must be 200 characters or fewer.");
       return;
-
     }
 
+    clearMessages();
+    setSaving(true);
 
-    // ================================================
-    // SAVE
-    // ================================================
+    try {
+      const isEdit = editingId !== null;
+      const url = isEdit
+        ? `${API_BASE_URL}/advertising-purposes/${editingId}`
+        : `${API_BASE_URL}/advertising-purposes`;
 
-    setAdvertisingPurposes((prev) => [
-      ...prev,
-      value,
-    ]);
+      const res = await fetch(url, {
+        method: isEdit ? "PUT" : "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${getToken()}`,
+        },
+        body: JSON.stringify({ advertising_purpose: value }),
+      });
 
+      const data = await res.json().catch(() => ({}));
 
-    setAdvertisingPurpose("");
+      if (!res.ok) {
+        throw new Error(
+          getErrorMessage(
+            data,
+            isEdit
+              ? "Failed to update advertising purpose"
+              : "Failed to create advertising purpose"
+          )
+        );
+      }
 
-
-    setError("");
-
-
-    setSuccess(
-      "Advertising purpose saved successfully."
-    );
-
+      setSuccess(
+        isEdit
+          ? "Advertising purpose updated successfully."
+          : "Advertising purpose saved successfully."
+      );
+      resetForm();
+      await fetchAdvertisingPurposes();
+    } catch (err) {
+      setError(err.message || "Something went wrong");
+    } finally {
+      setSaving(false);
+    }
   };
 
+  // ==================================================
+  // EDIT
+  // ==================================================
+
+  const handleEdit = (item) => {
+    clearMessages();
+    setEditingId(item.pkAPId);
+    setAdvertisingPurpose(item.AdvertisingPurpose || "");
+  };
 
   // ==================================================
-  // HANDLE KEY DOWN
+  // DELETE
+  // ==================================================
+
+  const handleDelete = async (id) => {
+    if (!window.confirm("Delete this advertising purpose?")) {
+      return;
+    }
+
+    clearMessages();
+    setDeletingId(id);
+
+    try {
+      const res = await fetch(
+        `${API_BASE_URL}/advertising-purposes/${id}`,
+        {
+          method: "DELETE",
+          headers: {
+            Authorization: `Bearer ${getToken()}`,
+          },
+        }
+      );
+
+      const data = await res.json().catch(() => ({}));
+
+      if (!res.ok) {
+        throw new Error(
+          getErrorMessage(data, "Failed to delete advertising purpose")
+        );
+      }
+
+      setSuccess("Advertising purpose deleted successfully.");
+
+      if (editingId === id) {
+        resetForm();
+      }
+
+      await fetchAdvertisingPurposes();
+    } catch (err) {
+      setError(err.message || "Something went wrong");
+    } finally {
+      setDeletingId(null);
+    }
+  };
+
+  // ==================================================
+  // KEY DOWN
   // ==================================================
 
   const handleKeyDown = (e) => {
-
     if (e.key === "Enter") {
-
       e.preventDefault();
-
-      handleSave();
-
+      if (
+        (editingId === null && isAllowed("add")) ||
+        (editingId !== null && isAllowed("edit"))
+      ) {
+        handleSave();
+      }
     }
-
   };
-
 
   // ==================================================
   // COMPONENT
   // ==================================================
 
   return (
-
     <div className="space-y-8">
-
-
       {/* ==================================================
           PAGE HEADER
       ================================================== */}
-
       <div>
-
         <h1
           className="
             text-2xl
@@ -160,7 +250,6 @@ export default function AdvertisingPurpose() {
           Advertising Purpose
         </h1>
 
-
         <p
           className="
             mt-1
@@ -170,298 +259,268 @@ export default function AdvertisingPurpose() {
         >
           Manage and configure advertising purposes.
         </p>
-
       </div>
 
-
-
       {/* ==================================================
-          ADD ADVERTISING PURPOSE
+          ADD / EDIT FORM
       ================================================== */}
-
-      <div
-        className="
-          overflow-hidden
-          rounded-2xl
-          border
-          border-theme-border
-          bg-card
-          shadow-sm
-        "
-      >
-
-
-        {/* ================================================
-            CARD HEADER
-        ================================================ */}
-
+      {(isAllowed("add") || (editingId !== null && isAllowed("edit"))) && (
         <div
           className="
-            flex
-            items-center
-            justify-between
-            gap-4
-            border-b
+            overflow-hidden
+            rounded-2xl
+            border
             border-theme-border
-            px-6
-            py-5
+            bg-card
+            shadow-sm
           "
         >
-
-          <div>
-
-            <h2
-              className="
-                text-lg
-                font-semibold
-                text-theme-text
-              "
-            >
-              Add Advertising Purpose
-            </h2>
-
-
-            <p
-              className="
-                mt-1
-                text-sm
-                text-theme-muted
-              "
-            >
-              Enter a new advertising purpose to add it to the list.
-            </p>
-
-          </div>
-
-
-          <div
-            className="
-              flex
-              h-11
-              w-11
-              shrink-0
-              items-center
-              justify-center
-              rounded-xl
-              bg-theme-primary-soft
-              text-theme-primary
-            "
-          >
-
-            <Target size={21} />
-
-          </div>
-
-        </div>
-
-
-
-        {/* ================================================
-            FORM
-        ================================================ */}
-
-        <div
-          className="
-            space-y-6
-            p-6
-          "
-        >
-
-
-          <div className="max-w-xl">
-
-
-            {/* LABEL */}
-
-            <label
-              htmlFor="advertisingPurpose"
-              className="
-                mb-2
-                block
-                text-sm
-                font-semibold
-                text-theme-text
-              "
-            >
-              Advertising Purpose
-            </label>
-
-
-            {/* INPUT */}
-
-            <input
-              id="advertisingPurpose"
-              type="text"
-              value={advertisingPurpose}
-              onChange={handleChange}
-              onKeyDown={handleKeyDown}
-              maxLength={30}
-              placeholder="Enter advertising purpose"
-              className="
-                h-12
-                w-full
-                rounded-xl
-                border
-                border-theme-border
-                bg-[var(--erp-background)]
-                px-4
-                text-sm
-                text-theme-text
-                outline-none
-                transition-all
-                placeholder:text-theme-faint
-                focus:border-theme-primary
-                focus:ring-2
-                focus:ring-theme-primary-soft
-              "
-            />
-
-
-            <p
-              className="
-                mt-2
-                text-xs
-                text-theme-faint
-              "
-            >
-              Maximum 30 characters.
-            </p>
-
-          </div>
-
-
-
-          {/* ================================================
-              ERROR MESSAGE
-          ================================================ */}
-
-          {error && (
-
-            <div
-              className="
-                flex
-                items-start
-                gap-3
-                rounded-xl
-                border
-                border-theme-danger/30
-                bg-theme-danger-soft
-                px-4
-                py-3
-                text-sm
-                text-theme-danger
-              "
-            >
-
-              <AlertCircle
-                size={18}
-                className="
-                  mt-0.5
-                  shrink-0
-                "
-              />
-
-              <span>
-                {error}
-              </span>
-
-            </div>
-
-          )}
-
-
-
-          {/* ================================================
-              SUCCESS MESSAGE
-          ================================================ */}
-
-          {success && (
-
-            <div
-              className="
-                flex
-                items-start
-                gap-3
-                rounded-xl
-                border
-                border-emerald-500/20
-                bg-emerald-500/10
-                px-4
-                py-3
-                text-sm
-                text-emerald-600
-                dark:text-emerald-400
-              "
-            >
-
-              <CheckCircle2
-                size={18}
-                className="
-                  mt-0.5
-                  shrink-0
-                "
-              />
-
-              <span>
-                {success}
-              </span>
-
-            </div>
-
-          )}
-
-
-
-          {/* ================================================
-              ACTION AREA
-          ================================================ */}
-
+          {/* CARD HEADER */}
           <div
             className="
               flex
               items-center
-              border-t
+              justify-between
+              gap-4
+              border-b
               border-theme-border
-              pt-6
+              px-6
+              py-5
             "
           >
+            <div>
+              <h2
+                className="
+                  text-lg
+                  font-semibold
+                  text-theme-text
+                "
+              >
+                {editingId !== null
+                  ? "Edit Advertising Purpose"
+                  : "Add Advertising Purpose"}
+              </h2>
 
-            <button
-              type="button"
-              onClick={handleSave}
+              <p
+                className="
+                  mt-1
+                  text-sm
+                  text-theme-muted
+                "
+              >
+                {editingId !== null
+                  ? "Update the selected advertising purpose."
+                  : "Enter a new advertising purpose to add it to the list."}
+              </p>
+            </div>
+
+            <div
               className="
-                inline-flex
+                flex
                 h-11
+                w-11
+                shrink-0
                 items-center
                 justify-center
                 rounded-xl
-                bg-theme-primary
-                px-5
-                text-sm
-                font-semibold
-                text-white
-                shadow-sm
-                transition-all
-                duration-200
-                hover:opacity-90
-                hover:shadow-md
+                bg-theme-primary-soft
+                text-theme-primary
               "
             >
-              Save Advertising Purpose
-            </button>
-
+              <Target size={21} />
+            </div>
           </div>
 
+          {/* FORM */}
+          <div className="space-y-6 p-6">
+            <div className="max-w-xl">
+              <label
+                htmlFor="advertisingPurpose"
+                className="
+                  mb-2
+                  block
+                  text-sm
+                  font-semibold
+                  text-theme-text
+                "
+              >
+                Advertising Purpose
+              </label>
+
+              <input
+                id="advertisingPurpose"
+                type="text"
+                value={advertisingPurpose}
+                onChange={(e) => {
+                  setAdvertisingPurpose(e.target.value);
+                  clearMessages();
+                }}
+                onKeyDown={handleKeyDown}
+                maxLength={200}
+                placeholder="Enter advertising purpose"
+                disabled={saving}
+                className="
+                  h-12
+                  w-full
+                  rounded-xl
+                  border
+                  border-theme-border
+                  bg-[var(--erp-background)]
+                  px-4
+                  text-sm
+                  text-theme-text
+                  outline-none
+                  transition-all
+                  placeholder:text-theme-faint
+                  focus:border-theme-primary
+                  focus:ring-2
+                  focus:ring-theme-primary-soft
+                  disabled:opacity-60
+                "
+              />
+
+              <p
+                className="
+                  mt-2
+                  text-xs
+                  text-theme-faint
+                "
+              >
+                Maximum 200 characters.
+              </p>
+            </div>
+
+            {/* ERROR */}
+            {error && (
+              <div
+                className="
+                  flex
+                  items-start
+                  gap-3
+                  rounded-xl
+                  border
+                  border-theme-danger/30
+                  bg-theme-danger-soft
+                  px-4
+                  py-3
+                  text-sm
+                  text-theme-danger
+                "
+              >
+                <AlertCircle size={18} className="mt-0.5 shrink-0" />
+                <span>{error}</span>
+              </div>
+            )}
+
+            {/* SUCCESS */}
+            {success && (
+              <div
+                className="
+                  flex
+                  items-start
+                  gap-3
+                  rounded-xl
+                  border
+                  border-emerald-500/20
+                  bg-emerald-500/10
+                  px-4
+                  py-3
+                  text-sm
+                  text-emerald-600
+                  dark:text-emerald-400
+                "
+              >
+                <CheckCircle2 size={18} className="mt-0.5 shrink-0" />
+                <span>{success}</span>
+              </div>
+            )}
+
+            {/* ACTIONS */}
+            <div
+              className="
+                flex
+                flex-wrap
+                items-center
+                gap-3
+                border-t
+                border-theme-border
+                pt-6
+              "
+            >
+              <button
+                type="button"
+                onClick={handleSave}
+                disabled={
+                  saving ||
+                  (editingId === null && !isAllowed("add")) ||
+                  (editingId !== null && !isAllowed("edit"))
+                }
+                className="
+                  inline-flex
+                  h-11
+                  items-center
+                  justify-center
+                  rounded-xl
+                  bg-theme-primary
+                  px-5
+                  text-sm
+                  font-semibold
+                  text-white
+                  shadow-sm
+                  transition-all
+                  duration-200
+                  hover:opacity-90
+                  hover:shadow-md
+                  disabled:cursor-not-allowed
+                  disabled:opacity-60
+                "
+              >
+                {saving
+                  ? "Saving…"
+                  : editingId !== null
+                    ? "Update Advertising Purpose"
+                    : "Save Advertising Purpose"}
+              </button>
+
+              {editingId !== null && (
+                <button
+                  type="button"
+                  onClick={() => {
+                    resetForm();
+                    clearMessages();
+                  }}
+                  disabled={saving}
+                  className="
+                    inline-flex
+                    h-11
+                    items-center
+                    justify-center
+                    rounded-xl
+                    border
+                    border-theme-border
+                    bg-card
+                    px-5
+                    text-sm
+                    font-semibold
+                    text-theme-text
+                    transition-all
+                    duration-200
+                    hover:bg-theme-primary-soft/40
+                    disabled:cursor-not-allowed
+                    disabled:opacity-60
+                  "
+                >
+                  Cancel
+                </button>
+              )}
+            </div>
+          </div>
         </div>
-
-      </div>
-
-
+      )}
 
       {/* ==================================================
-          SAVED ADVERTISING PURPOSES
+          SAVED LIST
       ================================================== */}
-
       <div
         className="
           overflow-hidden
@@ -472,12 +531,7 @@ export default function AdvertisingPurpose() {
           shadow-sm
         "
       >
-
-
-        {/* ================================================
-            TABLE HEADER
-        ================================================ */}
-
+        {/* TABLE HEADER */}
         <div
           className="
             flex
@@ -490,9 +544,7 @@ export default function AdvertisingPurpose() {
             py-5
           "
         >
-
           <div>
-
             <h2
               className="
                 text-lg
@@ -503,7 +555,6 @@ export default function AdvertisingPurpose() {
               Saved Advertising Purposes
             </h2>
 
-
             <p
               className="
                 mt-1
@@ -513,9 +564,7 @@ export default function AdvertisingPurpose() {
             >
               Advertising purposes currently available in the system.
             </p>
-
           </div>
-
 
           <div
             className="
@@ -530,21 +579,12 @@ export default function AdvertisingPurpose() {
               text-theme-primary
             "
           >
-
             <Target size={21} />
-
           </div>
-
         </div>
 
-
-
-        {/* ================================================
-            EMPTY STATE
-        ================================================ */}
-
-        {advertisingPurposes.length === 0 ? (
-
+        {/* LOADING */}
+        {loading && (
           <div
             className="
               flex
@@ -555,7 +595,24 @@ export default function AdvertisingPurpose() {
               text-center
             "
           >
+            <p className="text-sm text-theme-muted">
+              Loading advertising purposes…
+            </p>
+          </div>
+        )}
 
+        {/* EMPTY */}
+        {!loading && advertisingPurposes.length === 0 && (
+          <div
+            className="
+              flex
+              flex-col
+              items-center
+              justify-center
+              py-16
+              text-center
+            "
+          >
             <div
               className="
                 flex
@@ -568,11 +625,8 @@ export default function AdvertisingPurpose() {
                 text-theme-primary
               "
             >
-
               <Target size={26} />
-
             </div>
-
 
             <p
               className="
@@ -584,7 +638,6 @@ export default function AdvertisingPurpose() {
               No advertising purposes found
             </p>
 
-
             <p
               className="
                 mt-1
@@ -594,21 +647,14 @@ export default function AdvertisingPurpose() {
             >
               Add an advertising purpose to get started.
             </p>
-
           </div>
+        )}
 
-        ) : (
-
-          /* ================================================
-              TABLE
-          ================================================ */
-
+        {/* TABLE */}
+        {!loading && advertisingPurposes.length > 0 && (
           <div className="overflow-x-auto">
-
             <table className="w-full">
-
               <thead>
-
                 <tr
                   className="
                     border-b
@@ -616,7 +662,6 @@ export default function AdvertisingPurpose() {
                     bg-[var(--erp-background)]
                   "
                 >
-
                   <th
                     className="
                       w-20
@@ -630,9 +675,8 @@ export default function AdvertisingPurpose() {
                       text-theme-muted
                     "
                   >
-                    #
+                    ID
                   </th>
-
 
                   <th
                     className="
@@ -649,71 +693,119 @@ export default function AdvertisingPurpose() {
                     Advertising Purpose
                   </th>
 
-                </tr>
-
-              </thead>
-
-
-
-              <tbody
-                className="
-                  divide-y
-                  divide-theme-border
-                "
-              >
-
-                {advertisingPurposes.map(
-                  (item, index) => (
-
-                    <tr
-                      key={`${item}-${index}`}
+                  {(isAllowed("edit") || isAllowed("delete")) && (
+                    <th
                       className="
-                        transition-colors
-                        hover:bg-theme-primary-soft/40
+                        px-6
+                        py-4
+                        text-right
+                        text-xs
+                        font-semibold
+                        uppercase
+                        tracking-wider
+                        text-theme-muted
                       "
                     >
+                      Actions
+                    </th>
+                  )}
+                </tr>
+              </thead>
 
-                      <td
-                        className="
-                          px-6
-                          py-4
-                          text-sm
-                          text-theme-muted
-                        "
-                      >
-                        {index + 1}
+              <tbody className="divide-y divide-theme-border">
+                {advertisingPurposes.map((item) => (
+                  <tr
+                    key={item.pkAPId}
+                    className="
+                      transition-colors
+                      hover:bg-theme-primary-soft/40
+                    "
+                  >
+                    <td
+                      className="
+                        px-6
+                        py-4
+                        text-sm
+                        text-theme-muted
+                      "
+                    >
+                      {item.pkAPId}
+                    </td>
+
+                    <td
+                      className="
+                        px-6
+                        py-4
+                        text-sm
+                        font-medium
+                        text-theme-text
+                      "
+                    >
+                      {item.AdvertisingPurpose}
+                    </td>
+
+                    {(isAllowed("edit") || isAllowed("delete")) && (
+                      <td className="px-6 py-4">
+                        <div className="flex items-center justify-end gap-2">
+                          {isAllowed("edit") && (
+                            <button
+                              type="button"
+                              onClick={() => handleEdit(item)}
+                              disabled={saving || deletingId !== null}
+                              title="Edit"
+                              className="
+                                inline-flex
+                                h-9
+                                w-9
+                                items-center
+                                justify-center
+                                rounded-lg
+                                text-theme-muted
+                                transition-colors
+                                hover:bg-theme-primary-soft
+                                hover:text-theme-primary
+                                disabled:opacity-50
+                              "
+                            >
+                              <Pencil size={16} />
+                            </button>
+                          )}
+
+                          {isAllowed("delete") && (
+                            <button
+                              type="button"
+                              onClick={() => handleDelete(item.pkAPId)}
+                              disabled={
+                                saving || deletingId === item.pkAPId
+                              }
+                              title="Delete"
+                              className="
+                                inline-flex
+                                h-9
+                                w-9
+                                items-center
+                                justify-center
+                                rounded-lg
+                                text-theme-muted
+                                transition-colors
+                                hover:bg-red-50
+                                hover:text-red-600
+                                disabled:opacity-50
+                              "
+                            >
+                              <Trash2 size={16} />
+                            </button>
+                          )}
+                        </div>
                       </td>
-
-
-                      <td
-                        className="
-                          px-6
-                          py-4
-                          text-sm
-                          font-medium
-                          text-theme-text
-                        "
-                      >
-                        {item}
-                      </td>
-
-                    </tr>
-
-                  )
-                )}
-
+                    )}
+                  </tr>
+                ))}
               </tbody>
-
             </table>
-
           </div>
-
         )}
-
       </div>
-
     </div>
-
   );
-
 }
