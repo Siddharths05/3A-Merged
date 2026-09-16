@@ -39,22 +39,22 @@ from model import (
     create_office_type,
     create_requirement,
     create_user,
-    deactivate_ability,
-    deactivate_advertising_media,
-    deactivate_advertising_purpose,
-    deactivate_announcement_type,
-    deactivate_hobby,
-    deactivate_ksa,
-    deactivate_ksa_category,
-    deactivate_position_grade,
-    deactivate_role_in_offense,
-    deactivate_language,
-    deactivate_location,
-    deactivate_meeting_location,
-    deactivate_meeting_type,
-    deactivate_office_level,
-    deactivate_office_type,
-    deactivate_requirement,
+    delete_ability as hard_delete_ability,
+    delete_advertising_media as hard_delete_advertising_media,
+    delete_advertising_purpose as hard_delete_advertising_purpose,
+    delete_announcement_type as hard_delete_announcement_type,
+    delete_hobby as hard_delete_hobby,
+    delete_ksa as hard_delete_ksa,
+    delete_ksa_category as hard_delete_ksa_category,
+    delete_position_grade as hard_delete_position_grade,
+    delete_role_in_offense as hard_delete_role_in_offense,
+    delete_language as hard_delete_language,
+    delete_location as hard_delete_location,
+    delete_meeting_location as hard_delete_meeting_location,
+    delete_meeting_type as hard_delete_meeting_type,
+    delete_office_level as hard_delete_office_level,
+    delete_office_type as hard_delete_office_type,
+    delete_requirement as hard_delete_requirement,
     get_abilities,
     get_ability_by_id,
     get_active_user_count,
@@ -1182,6 +1182,7 @@ def update_existing_ability(
 # ==================================================
 # DELETE ABILITY
 # REQUIRES: ability / delete
+# HARD DELETE (Phase 2)
 # ==================================================
 
 @router.delete(
@@ -1210,7 +1211,7 @@ def delete_ability(
             detail="Ability not found",
         )
 
-    deactivate_ability(
+    hard_delete_ability(
         db,
         ability_id,
     )
@@ -1394,6 +1395,7 @@ def update_existing_location(
 # ==================================================
 # DELETE LOCATION
 # REQUIRES: location / delete
+# HARD DELETE (Phase 2)
 # ==================================================
 
 @router.delete(
@@ -1422,7 +1424,7 @@ def delete_location(
             detail="Location not found",
         )
 
-    deactivate_location(
+    hard_delete_location(
         db,
         location_id,
     )
@@ -1606,6 +1608,7 @@ def update_existing_hobby(
 # ==================================================
 # DELETE HOBBY
 # REQUIRES: hobby / delete
+# HARD DELETE (Phase 2)
 # ==================================================
 
 @router.delete(
@@ -1634,7 +1637,7 @@ def delete_hobby(
             detail="Hobby not found",
         )
 
-    deactivate_hobby(
+    hard_delete_hobby(
         db,
         hobby_id,
     )
@@ -1824,6 +1827,7 @@ def update_existing_announcement_type(
 # ==================================================
 # DELETE ANNOUNCEMENT TYPE
 # REQUIRES: announcement_type / delete
+# HARD DELETE (Phase 2)
 # ==================================================
 
 @router.delete(
@@ -1852,7 +1856,7 @@ def delete_announcement_type(
             detail="Announcement type not found",
         )
 
-    deactivate_announcement_type(
+    hard_delete_announcement_type(
         db,
         announcement_type_id,
     )
@@ -2036,6 +2040,7 @@ def update_existing_office_level(
 # ==================================================
 # DELETE OFFICE LEVEL
 # REQUIRES: office_level / delete
+# HARD DELETE (Phase 2)
 # ==================================================
 
 @router.delete(
@@ -2064,7 +2069,7 @@ def delete_office_level(
             detail="Office level not found",
         )
 
-    deactivate_office_level(
+    hard_delete_office_level(
         db,
         office_level_id,
     )
@@ -2248,6 +2253,7 @@ def update_existing_meeting_type(
 # ==================================================
 # DELETE MEETING TYPE
 # REQUIRES: meeting_type / delete
+# HARD DELETE (Phase 2)
 # ==================================================
 
 @router.delete(
@@ -2276,7 +2282,7 @@ def delete_meeting_type(
             detail="Meeting type not found",
         )
 
-    deactivate_meeting_type(
+    hard_delete_meeting_type(
         db,
         meeting_type_id,
     )
@@ -2460,6 +2466,7 @@ def update_existing_language(
 # ==================================================
 # DELETE LANGUAGE
 # REQUIRES: language / delete
+# HARD DELETE (Phase 2)
 # ==================================================
 
 @router.delete(
@@ -2488,7 +2495,7 @@ def delete_language(
             detail="Language not found",
         )
 
-    deactivate_language(
+    hard_delete_language(
         db,
         language_id,
     )
@@ -2672,6 +2679,7 @@ def update_existing_requirement(
 # ==================================================
 # DELETE REQUIREMENT
 # REQUIRES: requirement / delete
+# HARD DELETE (Phase 2)
 # ==================================================
 
 @router.delete(
@@ -2700,7 +2708,7 @@ def delete_requirement(
             detail="Requirement not found",
         )
 
-    deactivate_requirement(
+    hard_delete_requirement(
         db,
         requirement_id,
     )
@@ -2891,6 +2899,7 @@ def update_existing_advertising_media(
 # ==================================================
 # DELETE ADVERTISING MEDIA
 # REQUIRES: advertising_media / delete
+# HARD DELETE (Phase 2)
 # ==================================================
 
 @router.delete(
@@ -2919,7 +2928,7 @@ def delete_advertising_media(
             detail="Advertising media not found",
         )
 
-    deactivate_advertising_media(
+    hard_delete_advertising_media(
         db,
         advertising_media_id,
     )
@@ -3110,6 +3119,7 @@ def update_existing_advertising_purpose(
 # ==================================================
 # DELETE ADVERTISING PURPOSE
 # REQUIRES: advertising_purpose / delete
+# HARD DELETE (Phase 2)
 # ==================================================
 
 @router.delete(
@@ -3138,7 +3148,7 @@ def delete_advertising_purpose(
             detail="Advertising purpose not found",
         )
 
-    deactivate_advertising_purpose(
+    hard_delete_advertising_purpose(
         db,
         advertising_purpose_id,
     )
@@ -3329,6 +3339,7 @@ def update_existing_office_type(
 # ==================================================
 # DELETE OFFICE TYPE
 # REQUIRES: office_type / delete
+# HARD DELETE (Phase 2)
 # ==================================================
 
 @router.delete(
@@ -3357,7 +3368,7 @@ def delete_office_type(
             detail="Office type not found",
         )
 
-    deactivate_office_type(
+    hard_delete_office_type(
         db,
         office_type_id,
     )
@@ -3548,6 +3559,7 @@ def update_existing_meeting_location(
 # ==================================================
 # DELETE MEETING LOCATION
 # REQUIRES: meeting_location / delete
+# HARD DELETE (Phase 2)
 # ==================================================
 
 @router.delete(
@@ -3576,7 +3588,7 @@ def delete_meeting_location(
             detail="Meeting location not found",
         )
 
-    deactivate_meeting_location(
+    hard_delete_meeting_location(
         db,
         meeting_location_id,
     )
@@ -3767,6 +3779,7 @@ def update_existing_ksa(
 # ==================================================
 # DELETE KSA
 # REQUIRES: ksa / delete
+# HARD DELETE (Phase 2)
 # ==================================================
 
 @router.delete(
@@ -3795,7 +3808,7 @@ def delete_ksa(
             detail="KSA not found",
         )
 
-    deactivate_ksa(
+    hard_delete_ksa(
         db,
         ksa_id,
     )
@@ -3986,6 +3999,7 @@ def update_existing_ksa_category(
 # ==================================================
 # DELETE KSA CATEGORY
 # REQUIRES: ksa_category / delete
+# HARD DELETE (Phase 2)
 # ==================================================
 
 @router.delete(
@@ -4014,7 +4028,7 @@ def delete_ksa_category(
             detail="KSA category not found",
         )
 
-    deactivate_ksa_category(
+    hard_delete_ksa_category(
         db,
         ksa_category_id,
     )
@@ -4223,6 +4237,7 @@ def update_existing_position_grade(
 # ==================================================
 # DELETE POSITION GRADE
 # REQUIRES: position_grade / delete
+# HARD DELETE (Phase 2)
 # ==================================================
 
 @router.delete(
@@ -4251,7 +4266,7 @@ def delete_position_grade(
             detail="Position grade not found",
         )
 
-    deactivate_position_grade(
+    hard_delete_position_grade(
         db,
         position_grade_id,
     )
@@ -4460,6 +4475,7 @@ def update_existing_role_in_offense(
 # ==================================================
 # DELETE ROLE IN OFFENSE
 # REQUIRES: role_in_offense / delete
+# HARD DELETE (Phase 2)
 # ==================================================
 
 @router.delete(
@@ -4488,7 +4504,7 @@ def delete_role_in_offense(
             detail="Role in offense not found",
         )
 
-    deactivate_role_in_offense(
+    hard_delete_role_in_offense(
         db,
         role_in_offense_id,
     )

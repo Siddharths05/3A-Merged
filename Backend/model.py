@@ -85,7 +85,7 @@ class User(Base):
 # ==================================================
 # ABILITY SQLALCHEMY MODEL
 # MAPPED TO REAL TABLE: hrabilities
-# REAL COLUMNS: pkabid, abilities, updated_at, deleted_at
+# REAL COLUMNS: pkabid, abilities
 # (Python attribute names kept the same as before so
 #  route.py and AbilityMaster.jsx need NO changes)
 # ==================================================
@@ -111,27 +111,10 @@ class Ability(Base):
     )
 
 
-    updated_at = Column(
-        "updated_at",
-        DateTime,
-        nullable=True,
-        server_default=func.now(),
-        onupdate=func.now(),
-    )
-
-
-    deleted_at = Column(
-        "deleted_at",
-        DateTime,
-        nullable=True,
-        default=None,
-    )
-
-
 # ==================================================
 # LOCATION SQLALCHEMY MODEL
 # MAPPED TO REAL TABLE: hrlocation
-# REAL COLUMNS: pkhlid, location, updated_at, deleted_at
+# REAL COLUMNS: pkhlid, location
 # (Python attribute names kept the same as before so
 #  route.py and WorkLocation.jsx need NO changes)
 # ==================================================
@@ -157,27 +140,10 @@ class Location(Base):
     )
 
 
-    updated_at = Column(
-        "updated_at",
-        DateTime,
-        nullable=True,
-        server_default=func.now(),
-        onupdate=func.now(),
-    )
-
-
-    deleted_at = Column(
-        "deleted_at",
-        DateTime,
-        nullable=True,
-        default=None,
-    )
-
-
 # ==================================================
 # HOBBY SQLALCHEMY MODEL
 # MAPPED TO REAL TABLE: hrhobby
-# REAL COLUMNS: pkhid, hobby, updated_at, deleted_at
+# REAL COLUMNS: pkhid, hobby
 # ==================================================
 
 class Hobby(Base):
@@ -201,27 +167,10 @@ class Hobby(Base):
     )
 
 
-    updated_at = Column(
-        "updated_at",
-        DateTime,
-        nullable=True,
-        server_default=func.now(),
-        onupdate=func.now(),
-    )
-
-
-    deleted_at = Column(
-        "deleted_at",
-        DateTime,
-        nullable=True,
-        default=None,
-    )
-
-
 # ==================================================
 # JOB FUNCTION SQLALCHEMY MODEL
 # MAPPED TO REAL TABLE: hrjobfunction
-# REAL COLUMNS: pkjfid, jobfunction, updated_at, deleted_at
+# REAL COLUMNS: pkjfid, jobfunction
 # ==================================================
 
 class JobFunction(Base):
@@ -245,27 +194,10 @@ class JobFunction(Base):
     )
 
 
-    updated_at = Column(
-        "updated_at",
-        DateTime,
-        nullable=True,
-        server_default=func.now(),
-        onupdate=func.now(),
-    )
-
-
-    deleted_at = Column(
-        "deleted_at",
-        DateTime,
-        nullable=True,
-        default=None,
-    )
-
-
 # ==================================================
 # ANNOUNCEMENT TYPE SQLALCHEMY MODEL
 # MAPPED TO REAL TABLE: hrannouncementtype
-# REAL COLUMNS: pkatid, announcementtype, updated_at, deleted_at
+# REAL COLUMNS: pkatid, announcementtype
 # ==================================================
 
 class AnnouncementType(Base):
@@ -289,29 +221,11 @@ class AnnouncementType(Base):
     )
 
 
-    updated_at = Column(
-        "updated_at",
-        DateTime,
-        nullable=True,
-        server_default=func.now(),
-        onupdate=func.now(),
-    )
-
-
-    deleted_at = Column(
-        "deleted_at",
-        DateTime,
-        nullable=True,
-        default=None,
-    )
-
-
 # ==================================================
 # OFFICE LEVEL SQLALCHEMY MODEL
 # MAPPED TO REAL TABLE: hrofficelevel
 # REAL COLUMNS (confirmed by user via pgAdmin):
-#   pkolid (PK, integer), officelevel (varchar 200),
-#   updated_at, deleted_at
+#   pkolid (PK, integer), officelevel (varchar 200)
 # ==================================================
 
 class OfficeLevel(Base):
@@ -335,29 +249,11 @@ class OfficeLevel(Base):
     )
 
 
-    updated_at = Column(
-        "updated_at",
-        DateTime,
-        nullable=True,
-        server_default=func.now(),
-        onupdate=func.now(),
-    )
-
-
-    deleted_at = Column(
-        "deleted_at",
-        DateTime,
-        nullable=True,
-        default=None,
-    )
-
-
 # ==================================================
 # MEETING TYPE SQLALCHEMY MODEL
 # MAPPED TO REAL TABLE: hrmeetingtype
 # REAL COLUMNS (confirmed by user via pgAdmin):
-#   pkmtid (PK, integer), meetingtype (varchar 200),
-#   updated_at, deleted_at
+#   pkmtid (PK, integer), meetingtype (varchar 200)
 # ==================================================
 
 class MeetingType(Base):
@@ -381,29 +277,11 @@ class MeetingType(Base):
     )
 
 
-    updated_at = Column(
-        "updated_at",
-        DateTime,
-        nullable=True,
-        server_default=func.now(),
-        onupdate=func.now(),
-    )
-
-
-    deleted_at = Column(
-        "deleted_at",
-        DateTime,
-        nullable=True,
-        default=None,
-    )
-
-
 # ==================================================
 # LANGUAGE SQLALCHEMY MODEL
 # MAPPED TO REAL TABLE: hrlanguage
 # REAL COLUMNS (per user):
-#   pklid (PK, integer), language (varchar 200),
-#   updated_at, deleted_at
+#   pklid (PK, integer), language (varchar 200)
 # ==================================================
 
 class Language(Base):
@@ -427,29 +305,11 @@ class Language(Base):
     )
 
 
-    updated_at = Column(
-        "updated_at",
-        DateTime,
-        nullable=True,
-        server_default=func.now(),
-        onupdate=func.now(),
-    )
-
-
-    deleted_at = Column(
-        "deleted_at",
-        DateTime,
-        nullable=True,
-        default=None,
-    )
-
-
 # ==================================================
 # REQUIREMENT SQLALCHEMY MODEL
 # MAPPED TO REAL TABLE: hrrequirement
 # REAL COLUMNS (per user):
-#   pkrid (PK, integer), requirement (varchar 300),
-#   updated_at, deleted_at
+#   pkrid (PK, integer), requirement (varchar 300)
 # ==================================================
 
 class Requirement(Base):
@@ -473,29 +333,11 @@ class Requirement(Base):
     )
 
 
-    updated_at = Column(
-        "updated_at",
-        DateTime,
-        nullable=True,
-        server_default=func.now(),
-        onupdate=func.now(),
-    )
-
-
-    deleted_at = Column(
-        "deleted_at",
-        DateTime,
-        nullable=True,
-        default=None,
-    )
-
-
 # ==================================================
 # ADVERTISING MEDIA SQLALCHEMY MODEL
 # MAPPED TO REAL TABLE: hradvertisingmedia
 # REAL COLUMNS (per user):
-#   pkamid (PK, integer), advertisingmedia (varchar 200),
-#   updated_at, deleted_at
+#   pkamid (PK, integer), advertisingmedia (varchar 200)
 # ==================================================
 
 class AdvertisingMedia(Base):
@@ -519,30 +361,11 @@ class AdvertisingMedia(Base):
     )
 
 
-    updated_at = Column(
-        "updated_at",
-        DateTime,
-        nullable=True,
-        server_default=func.now(),
-        onupdate=func.now(),
-    )
-
-
-    deleted_at = Column(
-        "deleted_at",
-        DateTime,
-        nullable=True,
-        default=None,
-    )
-
-
-
 # ==================================================
 # ADVERTISING PURPOSE SQLALCHEMY MODEL
 # MAPPED TO REAL TABLE: hradvertisingpurpose
 # REAL COLUMNS (per user):
-#   pkapid (PK, integer), advertisingpurpose (varchar 200),
-#   updated_at, deleted_at
+#   pkapid (PK, integer), advertisingpurpose (varchar 200)
 # ==================================================
 
 class AdvertisingPurpose(Base):
@@ -566,30 +389,11 @@ class AdvertisingPurpose(Base):
     )
 
 
-    updated_at = Column(
-        "updated_at",
-        DateTime,
-        nullable=True,
-        server_default=func.now(),
-        onupdate=func.now(),
-    )
-
-
-    deleted_at = Column(
-        "deleted_at",
-        DateTime,
-        nullable=True,
-        default=None,
-    )
-
-
-
 # ==================================================
 # OFFICE TYPE SQLALCHEMY MODEL
 # MAPPED TO REAL TABLE: hrofficetype
 # REAL COLUMNS (per user):
-#   pkotid (PK, integer), officetype (varchar 200),
-#   updated_at, deleted_at
+#   pkotid (PK, integer), officetype (varchar 200)
 # ==================================================
 
 class OfficeType(Base):
@@ -613,30 +417,11 @@ class OfficeType(Base):
     )
 
 
-    updated_at = Column(
-        "updated_at",
-        DateTime,
-        nullable=True,
-        server_default=func.now(),
-        onupdate=func.now(),
-    )
-
-
-    deleted_at = Column(
-        "deleted_at",
-        DateTime,
-        nullable=True,
-        default=None,
-    )
-
-
-
 # ==================================================
 # MEETING LOCATION SQLALCHEMY MODEL
 # MAPPED TO REAL TABLE: hrmeetinglocation
 # REAL COLUMNS (per user):
-#   pkmlid (PK, integer), meetinglocation (varchar 200),
-#   updated_at, deleted_at
+#   pkmlid (PK, integer), meetinglocation (varchar 200)
 # ==================================================
 
 class MeetingLocation(Base):
@@ -660,30 +445,11 @@ class MeetingLocation(Base):
     )
 
 
-    updated_at = Column(
-        "updated_at",
-        DateTime,
-        nullable=True,
-        server_default=func.now(),
-        onupdate=func.now(),
-    )
-
-
-    deleted_at = Column(
-        "deleted_at",
-        DateTime,
-        nullable=True,
-        default=None,
-    )
-
-
-
 # ==================================================
 # KSA SQLALCHEMY MODEL
 # MAPPED TO REAL TABLE: hrksa
 # REAL COLUMNS (per user pgAdmin):
-#   pkksaid (PK, integer), ksa (varchar 300),
-#   updated_at, deleted_at
+#   pkksaid (PK, integer), ksa (varchar 300)
 # ==================================================
 
 class KSA(Base):
@@ -707,30 +473,11 @@ class KSA(Base):
     )
 
 
-    updated_at = Column(
-        "updated_at",
-        DateTime,
-        nullable=True,
-        server_default=func.now(),
-        onupdate=func.now(),
-    )
-
-
-    deleted_at = Column(
-        "deleted_at",
-        DateTime,
-        nullable=True,
-        default=None,
-    )
-
-
-
 # ==================================================
 # KSA CATEGORY SQLALCHEMY MODEL
 # MAPPED TO REAL TABLE: hrksacategory
 # REAL COLUMNS (per user):
-#   pkksacid (PK, integer), ksacategory (varchar 200),
-#   updated_at, deleted_at
+#   pkksacid (PK, integer), ksacategory (varchar 200)
 # ==================================================
 
 class KSACategory(Base):
@@ -754,31 +501,12 @@ class KSACategory(Base):
     )
 
 
-    updated_at = Column(
-        "updated_at",
-        DateTime,
-        nullable=True,
-        server_default=func.now(),
-        onupdate=func.now(),
-    )
-
-
-    deleted_at = Column(
-        "deleted_at",
-        DateTime,
-        nullable=True,
-        default=None,
-    )
-
-
-
 # ==================================================
 # POSITION GRADE SQLALCHEMY MODEL
 # MAPPED TO REAL TABLE: hrpositiongrade
 # REAL COLUMNS (per user):
 #   pkpgid (PK, integer), positiongrade (varchar 200),
-#   minimumpay numeric(15,2), maximumpay numeric(15,2),
-#   updated_at, deleted_at
+#   minimumpay numeric(15,2), maximumpay numeric(15,2)
 # ==================================================
 
 class PositionGrade(Base):
@@ -816,31 +544,12 @@ class PositionGrade(Base):
     )
 
 
-    updated_at = Column(
-        "updated_at",
-        DateTime,
-        nullable=True,
-        server_default=func.now(),
-        onupdate=func.now(),
-    )
-
-
-    deleted_at = Column(
-        "deleted_at",
-        DateTime,
-        nullable=True,
-        default=None,
-    )
-
-
-
 # ==================================================
 # ROLE IN OFFENSE SQLALCHEMY MODEL
 # MAPPED TO REAL TABLE: hrroleinoffense
 # REAL COLUMNS (per user):
 #   pkrioid (PK, integer), roleinoffense (varchar 200),
-#   minimumpenalty numeric(15,2), maximumpenalty numeric(15,2),
-#   updated_at, deleted_at
+#   minimumpenalty numeric(15,2), maximumpenalty numeric(15,2)
 # ==================================================
 
 class RoleInOffense(Base):
@@ -875,23 +584,6 @@ class RoleInOffense(Base):
         "maximumpenalty",
         Float,
         nullable=False,
-    )
-
-
-    updated_at = Column(
-        "updated_at",
-        DateTime,
-        nullable=True,
-        server_default=func.now(),
-        onupdate=func.now(),
-    )
-
-
-    deleted_at = Column(
-        "deleted_at",
-        DateTime,
-        nullable=True,
-        default=None,
     )
 
 
@@ -2467,18 +2159,6 @@ def ability_to_dict(ability):
 
         "Abilities": ability.Abilities,
 
-        "updated_at": (
-            ability.updated_at.isoformat()
-            if ability.updated_at
-            else None
-        ),
-
-        "deleted_at": (
-            ability.deleted_at.isoformat()
-            if ability.deleted_at
-            else None
-        ),
-
     }
 
 
@@ -2495,12 +2175,6 @@ def get_abilities(
     return (
 
         db.query(Ability)
-
-        .filter(
-
-            Ability.deleted_at.is_(None),
-
-        )
 
         .order_by(Ability.pkABId)
 
@@ -2524,8 +2198,6 @@ def get_ability_by_id(
         .filter(
 
             Ability.pkABId == ability_id,
-
-            Ability.deleted_at.is_(None),
 
         )
 
@@ -2555,8 +2227,6 @@ def ability_exists(
 
             func.lower(Ability.Abilities)
             == abilities.strip().lower(),
-
-            Ability.deleted_at.is_(None),
 
         )
 
@@ -2593,8 +2263,6 @@ def ability_exists_for_other(
 
             Ability.pkABId != ability_id,
 
-            Ability.deleted_at.is_(None),
-
         )
 
         .first()
@@ -2615,8 +2283,6 @@ def create_ability(
     ability = Ability(
 
         Abilities=abilities.strip(),
-
-        deleted_at=None,
 
     )
 
@@ -2682,7 +2348,7 @@ def update_ability(
         raise
 
 
-def deactivate_ability(
+def delete_ability(
 
     db: Session,
 
@@ -2704,14 +2370,11 @@ def deactivate_ability(
         return None
 
 
-    ability.deleted_at = datetime.utcnow()
-
-
     try:
 
-        db.commit()
+        db.delete(ability)
 
-        db.refresh(ability)
+        db.commit()
 
         return True
 
@@ -2740,18 +2403,6 @@ def location_to_dict(location):
 
         "Location": location.Location,
 
-        "updated_at": (
-            location.updated_at.isoformat()
-            if location.updated_at
-            else None
-        ),
-
-        "deleted_at": (
-            location.deleted_at.isoformat()
-            if location.deleted_at
-            else None
-        ),
-
     }
 
 
@@ -2768,12 +2419,6 @@ def get_locations(
     return (
 
         db.query(Location)
-
-        .filter(
-
-            Location.deleted_at.is_(None),
-
-        )
 
         .order_by(Location.pkHLId)
 
@@ -2797,8 +2442,6 @@ def get_location_by_id(
         .filter(
 
             Location.pkHLId == location_id,
-
-            Location.deleted_at.is_(None),
 
         )
 
@@ -2828,8 +2471,6 @@ def location_exists(
 
             func.lower(Location.Location)
             == location.strip().lower(),
-
-            Location.deleted_at.is_(None),
 
         )
 
@@ -2866,8 +2507,6 @@ def location_exists_for_other(
 
             Location.pkHLId != location_id,
 
-            Location.deleted_at.is_(None),
-
         )
 
         .first()
@@ -2888,8 +2527,6 @@ def create_location(
     new_location = Location(
 
         Location=location.strip(),
-
-        deleted_at=None,
 
     )
 
@@ -2955,7 +2592,7 @@ def update_location(
         raise
 
 
-def deactivate_location(
+def delete_location(
 
     db: Session,
 
@@ -2977,14 +2614,11 @@ def deactivate_location(
         return None
 
 
-    location.deleted_at = datetime.utcnow()
-
-
     try:
 
-        db.commit()
+        db.delete(location)
 
-        db.refresh(location)
+        db.commit()
 
         return True
 
@@ -3013,18 +2647,6 @@ def hobby_to_dict(hobby):
 
         "Hobby": hobby.Hobby,
 
-        "updated_at": (
-            hobby.updated_at.isoformat()
-            if hobby.updated_at
-            else None
-        ),
-
-        "deleted_at": (
-            hobby.deleted_at.isoformat()
-            if hobby.deleted_at
-            else None
-        ),
-
     }
 
 
@@ -3041,12 +2663,6 @@ def get_hobbies(
     return (
 
         db.query(Hobby)
-
-        .filter(
-
-            Hobby.deleted_at.is_(None),
-
-        )
 
         .order_by(Hobby.pkHId)
 
@@ -3070,8 +2686,6 @@ def get_hobby_by_id(
         .filter(
 
             Hobby.pkHId == hobby_id,
-
-            Hobby.deleted_at.is_(None),
 
         )
 
@@ -3101,8 +2715,6 @@ def hobby_exists(
 
             func.lower(Hobby.Hobby)
             == hobby.strip().lower(),
-
-            Hobby.deleted_at.is_(None),
 
         )
 
@@ -3139,8 +2751,6 @@ def hobby_exists_for_other(
 
             Hobby.pkHId != hobby_id,
 
-            Hobby.deleted_at.is_(None),
-
         )
 
         .first()
@@ -3161,8 +2771,6 @@ def create_hobby(
     new_hobby = Hobby(
 
         Hobby=hobby.strip(),
-
-        deleted_at=None,
 
     )
 
@@ -3228,7 +2836,7 @@ def update_hobby(
         raise
 
 
-def deactivate_hobby(
+def delete_hobby(
 
     db: Session,
 
@@ -3250,14 +2858,11 @@ def deactivate_hobby(
         return None
 
 
-    hobby.deleted_at = datetime.utcnow()
-
-
     try:
 
-        db.commit()
+        db.delete(hobby)
 
-        db.refresh(hobby)
+        db.commit()
 
         return True
 
@@ -3287,18 +2892,6 @@ def announcement_type_to_dict(announcement_type):
         "AnnouncementType":
             announcement_type.AnnouncementType,
 
-        "updated_at": (
-            announcement_type.updated_at.isoformat()
-            if announcement_type.updated_at
-            else None
-        ),
-
-        "deleted_at": (
-            announcement_type.deleted_at.isoformat()
-            if announcement_type.deleted_at
-            else None
-        ),
-
     }
 
 
@@ -3315,12 +2908,6 @@ def get_announcement_types(
     return (
 
         db.query(AnnouncementType)
-
-        .filter(
-
-            AnnouncementType.deleted_at.is_(None),
-
-        )
 
         .order_by(AnnouncementType.pkATId)
 
@@ -3345,8 +2932,6 @@ def get_announcement_type_by_id(
 
             AnnouncementType.pkATId
             == announcement_type_id,
-
-            AnnouncementType.deleted_at.is_(None),
 
         )
 
@@ -3378,8 +2963,6 @@ def announcement_type_exists(
                 AnnouncementType.AnnouncementType
             )
             == announcement_type.strip().lower(),
-
-            AnnouncementType.deleted_at.is_(None),
 
         )
 
@@ -3419,8 +3002,6 @@ def announcement_type_exists_for_other(
             AnnouncementType.pkATId
             != announcement_type_id,
 
-            AnnouncementType.deleted_at.is_(None),
-
         )
 
         .first()
@@ -3441,8 +3022,6 @@ def create_announcement_type(
     new_announcement_type = AnnouncementType(
 
         AnnouncementType=announcement_type.strip(),
-
-        deleted_at=None,
 
     )
 
@@ -3512,7 +3091,7 @@ def update_announcement_type(
         raise
 
 
-def deactivate_announcement_type(
+def delete_announcement_type(
 
     db: Session,
 
@@ -3536,14 +3115,11 @@ def deactivate_announcement_type(
         return None
 
 
-    announcement_type.deleted_at = datetime.utcnow()
-
-
     try:
 
-        db.commit()
+        db.delete(announcement_type)
 
-        db.refresh(announcement_type)
+        db.commit()
 
         return True
 
@@ -3572,18 +3148,6 @@ def office_level_to_dict(office_level):
 
         "OfficeLevel": office_level.OfficeLevel,
 
-        "updated_at": (
-            office_level.updated_at.isoformat()
-            if office_level.updated_at
-            else None
-        ),
-
-        "deleted_at": (
-            office_level.deleted_at.isoformat()
-            if office_level.deleted_at
-            else None
-        ),
-
     }
 
 
@@ -3600,12 +3164,6 @@ def get_office_levels(
     return (
 
         db.query(OfficeLevel)
-
-        .filter(
-
-            OfficeLevel.deleted_at.is_(None),
-
-        )
 
         .order_by(OfficeLevel.pkOLId)
 
@@ -3629,8 +3187,6 @@ def get_office_level_by_id(
         .filter(
 
             OfficeLevel.pkOLId == office_level_id,
-
-            OfficeLevel.deleted_at.is_(None),
 
         )
 
@@ -3660,8 +3216,6 @@ def office_level_exists(
 
             func.lower(OfficeLevel.OfficeLevel)
             == office_level.strip().lower(),
-
-            OfficeLevel.deleted_at.is_(None),
 
         )
 
@@ -3698,8 +3252,6 @@ def office_level_exists_for_other(
 
             OfficeLevel.pkOLId != office_level_id,
 
-            OfficeLevel.deleted_at.is_(None),
-
         )
 
         .first()
@@ -3720,8 +3272,6 @@ def create_office_level(
     new_office_level = OfficeLevel(
 
         OfficeLevel=office_level.strip(),
-
-        deleted_at=None,
 
     )
 
@@ -3787,7 +3337,7 @@ def update_office_level(
         raise
 
 
-def deactivate_office_level(
+def delete_office_level(
 
     db: Session,
 
@@ -3809,14 +3359,11 @@ def deactivate_office_level(
         return None
 
 
-    office_level.deleted_at = datetime.utcnow()
-
-
     try:
 
-        db.commit()
+        db.delete(office_level)
 
-        db.refresh(office_level)
+        db.commit()
 
         return True
 
@@ -3845,18 +3392,6 @@ def meeting_type_to_dict(meeting_type):
 
         "MeetingType": meeting_type.MeetingType,
 
-        "updated_at": (
-            meeting_type.updated_at.isoformat()
-            if meeting_type.updated_at
-            else None
-        ),
-
-        "deleted_at": (
-            meeting_type.deleted_at.isoformat()
-            if meeting_type.deleted_at
-            else None
-        ),
-
     }
 
 
@@ -3873,12 +3408,6 @@ def get_meeting_types(
     return (
 
         db.query(MeetingType)
-
-        .filter(
-
-            MeetingType.deleted_at.is_(None),
-
-        )
 
         .order_by(MeetingType.pkMTId)
 
@@ -3902,8 +3431,6 @@ def get_meeting_type_by_id(
         .filter(
 
             MeetingType.pkMTId == meeting_type_id,
-
-            MeetingType.deleted_at.is_(None),
 
         )
 
@@ -3933,8 +3460,6 @@ def meeting_type_exists(
 
             func.lower(MeetingType.MeetingType)
             == meeting_type.strip().lower(),
-
-            MeetingType.deleted_at.is_(None),
 
         )
 
@@ -3971,8 +3496,6 @@ def meeting_type_exists_for_other(
 
             MeetingType.pkMTId != meeting_type_id,
 
-            MeetingType.deleted_at.is_(None),
-
         )
 
         .first()
@@ -3993,8 +3516,6 @@ def create_meeting_type(
     new_meeting_type = MeetingType(
 
         MeetingType=meeting_type.strip(),
-
-        deleted_at=None,
 
     )
 
@@ -4060,7 +3581,7 @@ def update_meeting_type(
         raise
 
 
-def deactivate_meeting_type(
+def delete_meeting_type(
 
     db: Session,
 
@@ -4082,14 +3603,11 @@ def deactivate_meeting_type(
         return None
 
 
-    meeting_type.deleted_at = datetime.utcnow()
-
-
     try:
 
-        db.commit()
+        db.delete(meeting_type)
 
-        db.refresh(meeting_type)
+        db.commit()
 
         return True
 
@@ -4118,18 +3636,6 @@ def language_to_dict(language):
 
         "Language": language.Language,
 
-        "updated_at": (
-            language.updated_at.isoformat()
-            if language.updated_at
-            else None
-        ),
-
-        "deleted_at": (
-            language.deleted_at.isoformat()
-            if language.deleted_at
-            else None
-        ),
-
     }
 
 
@@ -4146,12 +3652,6 @@ def get_languages(
     return (
 
         db.query(Language)
-
-        .filter(
-
-            Language.deleted_at.is_(None),
-
-        )
 
         .order_by(Language.pkLId)
 
@@ -4175,8 +3675,6 @@ def get_language_by_id(
         .filter(
 
             Language.pkLId == language_id,
-
-            Language.deleted_at.is_(None),
 
         )
 
@@ -4206,8 +3704,6 @@ def language_exists(
 
             func.lower(Language.Language)
             == language.strip().lower(),
-
-            Language.deleted_at.is_(None),
 
         )
 
@@ -4244,8 +3740,6 @@ def language_exists_for_other(
 
             Language.pkLId != language_id,
 
-            Language.deleted_at.is_(None),
-
         )
 
         .first()
@@ -4266,8 +3760,6 @@ def create_language(
     new_language = Language(
 
         Language=language.strip(),
-
-        deleted_at=None,
 
     )
 
@@ -4333,7 +3825,7 @@ def update_language(
         raise
 
 
-def deactivate_language(
+def delete_language(
 
     db: Session,
 
@@ -4355,14 +3847,11 @@ def deactivate_language(
         return None
 
 
-    language.deleted_at = datetime.utcnow()
-
-
     try:
 
-        db.commit()
+        db.delete(language)
 
-        db.refresh(language)
+        db.commit()
 
         return True
 
@@ -4391,18 +3880,6 @@ def requirement_to_dict(requirement):
 
         "Requirement": requirement.Requirement,
 
-        "updated_at": (
-            requirement.updated_at.isoformat()
-            if requirement.updated_at
-            else None
-        ),
-
-        "deleted_at": (
-            requirement.deleted_at.isoformat()
-            if requirement.deleted_at
-            else None
-        ),
-
     }
 
 
@@ -4419,12 +3896,6 @@ def get_requirements(
     return (
 
         db.query(Requirement)
-
-        .filter(
-
-            Requirement.deleted_at.is_(None),
-
-        )
 
         .order_by(Requirement.pkRId)
 
@@ -4448,8 +3919,6 @@ def get_requirement_by_id(
         .filter(
 
             Requirement.pkRId == requirement_id,
-
-            Requirement.deleted_at.is_(None),
 
         )
 
@@ -4479,8 +3948,6 @@ def requirement_exists(
 
             func.lower(Requirement.Requirement)
             == requirement.strip().lower(),
-
-            Requirement.deleted_at.is_(None),
 
         )
 
@@ -4517,8 +3984,6 @@ def requirement_exists_for_other(
 
             Requirement.pkRId != requirement_id,
 
-            Requirement.deleted_at.is_(None),
-
         )
 
         .first()
@@ -4539,8 +4004,6 @@ def create_requirement(
     new_requirement = Requirement(
 
         Requirement=requirement.strip(),
-
-        deleted_at=None,
 
     )
 
@@ -4606,7 +4069,7 @@ def update_requirement(
         raise
 
 
-def deactivate_requirement(
+def delete_requirement(
 
     db: Session,
 
@@ -4628,14 +4091,11 @@ def deactivate_requirement(
         return None
 
 
-    requirement.deleted_at = datetime.utcnow()
-
-
     try:
 
-        db.commit()
+        db.delete(requirement)
 
-        db.refresh(requirement)
+        db.commit()
 
         return True
 
@@ -4664,18 +4124,6 @@ def advertising_media_to_dict(advertising_media):
 
         "AdvertisingMedia": advertising_media.AdvertisingMedia,
 
-        "updated_at": (
-            advertising_media.updated_at.isoformat()
-            if advertising_media.updated_at
-            else None
-        ),
-
-        "deleted_at": (
-            advertising_media.deleted_at.isoformat()
-            if advertising_media.deleted_at
-            else None
-        ),
-
     }
 
 
@@ -4692,12 +4140,6 @@ def get_advertising_medias(
     return (
 
         db.query(AdvertisingMedia)
-
-        .filter(
-
-            AdvertisingMedia.deleted_at.is_(None),
-
-        )
 
         .order_by(AdvertisingMedia.pkAMId)
 
@@ -4721,8 +4163,6 @@ def get_advertising_media_by_id(
         .filter(
 
             AdvertisingMedia.pkAMId == advertising_media_id,
-
-            AdvertisingMedia.deleted_at.is_(None),
 
         )
 
@@ -4752,8 +4192,6 @@ def advertising_media_exists(
 
             func.lower(AdvertisingMedia.AdvertisingMedia)
             == advertising_media.strip().lower(),
-
-            AdvertisingMedia.deleted_at.is_(None),
 
         )
 
@@ -4790,8 +4228,6 @@ def advertising_media_exists_for_other(
 
             AdvertisingMedia.pkAMId != advertising_media_id,
 
-            AdvertisingMedia.deleted_at.is_(None),
-
         )
 
         .first()
@@ -4812,8 +4248,6 @@ def create_advertising_media(
     new_advertising_media = AdvertisingMedia(
 
         AdvertisingMedia=advertising_media.strip(),
-
-        deleted_at=None,
 
     )
 
@@ -4879,7 +4313,7 @@ def update_advertising_media(
         raise
 
 
-def deactivate_advertising_media(
+def delete_advertising_media(
 
     db: Session,
 
@@ -4901,14 +4335,11 @@ def deactivate_advertising_media(
         return None
 
 
-    advertising_media.deleted_at = datetime.utcnow()
-
-
     try:
 
-        db.commit()
+        db.delete(advertising_media)
 
-        db.refresh(advertising_media)
+        db.commit()
 
         return True
 
@@ -4918,7 +4349,6 @@ def deactivate_advertising_media(
         db.rollback()
 
         raise
-
 
 
 # ==================================================
@@ -4938,18 +4368,6 @@ def advertising_purpose_to_dict(advertising_purpose):
 
         "AdvertisingPurpose": advertising_purpose.AdvertisingPurpose,
 
-        "updated_at": (
-            advertising_purpose.updated_at.isoformat()
-            if advertising_purpose.updated_at
-            else None
-        ),
-
-        "deleted_at": (
-            advertising_purpose.deleted_at.isoformat()
-            if advertising_purpose.deleted_at
-            else None
-        ),
-
     }
 
 
@@ -4966,12 +4384,6 @@ def get_advertising_purposes(
     return (
 
         db.query(AdvertisingPurpose)
-
-        .filter(
-
-            AdvertisingPurpose.deleted_at.is_(None),
-
-        )
 
         .order_by(AdvertisingPurpose.pkAPId)
 
@@ -4995,8 +4407,6 @@ def get_advertising_purpose_by_id(
         .filter(
 
             AdvertisingPurpose.pkAPId == advertising_purpose_id,
-
-            AdvertisingPurpose.deleted_at.is_(None),
 
         )
 
@@ -5026,8 +4436,6 @@ def advertising_purpose_exists(
 
             func.lower(AdvertisingPurpose.AdvertisingPurpose)
             == advertising_purpose.strip().lower(),
-
-            AdvertisingPurpose.deleted_at.is_(None),
 
         )
 
@@ -5064,8 +4472,6 @@ def advertising_purpose_exists_for_other(
 
             AdvertisingPurpose.pkAPId != advertising_purpose_id,
 
-            AdvertisingPurpose.deleted_at.is_(None),
-
         )
 
         .first()
@@ -5086,8 +4492,6 @@ def create_advertising_purpose(
     new_advertising_purpose = AdvertisingPurpose(
 
         AdvertisingPurpose=advertising_purpose.strip(),
-
-        deleted_at=None,
 
     )
 
@@ -5153,7 +4557,7 @@ def update_advertising_purpose(
         raise
 
 
-def deactivate_advertising_purpose(
+def delete_advertising_purpose(
 
     db: Session,
 
@@ -5175,14 +4579,11 @@ def deactivate_advertising_purpose(
         return None
 
 
-    advertising_purpose.deleted_at = datetime.utcnow()
-
-
     try:
 
-        db.commit()
+        db.delete(advertising_purpose)
 
-        db.refresh(advertising_purpose)
+        db.commit()
 
         return True
 
@@ -5192,7 +4593,6 @@ def deactivate_advertising_purpose(
         db.rollback()
 
         raise
-
 
 
 # ==================================================
@@ -5212,18 +4612,6 @@ def office_type_to_dict(office_type):
 
         "OfficeType": office_type.OfficeType,
 
-        "updated_at": (
-            office_type.updated_at.isoformat()
-            if office_type.updated_at
-            else None
-        ),
-
-        "deleted_at": (
-            office_type.deleted_at.isoformat()
-            if office_type.deleted_at
-            else None
-        ),
-
     }
 
 
@@ -5240,12 +4628,6 @@ def get_office_types(
     return (
 
         db.query(OfficeType)
-
-        .filter(
-
-            OfficeType.deleted_at.is_(None),
-
-        )
 
         .order_by(OfficeType.pkOTId)
 
@@ -5269,8 +4651,6 @@ def get_office_type_by_id(
         .filter(
 
             OfficeType.pkOTId == office_type_id,
-
-            OfficeType.deleted_at.is_(None),
 
         )
 
@@ -5300,8 +4680,6 @@ def office_type_exists(
 
             func.lower(OfficeType.OfficeType)
             == office_type.strip().lower(),
-
-            OfficeType.deleted_at.is_(None),
 
         )
 
@@ -5338,8 +4716,6 @@ def office_type_exists_for_other(
 
             OfficeType.pkOTId != office_type_id,
 
-            OfficeType.deleted_at.is_(None),
-
         )
 
         .first()
@@ -5360,8 +4736,6 @@ def create_office_type(
     new_office_type = OfficeType(
 
         OfficeType=office_type.strip(),
-
-        deleted_at=None,
 
     )
 
@@ -5427,7 +4801,7 @@ def update_office_type(
         raise
 
 
-def deactivate_office_type(
+def delete_office_type(
 
     db: Session,
 
@@ -5449,14 +4823,11 @@ def deactivate_office_type(
         return None
 
 
-    office_type.deleted_at = datetime.utcnow()
-
-
     try:
 
-        db.commit()
+        db.delete(office_type)
 
-        db.refresh(office_type)
+        db.commit()
 
         return True
 
@@ -5466,7 +4837,6 @@ def deactivate_office_type(
         db.rollback()
 
         raise
-
 
 
 # ==================================================
@@ -5486,18 +4856,6 @@ def meeting_location_to_dict(meeting_location):
 
         "MeetingLocation": meeting_location.MeetingLocation,
 
-        "updated_at": (
-            meeting_location.updated_at.isoformat()
-            if meeting_location.updated_at
-            else None
-        ),
-
-        "deleted_at": (
-            meeting_location.deleted_at.isoformat()
-            if meeting_location.deleted_at
-            else None
-        ),
-
     }
 
 
@@ -5514,12 +4872,6 @@ def get_meeting_locations(
     return (
 
         db.query(MeetingLocation)
-
-        .filter(
-
-            MeetingLocation.deleted_at.is_(None),
-
-        )
 
         .order_by(MeetingLocation.pkMLId)
 
@@ -5543,8 +4895,6 @@ def get_meeting_location_by_id(
         .filter(
 
             MeetingLocation.pkMLId == meeting_location_id,
-
-            MeetingLocation.deleted_at.is_(None),
 
         )
 
@@ -5574,8 +4924,6 @@ def meeting_location_exists(
 
             func.lower(MeetingLocation.MeetingLocation)
             == meeting_location.strip().lower(),
-
-            MeetingLocation.deleted_at.is_(None),
 
         )
 
@@ -5612,8 +4960,6 @@ def meeting_location_exists_for_other(
 
             MeetingLocation.pkMLId != meeting_location_id,
 
-            MeetingLocation.deleted_at.is_(None),
-
         )
 
         .first()
@@ -5634,8 +4980,6 @@ def create_meeting_location(
     new_meeting_location = MeetingLocation(
 
         MeetingLocation=meeting_location.strip(),
-
-        deleted_at=None,
 
     )
 
@@ -5701,7 +5045,7 @@ def update_meeting_location(
         raise
 
 
-def deactivate_meeting_location(
+def delete_meeting_location(
 
     db: Session,
 
@@ -5723,14 +5067,11 @@ def deactivate_meeting_location(
         return None
 
 
-    meeting_location.deleted_at = datetime.utcnow()
-
-
     try:
 
-        db.commit()
+        db.delete(meeting_location)
 
-        db.refresh(meeting_location)
+        db.commit()
 
         return True
 
@@ -5740,7 +5081,6 @@ def deactivate_meeting_location(
         db.rollback()
 
         raise
-
 
 
 # ==================================================
@@ -5760,18 +5100,6 @@ def ksa_to_dict(ksa):
 
         "KSA": ksa.KSA,
 
-        "updated_at": (
-            ksa.updated_at.isoformat()
-            if ksa.updated_at
-            else None
-        ),
-
-        "deleted_at": (
-            ksa.deleted_at.isoformat()
-            if ksa.deleted_at
-            else None
-        ),
-
     }
 
 
@@ -5788,12 +5116,6 @@ def get_ksas(
     return (
 
         db.query(KSA)
-
-        .filter(
-
-            KSA.deleted_at.is_(None),
-
-        )
 
         .order_by(KSA.pkKSAId)
 
@@ -5817,8 +5139,6 @@ def get_ksa_by_id(
         .filter(
 
             KSA.pkKSAId == ksa_id,
-
-            KSA.deleted_at.is_(None),
 
         )
 
@@ -5848,8 +5168,6 @@ def ksa_exists(
 
             func.lower(KSA.KSA)
             == ksa.strip().lower(),
-
-            KSA.deleted_at.is_(None),
 
         )
 
@@ -5886,8 +5204,6 @@ def ksa_exists_for_other(
 
             KSA.pkKSAId != ksa_id,
 
-            KSA.deleted_at.is_(None),
-
         )
 
         .first()
@@ -5908,8 +5224,6 @@ def create_ksa(
     new_ksa = KSA(
 
         KSA=ksa.strip(),
-
-        deleted_at=None,
 
     )
 
@@ -5975,7 +5289,7 @@ def update_ksa(
         raise
 
 
-def deactivate_ksa(
+def delete_ksa(
 
     db: Session,
 
@@ -5997,14 +5311,11 @@ def deactivate_ksa(
         return None
 
 
-    ksa.deleted_at = datetime.utcnow()
-
-
     try:
 
-        db.commit()
+        db.delete(ksa)
 
-        db.refresh(ksa)
+        db.commit()
 
         return True
 
@@ -6014,7 +5325,6 @@ def deactivate_ksa(
         db.rollback()
 
         raise
-
 
 
 # ==================================================
@@ -6034,18 +5344,6 @@ def ksa_category_to_dict(ksa_category):
 
         "KSACategory": ksa_category.KSACategory,
 
-        "updated_at": (
-            ksa_category.updated_at.isoformat()
-            if ksa_category.updated_at
-            else None
-        ),
-
-        "deleted_at": (
-            ksa_category.deleted_at.isoformat()
-            if ksa_category.deleted_at
-            else None
-        ),
-
     }
 
 
@@ -6062,12 +5360,6 @@ def get_ksa_categories(
     return (
 
         db.query(KSACategory)
-
-        .filter(
-
-            KSACategory.deleted_at.is_(None),
-
-        )
 
         .order_by(KSACategory.pkKSACId)
 
@@ -6091,8 +5383,6 @@ def get_ksa_category_by_id(
         .filter(
 
             KSACategory.pkKSACId == ksa_category_id,
-
-            KSACategory.deleted_at.is_(None),
 
         )
 
@@ -6122,8 +5412,6 @@ def ksa_category_exists(
 
             func.lower(KSACategory.KSACategory)
             == ksa_category.strip().lower(),
-
-            KSACategory.deleted_at.is_(None),
 
         )
 
@@ -6160,8 +5448,6 @@ def ksa_category_exists_for_other(
 
             KSACategory.pkKSACId != ksa_category_id,
 
-            KSACategory.deleted_at.is_(None),
-
         )
 
         .first()
@@ -6182,8 +5468,6 @@ def create_ksa_category(
     new_ksa_category = KSACategory(
 
         KSACategory=ksa_category.strip(),
-
-        deleted_at=None,
 
     )
 
@@ -6249,7 +5533,7 @@ def update_ksa_category(
         raise
 
 
-def deactivate_ksa_category(
+def delete_ksa_category(
 
     db: Session,
 
@@ -6271,14 +5555,11 @@ def deactivate_ksa_category(
         return None
 
 
-    ksa_category.deleted_at = datetime.utcnow()
-
-
     try:
 
-        db.commit()
+        db.delete(ksa_category)
 
-        db.refresh(ksa_category)
+        db.commit()
 
         return True
 
@@ -6288,7 +5569,6 @@ def deactivate_ksa_category(
         db.rollback()
 
         raise
-
 
 
 # ==================================================
@@ -6312,18 +5592,6 @@ def position_grade_to_dict(position_grade):
 
         "MaximumPay": position_grade.MaximumPay,
 
-        "updated_at": (
-            position_grade.updated_at.isoformat()
-            if position_grade.updated_at
-            else None
-        ),
-
-        "deleted_at": (
-            position_grade.deleted_at.isoformat()
-            if position_grade.deleted_at
-            else None
-        ),
-
     }
 
 
@@ -6340,12 +5608,6 @@ def get_position_grades(
     return (
 
         db.query(PositionGrade)
-
-        .filter(
-
-            PositionGrade.deleted_at.is_(None),
-
-        )
 
         .order_by(PositionGrade.pkPGId)
 
@@ -6369,8 +5631,6 @@ def get_position_grade_by_id(
         .filter(
 
             PositionGrade.pkPGId == position_grade_id,
-
-            PositionGrade.deleted_at.is_(None),
 
         )
 
@@ -6400,8 +5660,6 @@ def position_grade_exists(
 
             func.lower(PositionGrade.PositionGrade)
             == position_grade.strip().lower(),
-
-            PositionGrade.deleted_at.is_(None),
 
         )
 
@@ -6438,8 +5696,6 @@ def position_grade_exists_for_other(
 
             PositionGrade.pkPGId != position_grade_id,
 
-            PositionGrade.deleted_at.is_(None),
-
         )
 
         .first()
@@ -6468,8 +5724,6 @@ def create_position_grade(
         MinimumPay=minimum_pay,
 
         MaximumPay=maximum_pay,
-
-        deleted_at=None,
 
     )
 
@@ -6543,7 +5797,7 @@ def update_position_grade(
         raise
 
 
-def deactivate_position_grade(
+def delete_position_grade(
 
     db: Session,
 
@@ -6565,14 +5819,11 @@ def deactivate_position_grade(
         return None
 
 
-    position_grade.deleted_at = datetime.utcnow()
-
-
     try:
 
-        db.commit()
+        db.delete(position_grade)
 
-        db.refresh(position_grade)
+        db.commit()
 
         return True
 
@@ -6582,7 +5833,6 @@ def deactivate_position_grade(
         db.rollback()
 
         raise
-
 
 
 # ==================================================
@@ -6606,18 +5856,6 @@ def role_in_offense_to_dict(role_in_offense):
 
         "MaximumPenalty": role_in_offense.MaximumPenalty,
 
-        "updated_at": (
-            role_in_offense.updated_at.isoformat()
-            if role_in_offense.updated_at
-            else None
-        ),
-
-        "deleted_at": (
-            role_in_offense.deleted_at.isoformat()
-            if role_in_offense.deleted_at
-            else None
-        ),
-
     }
 
 
@@ -6634,12 +5872,6 @@ def get_role_in_offenses(
     return (
 
         db.query(RoleInOffense)
-
-        .filter(
-
-            RoleInOffense.deleted_at.is_(None),
-
-        )
 
         .order_by(RoleInOffense.pkRIOId)
 
@@ -6663,8 +5895,6 @@ def get_role_in_offense_by_id(
         .filter(
 
             RoleInOffense.pkRIOId == role_in_offense_id,
-
-            RoleInOffense.deleted_at.is_(None),
 
         )
 
@@ -6694,8 +5924,6 @@ def role_in_offense_exists(
 
             func.lower(RoleInOffense.RoleInOffense)
             == role_in_offense.strip().lower(),
-
-            RoleInOffense.deleted_at.is_(None),
 
         )
 
@@ -6732,8 +5960,6 @@ def role_in_offense_exists_for_other(
 
             RoleInOffense.pkRIOId != role_in_offense_id,
 
-            RoleInOffense.deleted_at.is_(None),
-
         )
 
         .first()
@@ -6762,8 +5988,6 @@ def create_role_in_offense(
         MinimumPenalty=minimum_penalty,
 
         MaximumPenalty=maximum_penalty,
-
-        deleted_at=None,
 
     )
 
@@ -6837,7 +6061,7 @@ def update_role_in_offense(
         raise
 
 
-def deactivate_role_in_offense(
+def delete_role_in_offense(
 
     db: Session,
 
@@ -6859,14 +6083,11 @@ def deactivate_role_in_offense(
         return None
 
 
-    item.deleted_at = datetime.utcnow()
-
-
     try:
 
-        db.commit()
+        db.delete(item)
 
-        db.refresh(item)
+        db.commit()
 
         return True
 
