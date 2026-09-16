@@ -7,6 +7,8 @@ import {
   Pencil,
   Trash2,
   X,
+  Download,
+  Printer,
 } from "lucide-react";
 
 import { usePermissions } from "../../components/Permissions";
@@ -19,9 +21,6 @@ export default function Requirements() {
 
   // ==================================================
   // PERMISSIONS
-  // Admin bypasses entirely; everyone else is gated on
-  // the "requirement" module rights, same pattern
-  // Header.jsx uses for the Masters dropdown.
   // ==================================================
 
   const { role, can } = usePermissions();
@@ -45,6 +44,10 @@ export default function Requirements() {
   const [saving, setSaving] = useState(false);
 
   const [deletingId, setDeletingId] = useState(null);
+
+  const [exporting, setExporting] = useState(false);
+
+  const [printing, setPrinting] = useState(false);
 
   const [error, setError] = useState("");
 
@@ -330,7 +333,6 @@ export default function Requirements() {
         data.message || "Requirement deleted successfully."
       );
 
-      // If the deleted row was mid-edit, clear the form.
       if (editingId === item.pkRId) {
         setEditingId(null);
 
@@ -353,6 +355,130 @@ export default function Requirements() {
       }
     } finally {
       setDeletingId(null);
+    }
+  };
+
+
+  // ==================================================
+  // EXPORT TO EXCEL
+  // ==================================================
+
+  const handleExport = async () => {
+    try {
+      setExporting(true);
+      setError("");
+
+      const token = getToken();
+
+      if (!token) {
+        throw new Error(
+          "Authentication token not found. Please login again."
+        );
+      }
+
+      const response = await fetch(
+        `${API_BASE_URL}/requirements/export`,
+        {
+          method: "GET",
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+
+      if (!response.ok) {
+        const message = await getErrorMessage(response);
+        throw new Error(message);
+      }
+
+      const blob = await response.blob();
+      const url = window.URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = url;
+      const date = new Date()
+        .toISOString()
+        .slice(0, 10)
+        .replace(/-/g, "_");
+      link.download = `export_Requirement_${date}.xlsx`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      window.URL.revokeObjectURL(url);
+
+      setSuccess("Excel file downloaded successfully.");
+    } catch (err) {
+      console.error("Export error:", err);
+      if (err instanceof TypeError) {
+        setError(
+          "Failed to connect to the server. Please make sure the backend is running."
+        );
+      } else {
+        setError(err.message || "Failed to export data");
+      }
+    } finally {
+      setExporting(false);
+    }
+  };
+
+
+  // ==================================================
+  // PRINT TO WORD
+  // ==================================================
+
+  const handlePrint = async () => {
+    try {
+      setPrinting(true);
+      setError("");
+
+      const token = getToken();
+
+      if (!token) {
+        throw new Error(
+          "Authentication token not found. Please login again."
+        );
+      }
+
+      const response = await fetch(
+        `${API_BASE_URL}/requirements/print`,
+        {
+          method: "GET",
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+
+      if (!response.ok) {
+        const message = await getErrorMessage(response);
+        throw new Error(message);
+      }
+
+      const blob = await response.blob();
+      const url = window.URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = url;
+      const date = new Date()
+        .toISOString()
+        .slice(0, 10)
+        .replace(/-/g, "_");
+      link.download = `print_Requirement_${date}.docx`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      window.URL.revokeObjectURL(url);
+
+      setSuccess("Word file downloaded successfully.");
+    } catch (err) {
+      console.error("Print error:", err);
+      if (err instanceof TypeError) {
+        setError(
+          "Failed to connect to the server. Please make sure the backend is running."
+        );
+      } else {
+        setError(err.message || "Failed to print data");
+      }
+    } finally {
+      setPrinting(false);
     }
   };
 
@@ -451,11 +577,6 @@ export default function Requirements() {
 
       {/* ==================================================
           ADD / EDIT REQUIREMENT
-          Hidden entirely for a user with neither add nor
-          edit rights on this module — matches the read-only
-          treatment the rest of the app gives non-permitted
-          users, rather than showing a form that will just
-          403 on submit.
       ================================================== */}
 
       {(isAllowed("add") || isAllowed("edit")) && (
@@ -471,8 +592,6 @@ export default function Requirements() {
           "
         >
 
-
-          {/* CARD HEADER */}
 
           <div
             className="
@@ -519,8 +638,6 @@ export default function Requirements() {
 
 
 
-            {/* ICON */}
-
             <div
               className="
                 flex
@@ -543,8 +660,6 @@ export default function Requirements() {
 
 
 
-          {/* FORM */}
-
           <div
             className="
               space-y-6
@@ -555,8 +670,6 @@ export default function Requirements() {
 
             <div className="max-w-xl">
 
-
-              {/* LABEL */}
 
               <label
                 htmlFor="requirement"
@@ -572,8 +685,6 @@ export default function Requirements() {
               </label>
 
 
-
-              {/* INPUT */}
 
               <input
                 id="requirement"
@@ -617,8 +728,6 @@ export default function Requirements() {
             </div>
 
 
-
-            {/* ACTIONS */}
 
             <div
               className="
@@ -725,11 +834,10 @@ export default function Requirements() {
       >
 
 
-        {/* TABLE HEADER */}
-
         <div
           className="
             flex
+            flex-wrap
             items-center
             justify-between
             gap-4
@@ -768,31 +876,103 @@ export default function Requirements() {
 
 
 
-          {/* ICON */}
+          <div className="flex items-center gap-2">
 
-          <div
-            className="
-              flex
-              h-11
-              w-11
-              shrink-0
-              items-center
-              justify-center
-              rounded-xl
-              bg-theme-primary-soft
-              text-theme-primary
-            "
-          >
+            {isAllowed("export") && (
 
-            <ClipboardList size={21} />
+              <button
+                type="button"
+                onClick={handleExport}
+                disabled={
+                  loading ||
+                  exporting ||
+                  printing ||
+                  requirements.length === 0
+                }
+                className="
+                  inline-flex
+                  h-10
+                  items-center
+                  justify-center
+                  gap-2
+                  rounded-lg
+                  bg-blue-600
+                  px-4
+                  text-sm
+                  font-semibold
+                  text-white
+                  transition
+                  hover:bg-blue-700
+                  disabled:cursor-not-allowed
+                  disabled:opacity-60
+                "
+              >
+                <Download size={16} />
+                {exporting ? "Exporting…" : "Export"}
+              </button>
+
+            )}
+
+
+            {isAllowed("print") && (
+
+              <button
+                type="button"
+                onClick={handlePrint}
+                disabled={
+                  loading ||
+                  exporting ||
+                  printing ||
+                  requirements.length === 0
+                }
+                className="
+                  inline-flex
+                  h-10
+                  items-center
+                  justify-center
+                  gap-2
+                  rounded-lg
+                  bg-emerald-600
+                  px-4
+                  text-sm
+                  font-semibold
+                  text-white
+                  transition
+                  hover:bg-emerald-700
+                  disabled:cursor-not-allowed
+                  disabled:opacity-60
+                "
+              >
+                <Printer size={16} />
+                {printing ? "Preparing…" : "Print"}
+              </button>
+
+            )}
+
+
+            <div
+              className="
+                flex
+                h-11
+                w-11
+                shrink-0
+                items-center
+                justify-center
+                rounded-xl
+                bg-theme-primary-soft
+                text-theme-primary
+              "
+            >
+
+              <ClipboardList size={21} />
+
+            </div>
 
           </div>
 
         </div>
 
 
-
-        {/* LOADING STATE */}
 
         {loading && (
 
@@ -811,8 +991,6 @@ export default function Requirements() {
         )}
 
 
-
-        {/* EMPTY STATE */}
 
         {!loading && requirements.length === 0 && (
 
@@ -873,8 +1051,6 @@ export default function Requirements() {
         )}
 
 
-
-        {/* TABLE */}
 
         {!loading && requirements.length > 0 && (
 

@@ -7,6 +7,8 @@ import {
   X,
   AlertCircle,
   CheckCircle2,
+  Download,
+  Printer,
 } from "lucide-react";
 
 import { Can, usePermissions } from "../../components/Permissions";
@@ -35,6 +37,10 @@ export default function Hobbies() {
   const [deletingId, setDeletingId] = useState(null);
 
   const [editingId, setEditingId] = useState(null);
+
+  const [exporting, setExporting] = useState(false);
+
+  const [printing, setPrinting] = useState(false);
 
   const [error, setError] = useState("");
 
@@ -103,10 +109,6 @@ export default function Hobbies() {
 
       const data = await response.json();
 
-      // ==============================================
-      // BACKEND RETURNS { total, hobbies: [...] }
-      // ==============================================
-
       setHobbies(
         Array.isArray(data.hobbies)
           ? data.hobbies
@@ -173,10 +175,6 @@ export default function Hobbies() {
 
     const trimmedHobby =
       hobby.trim();
-
-    // ================================================
-    // VALIDATION
-    // ================================================
 
     if (!trimmedHobby) {
       setError(
@@ -375,10 +373,131 @@ export default function Hobbies() {
   };
 
   // ==================================================
+  // EXPORT TO EXCEL
+  // ==================================================
+
+  const handleExport = async () => {
+    try {
+      setExporting(true);
+      setError("");
+
+      const token = getToken();
+
+      if (!token) {
+        throw new Error(
+          "Authentication token not found. Please login again."
+        );
+      }
+
+      const response = await fetch(
+        `${API_BASE_URL}/hobbies/export`,
+        {
+          method: "GET",
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+
+      if (!response.ok) {
+        const message =
+          await getErrorMessage(response);
+        throw new Error(message);
+      }
+
+      const blob = await response.blob();
+      const url = window.URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = url;
+      const date = new Date()
+        .toISOString()
+        .slice(0, 10)
+        .replace(/-/g, "_");
+      link.download = `export_Hobby_${date}.xlsx`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      window.URL.revokeObjectURL(url);
+
+      setSuccess("Excel file downloaded successfully.");
+    } catch (err) {
+      console.error("Export error:", err);
+      if (err instanceof TypeError) {
+        setError(
+          "Failed to connect to the server. Please make sure the backend is running."
+        );
+      } else {
+        setError(err.message || "Failed to export data");
+      }
+    } finally {
+      setExporting(false);
+    }
+  };
+
+  // ==================================================
+  // PRINT TO WORD
+  // ==================================================
+
+  const handlePrint = async () => {
+    try {
+      setPrinting(true);
+      setError("");
+
+      const token = getToken();
+
+      if (!token) {
+        throw new Error(
+          "Authentication token not found. Please login again."
+        );
+      }
+
+      const response = await fetch(
+        `${API_BASE_URL}/hobbies/print`,
+        {
+          method: "GET",
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+
+      if (!response.ok) {
+        const message =
+          await getErrorMessage(response);
+        throw new Error(message);
+      }
+
+      const blob = await response.blob();
+      const url = window.URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = url;
+      const date = new Date()
+        .toISOString()
+        .slice(0, 10)
+        .replace(/-/g, "_");
+      link.download = `print_Hobby_${date}.docx`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      window.URL.revokeObjectURL(url);
+
+      setSuccess("Word file downloaded successfully.");
+    } catch (err) {
+      console.error("Print error:", err);
+      if (err instanceof TypeError) {
+        setError(
+          "Failed to connect to the server. Please make sure the backend is running."
+        );
+      } else {
+        setError(err.message || "Failed to print data");
+      }
+    } finally {
+      setPrinting(false);
+    }
+  };
+
+  // ==================================================
   // NO VIEW RIGHT
-  // Defense-in-depth: Header already hides this link
-  // for users without view rights, but this stops
-  // someone reaching the page by typing the URL.
   // ==================================================
 
   if (!rightsLoading && !can("hobby", "view")) {
@@ -486,8 +605,6 @@ export default function Hobbies() {
         "
       >
 
-        {/* CARD HEADER */}
-
         <div
           className="
             flex
@@ -544,8 +661,6 @@ export default function Hobbies() {
           </div>
 
         </div>
-
-        {/* FORM */}
 
         <form
           onSubmit={handleSubmit}
@@ -627,8 +742,6 @@ export default function Hobbies() {
 
           </div>
 
-          {/* ERROR */}
-
           {error && (
             <div
               className="
@@ -658,8 +771,6 @@ export default function Hobbies() {
               </span>
             </div>
           )}
-
-          {/* SUCCESS */}
 
           {success && (
             <div
@@ -691,8 +802,6 @@ export default function Hobbies() {
               </span>
             </div>
           )}
-
-          {/* ACTIONS */}
 
           <div
             className="
@@ -793,11 +902,10 @@ export default function Hobbies() {
         "
       >
 
-        {/* TABLE HEADER */}
-
         <div
           className="
             flex
+            flex-wrap
             items-center
             justify-between
             gap-4
@@ -830,25 +938,91 @@ export default function Hobbies() {
             </p>
           </div>
 
-          <div
-            className="
-              flex
-              h-11
-              w-11
-              shrink-0
-              items-center
-              justify-center
-              rounded-xl
-              bg-theme-primary-soft
-              text-theme-primary
-            "
-          >
-            <Heart size={21} />
+          <div className="flex items-center gap-2">
+            <Can module="hobby" action="export">
+              <button
+                type="button"
+                onClick={handleExport}
+                disabled={
+                  loading ||
+                  exporting ||
+                  printing ||
+                  hobbies.length === 0
+                }
+                className="
+                  inline-flex
+                  h-10
+                  items-center
+                  justify-center
+                  gap-2
+                  rounded-lg
+                  bg-blue-600
+                  px-4
+                  text-sm
+                  font-semibold
+                  text-white
+                  transition
+                  hover:bg-blue-700
+                  disabled:cursor-not-allowed
+                  disabled:opacity-60
+                "
+              >
+                <Download size={16} />
+                {exporting ? "Exporting…" : "Export"}
+              </button>
+            </Can>
+
+            <Can module="hobby" action="print">
+              <button
+                type="button"
+                onClick={handlePrint}
+                disabled={
+                  loading ||
+                  exporting ||
+                  printing ||
+                  hobbies.length === 0
+                }
+                className="
+                  inline-flex
+                  h-10
+                  items-center
+                  justify-center
+                  gap-2
+                  rounded-lg
+                  bg-emerald-600
+                  px-4
+                  text-sm
+                  font-semibold
+                  text-white
+                  transition
+                  hover:bg-emerald-700
+                  disabled:cursor-not-allowed
+                  disabled:opacity-60
+                "
+              >
+                <Printer size={16} />
+                {printing ? "Preparing…" : "Print"}
+              </button>
+            </Can>
+
+            <div
+              className="
+                flex
+                h-11
+                w-11
+                shrink-0
+                items-center
+                justify-center
+                rounded-xl
+                bg-theme-primary-soft
+                text-theme-primary
+              "
+            >
+              <Heart size={21} />
+            </div>
           </div>
 
         </div>
-
-        {/* LOADING */}
 
         {loading && (
           <div
@@ -863,8 +1037,6 @@ export default function Hobbies() {
             Loading hobbies...
           </div>
         )}
-
-        {/* EMPTY STATE */}
 
         {!loading && hobbies.length === 0 && !error && (
           <div
@@ -915,8 +1087,6 @@ export default function Hobbies() {
 
           </div>
         )}
-
-        {/* TABLE */}
 
         {!loading && hobbies.length > 0 && (
           <div className="overflow-x-auto">

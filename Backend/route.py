@@ -1,9 +1,17 @@
+from datetime import datetime
+from io import BytesIO
+
 from fastapi import (
     APIRouter,
     Depends,
     HTTPException,
     status,
 )
+from fastapi.responses import StreamingResponse
+
+from openpyxl import Workbook
+from openpyxl.styles import Font, PatternFill, Alignment
+from docx import Document
 
 from sqlalchemy.orm import Session
 
@@ -209,6 +217,702 @@ from security import (
 
 router = APIRouter()
 
+
+# ==================================================
+# EXPORT / PRINT HELPERS (Phase 3)
+# ==================================================
+
+def _export_to_excel(records, columns, sheet_title="Data"):
+    """
+    records: list of model objects
+    columns: list of (header_display, attr_name)
+    """
+    wb = Workbook()
+    ws = wb.active
+    ws.title = sheet_title[:31]
+
+    header_fill = PatternFill(
+        start_color="366092",
+        end_color="366092",
+        fill_type="solid",
+    )
+    header_font = Font(bold=True, color="FFFFFF")
+    header_align = Alignment(horizontal="center")
+
+    for col_idx, (header, _) in enumerate(columns, 1):
+        cell = ws.cell(row=1, column=col_idx, value=header)
+        cell.font = header_font
+        cell.fill = header_fill
+        cell.alignment = header_align
+
+    for row_idx, record in enumerate(records, 2):
+        for col_idx, (_, attr) in enumerate(columns, 1):
+            value = getattr(record, attr, None)
+            ws.cell(row=row_idx, column=col_idx, value=value)
+
+    for col in ws.columns:
+        max_len = 0
+        letter = col[0].column_letter
+        for cell in col:
+            max_len = max(max_len, len(str(cell.value or "")))
+        ws.column_dimensions[letter].width = min(max_len + 2, 50)
+
+    stream = BytesIO()
+    wb.save(stream)
+    stream.seek(0)
+    return stream
+
+
+def _export_to_word(records, columns, title):
+    """
+    records: list of model objects
+    columns: list of (header_display, attr_name)
+    """
+    doc = Document()
+    doc.add_heading(title, level=1)
+    doc.add_paragraph(
+        f"Generated: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}"
+    )
+
+    table = doc.add_table(rows=1, cols=len(columns))
+    table.style = "Light Grid Accent 1"
+
+    header_cells = table.rows[0].cells
+    for idx, (header, _) in enumerate(columns):
+        header_cells[idx].text = header
+        for paragraph in header_cells[idx].paragraphs:
+            for run in paragraph.runs:
+                run.font.bold = True
+
+    for record in records:
+        row_cells = table.add_row().cells
+        for col_idx, (_, attr) in enumerate(columns):
+            value = getattr(record, attr, None)
+            row_cells[col_idx].text = "" if value is None else str(value)
+
+    stream = BytesIO()
+    doc.save(stream)
+    stream.seek(0)
+    return stream
+
+
+def _file_date():
+    return datetime.now().strftime("%Y_%m_%d")
+
+
+
+
+# ==================================================
+# EXPORT / PRINT ENDPOINTS (Phase 3)
+# ==================================================
+
+
+@router.get("/abilities/export")
+def export_abilities(
+    db: Session = Depends(get_db),
+    current_user: dict = Depends(
+        require_permission("ability", "export")
+    ),
+):
+    records = get_abilities(db)
+    columns = [("ID", "pkABId"), ("Abilities", "Abilities")]
+    stream = _export_to_excel(records, columns, sheet_title="Ability")
+    filename = f"export_Ability_{_file_date()}.xlsx"
+    return StreamingResponse(
+        stream,
+        media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+        headers={"Content-Disposition": f"attachment; filename={filename}"},
+    )
+
+
+@router.get("/abilities/print")
+def print_abilities(
+    db: Session = Depends(get_db),
+    current_user: dict = Depends(
+        require_permission("ability", "print")
+    ),
+):
+    records = get_abilities(db)
+    columns = [("ID", "pkABId"), ("Abilities", "Abilities")]
+    stream = _export_to_word(
+        records, columns, title="Ability Report"
+    )
+    filename = f"print_Ability_{_file_date()}.docx"
+    return StreamingResponse(
+        stream,
+        media_type="application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+        headers={"Content-Disposition": f"attachment; filename={filename}"},
+    )
+
+
+@router.get("/locations/export")
+def export_locations(
+    db: Session = Depends(get_db),
+    current_user: dict = Depends(
+        require_permission("location", "export")
+    ),
+):
+    records = get_locations(db)
+    columns = [("ID", "pkHLId"), ("Location", "Location")]
+    stream = _export_to_excel(records, columns, sheet_title="Location")
+    filename = f"export_Location_{_file_date()}.xlsx"
+    return StreamingResponse(
+        stream,
+        media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+        headers={"Content-Disposition": f"attachment; filename={filename}"},
+    )
+
+
+@router.get("/locations/print")
+def print_locations(
+    db: Session = Depends(get_db),
+    current_user: dict = Depends(
+        require_permission("location", "print")
+    ),
+):
+    records = get_locations(db)
+    columns = [("ID", "pkHLId"), ("Location", "Location")]
+    stream = _export_to_word(
+        records, columns, title="Location Report"
+    )
+    filename = f"print_Location_{_file_date()}.docx"
+    return StreamingResponse(
+        stream,
+        media_type="application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+        headers={"Content-Disposition": f"attachment; filename={filename}"},
+    )
+
+
+@router.get("/hobbies/export")
+def export_hobbies(
+    db: Session = Depends(get_db),
+    current_user: dict = Depends(
+        require_permission("hobby", "export")
+    ),
+):
+    records = get_hobbies(db)
+    columns = [("ID", "pkHId"), ("Hobby", "Hobby")]
+    stream = _export_to_excel(records, columns, sheet_title="Hobby")
+    filename = f"export_Hobby_{_file_date()}.xlsx"
+    return StreamingResponse(
+        stream,
+        media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+        headers={"Content-Disposition": f"attachment; filename={filename}"},
+    )
+
+
+@router.get("/hobbies/print")
+def print_hobbies(
+    db: Session = Depends(get_db),
+    current_user: dict = Depends(
+        require_permission("hobby", "print")
+    ),
+):
+    records = get_hobbies(db)
+    columns = [("ID", "pkHId"), ("Hobby", "Hobby")]
+    stream = _export_to_word(
+        records, columns, title="Hobby Report"
+    )
+    filename = f"print_Hobby_{_file_date()}.docx"
+    return StreamingResponse(
+        stream,
+        media_type="application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+        headers={"Content-Disposition": f"attachment; filename={filename}"},
+    )
+
+
+@router.get("/announcement-types/export")
+def export_announcement_types(
+    db: Session = Depends(get_db),
+    current_user: dict = Depends(
+        require_permission("announcement_type", "export")
+    ),
+):
+    records = get_announcement_types(db)
+    columns = [("ID", "pkATId"), ("Announcement Type", "AnnouncementType")]
+    stream = _export_to_excel(records, columns, sheet_title="AnnouncementType")
+    filename = f"export_AnnouncementType_{_file_date()}.xlsx"
+    return StreamingResponse(
+        stream,
+        media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+        headers={"Content-Disposition": f"attachment; filename={filename}"},
+    )
+
+
+@router.get("/announcement-types/print")
+def print_announcement_types(
+    db: Session = Depends(get_db),
+    current_user: dict = Depends(
+        require_permission("announcement_type", "print")
+    ),
+):
+    records = get_announcement_types(db)
+    columns = [("ID", "pkATId"), ("Announcement Type", "AnnouncementType")]
+    stream = _export_to_word(
+        records, columns, title="AnnouncementType Report"
+    )
+    filename = f"print_AnnouncementType_{_file_date()}.docx"
+    return StreamingResponse(
+        stream,
+        media_type="application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+        headers={"Content-Disposition": f"attachment; filename={filename}"},
+    )
+
+
+@router.get("/office-levels/export")
+def export_office_levels(
+    db: Session = Depends(get_db),
+    current_user: dict = Depends(
+        require_permission("office_level", "export")
+    ),
+):
+    records = get_office_levels(db)
+    columns = [("ID", "pkOLId"), ("Office Level", "OfficeLevel")]
+    stream = _export_to_excel(records, columns, sheet_title="OfficeLevel")
+    filename = f"export_OfficeLevel_{_file_date()}.xlsx"
+    return StreamingResponse(
+        stream,
+        media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+        headers={"Content-Disposition": f"attachment; filename={filename}"},
+    )
+
+
+@router.get("/office-levels/print")
+def print_office_levels(
+    db: Session = Depends(get_db),
+    current_user: dict = Depends(
+        require_permission("office_level", "print")
+    ),
+):
+    records = get_office_levels(db)
+    columns = [("ID", "pkOLId"), ("Office Level", "OfficeLevel")]
+    stream = _export_to_word(
+        records, columns, title="OfficeLevel Report"
+    )
+    filename = f"print_OfficeLevel_{_file_date()}.docx"
+    return StreamingResponse(
+        stream,
+        media_type="application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+        headers={"Content-Disposition": f"attachment; filename={filename}"},
+    )
+
+
+@router.get("/meeting-types/export")
+def export_meeting_types(
+    db: Session = Depends(get_db),
+    current_user: dict = Depends(
+        require_permission("meeting_type", "export")
+    ),
+):
+    records = get_meeting_types(db)
+    columns = [("ID", "pkMTId"), ("Meeting Type", "MeetingType")]
+    stream = _export_to_excel(records, columns, sheet_title="MeetingType")
+    filename = f"export_MeetingType_{_file_date()}.xlsx"
+    return StreamingResponse(
+        stream,
+        media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+        headers={"Content-Disposition": f"attachment; filename={filename}"},
+    )
+
+
+@router.get("/meeting-types/print")
+def print_meeting_types(
+    db: Session = Depends(get_db),
+    current_user: dict = Depends(
+        require_permission("meeting_type", "print")
+    ),
+):
+    records = get_meeting_types(db)
+    columns = [("ID", "pkMTId"), ("Meeting Type", "MeetingType")]
+    stream = _export_to_word(
+        records, columns, title="MeetingType Report"
+    )
+    filename = f"print_MeetingType_{_file_date()}.docx"
+    return StreamingResponse(
+        stream,
+        media_type="application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+        headers={"Content-Disposition": f"attachment; filename={filename}"},
+    )
+
+
+@router.get("/languages/export")
+def export_languages(
+    db: Session = Depends(get_db),
+    current_user: dict = Depends(
+        require_permission("language", "export")
+    ),
+):
+    records = get_languages(db)
+    columns = [("ID", "pkLId"), ("Language", "Language")]
+    stream = _export_to_excel(records, columns, sheet_title="Language")
+    filename = f"export_Language_{_file_date()}.xlsx"
+    return StreamingResponse(
+        stream,
+        media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+        headers={"Content-Disposition": f"attachment; filename={filename}"},
+    )
+
+
+@router.get("/languages/print")
+def print_languages(
+    db: Session = Depends(get_db),
+    current_user: dict = Depends(
+        require_permission("language", "print")
+    ),
+):
+    records = get_languages(db)
+    columns = [("ID", "pkLId"), ("Language", "Language")]
+    stream = _export_to_word(
+        records, columns, title="Language Report"
+    )
+    filename = f"print_Language_{_file_date()}.docx"
+    return StreamingResponse(
+        stream,
+        media_type="application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+        headers={"Content-Disposition": f"attachment; filename={filename}"},
+    )
+
+
+@router.get("/requirements/export")
+def export_requirements(
+    db: Session = Depends(get_db),
+    current_user: dict = Depends(
+        require_permission("requirement", "export")
+    ),
+):
+    records = get_requirements(db)
+    columns = [("ID", "pkRId"), ("Requirement", "Requirement")]
+    stream = _export_to_excel(records, columns, sheet_title="Requirement")
+    filename = f"export_Requirement_{_file_date()}.xlsx"
+    return StreamingResponse(
+        stream,
+        media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+        headers={"Content-Disposition": f"attachment; filename={filename}"},
+    )
+
+
+@router.get("/requirements/print")
+def print_requirements(
+    db: Session = Depends(get_db),
+    current_user: dict = Depends(
+        require_permission("requirement", "print")
+    ),
+):
+    records = get_requirements(db)
+    columns = [("ID", "pkRId"), ("Requirement", "Requirement")]
+    stream = _export_to_word(
+        records, columns, title="Requirement Report"
+    )
+    filename = f"print_Requirement_{_file_date()}.docx"
+    return StreamingResponse(
+        stream,
+        media_type="application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+        headers={"Content-Disposition": f"attachment; filename={filename}"},
+    )
+
+
+@router.get("/advertising-medias/export")
+def export_advertising_medias(
+    db: Session = Depends(get_db),
+    current_user: dict = Depends(
+        require_permission("advertising_media", "export")
+    ),
+):
+    records = get_advertising_medias(db)
+    columns = [("ID", "pkAMId"), ("Advertising Media", "AdvertisingMedia")]
+    stream = _export_to_excel(records, columns, sheet_title="AdvertisingMedia")
+    filename = f"export_AdvertisingMedia_{_file_date()}.xlsx"
+    return StreamingResponse(
+        stream,
+        media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+        headers={"Content-Disposition": f"attachment; filename={filename}"},
+    )
+
+
+@router.get("/advertising-medias/print")
+def print_advertising_medias(
+    db: Session = Depends(get_db),
+    current_user: dict = Depends(
+        require_permission("advertising_media", "print")
+    ),
+):
+    records = get_advertising_medias(db)
+    columns = [("ID", "pkAMId"), ("Advertising Media", "AdvertisingMedia")]
+    stream = _export_to_word(
+        records, columns, title="AdvertisingMedia Report"
+    )
+    filename = f"print_AdvertisingMedia_{_file_date()}.docx"
+    return StreamingResponse(
+        stream,
+        media_type="application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+        headers={"Content-Disposition": f"attachment; filename={filename}"},
+    )
+
+
+@router.get("/advertising-purposes/export")
+def export_advertising_purposes(
+    db: Session = Depends(get_db),
+    current_user: dict = Depends(
+        require_permission("advertising_purpose", "export")
+    ),
+):
+    records = get_advertising_purposes(db)
+    columns = [("ID", "pkAPId"), ("Advertising Purpose", "AdvertisingPurpose")]
+    stream = _export_to_excel(records, columns, sheet_title="AdvertisingPurpose")
+    filename = f"export_AdvertisingPurpose_{_file_date()}.xlsx"
+    return StreamingResponse(
+        stream,
+        media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+        headers={"Content-Disposition": f"attachment; filename={filename}"},
+    )
+
+
+@router.get("/advertising-purposes/print")
+def print_advertising_purposes(
+    db: Session = Depends(get_db),
+    current_user: dict = Depends(
+        require_permission("advertising_purpose", "print")
+    ),
+):
+    records = get_advertising_purposes(db)
+    columns = [("ID", "pkAPId"), ("Advertising Purpose", "AdvertisingPurpose")]
+    stream = _export_to_word(
+        records, columns, title="AdvertisingPurpose Report"
+    )
+    filename = f"print_AdvertisingPurpose_{_file_date()}.docx"
+    return StreamingResponse(
+        stream,
+        media_type="application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+        headers={"Content-Disposition": f"attachment; filename={filename}"},
+    )
+
+
+@router.get("/office-types/export")
+def export_office_types(
+    db: Session = Depends(get_db),
+    current_user: dict = Depends(
+        require_permission("office_type", "export")
+    ),
+):
+    records = get_office_types(db)
+    columns = [("ID", "pkOTId"), ("Office Type", "OfficeType")]
+    stream = _export_to_excel(records, columns, sheet_title="OfficeType")
+    filename = f"export_OfficeType_{_file_date()}.xlsx"
+    return StreamingResponse(
+        stream,
+        media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+        headers={"Content-Disposition": f"attachment; filename={filename}"},
+    )
+
+
+@router.get("/office-types/print")
+def print_office_types(
+    db: Session = Depends(get_db),
+    current_user: dict = Depends(
+        require_permission("office_type", "print")
+    ),
+):
+    records = get_office_types(db)
+    columns = [("ID", "pkOTId"), ("Office Type", "OfficeType")]
+    stream = _export_to_word(
+        records, columns, title="OfficeType Report"
+    )
+    filename = f"print_OfficeType_{_file_date()}.docx"
+    return StreamingResponse(
+        stream,
+        media_type="application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+        headers={"Content-Disposition": f"attachment; filename={filename}"},
+    )
+
+
+@router.get("/meeting-locations/export")
+def export_meeting_locations(
+    db: Session = Depends(get_db),
+    current_user: dict = Depends(
+        require_permission("meeting_location", "export")
+    ),
+):
+    records = get_meeting_locations(db)
+    columns = [("ID", "pkMLId"), ("Meeting Location", "MeetingLocation")]
+    stream = _export_to_excel(records, columns, sheet_title="MeetingLocation")
+    filename = f"export_MeetingLocation_{_file_date()}.xlsx"
+    return StreamingResponse(
+        stream,
+        media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+        headers={"Content-Disposition": f"attachment; filename={filename}"},
+    )
+
+
+@router.get("/meeting-locations/print")
+def print_meeting_locations(
+    db: Session = Depends(get_db),
+    current_user: dict = Depends(
+        require_permission("meeting_location", "print")
+    ),
+):
+    records = get_meeting_locations(db)
+    columns = [("ID", "pkMLId"), ("Meeting Location", "MeetingLocation")]
+    stream = _export_to_word(
+        records, columns, title="MeetingLocation Report"
+    )
+    filename = f"print_MeetingLocation_{_file_date()}.docx"
+    return StreamingResponse(
+        stream,
+        media_type="application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+        headers={"Content-Disposition": f"attachment; filename={filename}"},
+    )
+
+
+@router.get("/ksas/export")
+def export_ksas(
+    db: Session = Depends(get_db),
+    current_user: dict = Depends(
+        require_permission("ksa", "export")
+    ),
+):
+    records = get_ksas(db)
+    columns = [("ID", "pkKSAId"), ("KSA", "KSA")]
+    stream = _export_to_excel(records, columns, sheet_title="KSA")
+    filename = f"export_KSA_{_file_date()}.xlsx"
+    return StreamingResponse(
+        stream,
+        media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+        headers={"Content-Disposition": f"attachment; filename={filename}"},
+    )
+
+
+@router.get("/ksas/print")
+def print_ksas(
+    db: Session = Depends(get_db),
+    current_user: dict = Depends(
+        require_permission("ksa", "print")
+    ),
+):
+    records = get_ksas(db)
+    columns = [("ID", "pkKSAId"), ("KSA", "KSA")]
+    stream = _export_to_word(
+        records, columns, title="KSA Report"
+    )
+    filename = f"print_KSA_{_file_date()}.docx"
+    return StreamingResponse(
+        stream,
+        media_type="application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+        headers={"Content-Disposition": f"attachment; filename={filename}"},
+    )
+
+
+@router.get("/ksa-categories/export")
+def export_ksa_categories(
+    db: Session = Depends(get_db),
+    current_user: dict = Depends(
+        require_permission("ksa_category", "export")
+    ),
+):
+    records = get_ksa_categories(db)
+    columns = [("ID", "pkKSACId"), ("KSA Category", "KSACategory")]
+    stream = _export_to_excel(records, columns, sheet_title="KSACategory")
+    filename = f"export_KSACategory_{_file_date()}.xlsx"
+    return StreamingResponse(
+        stream,
+        media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+        headers={"Content-Disposition": f"attachment; filename={filename}"},
+    )
+
+
+@router.get("/ksa-categories/print")
+def print_ksa_categories(
+    db: Session = Depends(get_db),
+    current_user: dict = Depends(
+        require_permission("ksa_category", "print")
+    ),
+):
+    records = get_ksa_categories(db)
+    columns = [("ID", "pkKSACId"), ("KSA Category", "KSACategory")]
+    stream = _export_to_word(
+        records, columns, title="KSACategory Report"
+    )
+    filename = f"print_KSACategory_{_file_date()}.docx"
+    return StreamingResponse(
+        stream,
+        media_type="application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+        headers={"Content-Disposition": f"attachment; filename={filename}"},
+    )
+
+
+@router.get("/position-grades/export")
+def export_position_grades(
+    db: Session = Depends(get_db),
+    current_user: dict = Depends(
+        require_permission("position_grade", "export")
+    ),
+):
+    records = get_position_grades(db)
+    columns = [("ID", "pkPGId"), ("Position Grade", "PositionGrade"), ("Minimum Pay", "MinimumPay"), ("Maximum Pay", "MaximumPay")]
+    stream = _export_to_excel(records, columns, sheet_title="PositionGrade")
+    filename = f"export_PositionGrade_{_file_date()}.xlsx"
+    return StreamingResponse(
+        stream,
+        media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+        headers={"Content-Disposition": f"attachment; filename={filename}"},
+    )
+
+
+@router.get("/position-grades/print")
+def print_position_grades(
+    db: Session = Depends(get_db),
+    current_user: dict = Depends(
+        require_permission("position_grade", "print")
+    ),
+):
+    records = get_position_grades(db)
+    columns = [("ID", "pkPGId"), ("Position Grade", "PositionGrade"), ("Minimum Pay", "MinimumPay"), ("Maximum Pay", "MaximumPay")]
+    stream = _export_to_word(
+        records, columns, title="PositionGrade Report"
+    )
+    filename = f"print_PositionGrade_{_file_date()}.docx"
+    return StreamingResponse(
+        stream,
+        media_type="application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+        headers={"Content-Disposition": f"attachment; filename={filename}"},
+    )
+
+
+@router.get("/role-in-offenses/export")
+def export_role_in_offenses(
+    db: Session = Depends(get_db),
+    current_user: dict = Depends(
+        require_permission("role_in_offense", "export")
+    ),
+):
+    records = get_role_in_offenses(db)
+    columns = [("ID", "pkRIOId"), ("Role in Offense", "RoleInOffense"), ("Minimum Penalty", "MinimumPenalty"), ("Maximum Penalty", "MaximumPenalty")]
+    stream = _export_to_excel(records, columns, sheet_title="RoleInOffense")
+    filename = f"export_RoleInOffense_{_file_date()}.xlsx"
+    return StreamingResponse(
+        stream,
+        media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+        headers={"Content-Disposition": f"attachment; filename={filename}"},
+    )
+
+
+@router.get("/role-in-offenses/print")
+def print_role_in_offenses(
+    db: Session = Depends(get_db),
+    current_user: dict = Depends(
+        require_permission("role_in_offense", "print")
+    ),
+):
+    records = get_role_in_offenses(db)
+    columns = [("ID", "pkRIOId"), ("Role in Offense", "RoleInOffense"), ("Minimum Penalty", "MinimumPenalty"), ("Maximum Penalty", "MaximumPenalty")]
+    stream = _export_to_word(
+        records, columns, title="RoleInOffense Report"
+    )
+    filename = f"print_RoleInOffense_{_file_date()}.docx"
+    return StreamingResponse(
+        stream,
+        media_type="application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+        headers={"Content-Disposition": f"attachment; filename={filename}"},
+    )
 
 # ==================================================
 # REGISTER
@@ -4513,6 +5217,7 @@ def delete_role_in_offense(
 
         "message": "Role in offense deleted successfully",
     }
+
 
 
 # ==================================================

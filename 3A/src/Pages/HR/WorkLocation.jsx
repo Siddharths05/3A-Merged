@@ -7,11 +7,21 @@ import {
   X,
   AlertCircle,
   CheckCircle2,
+  Download,
+  Printer,
 } from "lucide-react";
+
+import { Can, usePermissions } from "../../components/Permissions";
 
 const API_BASE_URL = "http://127.0.0.1:8000/api";
 
 export default function WorkLocation() {
+  // ==================================================
+  // PERMISSIONS
+  // ==================================================
+
+  const { can, loading: rightsLoading } = usePermissions();
+
   // ==================================================
   // STATE
   // ==================================================
@@ -27,6 +37,10 @@ export default function WorkLocation() {
   const [deletingId, setDeletingId] = useState(null);
 
   const [editingId, setEditingId] = useState(null);
+
+  const [exporting, setExporting] = useState(false);
+
+  const [printing, setPrinting] = useState(false);
 
   const [error, setError] = useState("");
 
@@ -98,10 +112,6 @@ export default function WorkLocation() {
       const data =
         await response.json();
 
-      // ==============================================
-      // BACKEND RETURNS { total, locations: [...] }
-      // ==============================================
-
       setLocations(
         Array.isArray(data.locations)
           ? data.locations
@@ -168,10 +178,6 @@ export default function WorkLocation() {
 
     const trimmedLocation =
       location.trim();
-
-    // ================================================
-    // VALIDATION
-    // ================================================
 
     if (!trimmedLocation) {
       setError(
@@ -370,6 +376,189 @@ export default function WorkLocation() {
   };
 
   // ==================================================
+  // EXPORT TO EXCEL
+  // ==================================================
+
+  const handleExport = async () => {
+    try {
+      setExporting(true);
+      setError("");
+
+      const token = getToken();
+
+      if (!token) {
+        throw new Error(
+          "Authentication token not found. Please login again."
+        );
+      }
+
+      const response = await fetch(
+        `${API_BASE_URL}/locations/export`,
+        {
+          method: "GET",
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+
+      if (!response.ok) {
+        const message =
+          await getErrorMessage(response);
+        throw new Error(message);
+      }
+
+      const blob = await response.blob();
+      const url = window.URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = url;
+      const date = new Date()
+        .toISOString()
+        .slice(0, 10)
+        .replace(/-/g, "_");
+      link.download = `export_Location_${date}.xlsx`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      window.URL.revokeObjectURL(url);
+
+      setSuccess("Excel file downloaded successfully.");
+    } catch (err) {
+      console.error("Export error:", err);
+      if (err instanceof TypeError) {
+        setError(
+          "Failed to connect to the server. Please make sure the backend is running."
+        );
+      } else {
+        setError(err.message || "Failed to export data");
+      }
+    } finally {
+      setExporting(false);
+    }
+  };
+
+  // ==================================================
+  // PRINT TO WORD
+  // ==================================================
+
+  const handlePrint = async () => {
+    try {
+      setPrinting(true);
+      setError("");
+
+      const token = getToken();
+
+      if (!token) {
+        throw new Error(
+          "Authentication token not found. Please login again."
+        );
+      }
+
+      const response = await fetch(
+        `${API_BASE_URL}/locations/print`,
+        {
+          method: "GET",
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+
+      if (!response.ok) {
+        const message =
+          await getErrorMessage(response);
+        throw new Error(message);
+      }
+
+      const blob = await response.blob();
+      const url = window.URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = url;
+      const date = new Date()
+        .toISOString()
+        .slice(0, 10)
+        .replace(/-/g, "_");
+      link.download = `print_Location_${date}.docx`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      window.URL.revokeObjectURL(url);
+
+      setSuccess("Word file downloaded successfully.");
+    } catch (err) {
+      console.error("Print error:", err);
+      if (err instanceof TypeError) {
+        setError(
+          "Failed to connect to the server. Please make sure the backend is running."
+        );
+      } else {
+        setError(err.message || "Failed to print data");
+      }
+    } finally {
+      setPrinting(false);
+    }
+  };
+
+  // ==================================================
+  // NO VIEW RIGHT
+  // ==================================================
+
+  if (!rightsLoading && !can("location", "view")) {
+    return (
+      <div
+        className="
+          flex
+          flex-col
+          items-center
+          justify-center
+          rounded-2xl
+          border
+          border-theme-border
+          bg-card
+          py-20
+          text-center
+          shadow-sm
+        "
+      >
+        <div
+          className="
+            flex
+            h-14
+            w-14
+            items-center
+            justify-center
+            rounded-full
+            bg-theme-danger-soft
+            text-theme-danger
+          "
+        >
+          <MapPin size={26} />
+        </div>
+
+        <p
+          className="
+            mt-4
+            font-medium
+            text-theme-text
+          "
+        >
+          You don't have access to this page
+        </p>
+
+        <p
+          className="
+            mt-1
+            text-sm
+            text-theme-faint
+          "
+        >
+          Ask an admin to grant you View rights for Work Location.
+        </p>
+      </div>
+    );
+  }
+
+  // ==================================================
   // COMPONENT
   // ==================================================
 
@@ -420,8 +609,6 @@ export default function WorkLocation() {
           shadow-sm
         "
       >
-
-        {/* CARD HEADER */}
 
         <div
           className="
@@ -481,8 +668,6 @@ export default function WorkLocation() {
           </div>
 
         </div>
-
-        {/* FORM */}
 
         <form
           onSubmit={handleSubmit}
@@ -548,8 +733,6 @@ export default function WorkLocation() {
 
           </div>
 
-          {/* ERROR */}
-
           {error && (
             <div
               className="
@@ -579,8 +762,6 @@ export default function WorkLocation() {
               </span>
             </div>
           )}
-
-          {/* SUCCESS */}
 
           {success && (
             <div
@@ -613,8 +794,6 @@ export default function WorkLocation() {
             </div>
           )}
 
-          {/* ACTIONS */}
-
           <div
             className="
               flex
@@ -627,35 +806,40 @@ export default function WorkLocation() {
             "
           >
 
-            <button
-              type="submit"
-              disabled={saving}
-              className="
-                inline-flex
-                h-11
-                items-center
-                justify-center
-                rounded-xl
-                bg-theme-primary
-                px-5
-                text-sm
-                font-semibold
-                text-white
-                shadow-sm
-                transition-all
-                duration-200
-                hover:opacity-90
-                hover:shadow-md
-                disabled:cursor-not-allowed
-                disabled:opacity-60
-              "
+            <Can
+              module="location"
+              action={editingId !== null ? "edit" : "add"}
             >
-              {saving
-                ? "Saving..."
-                : editingId !== null
-                ? "Update Work Location"
-                : "Save Work Location"}
-            </button>
+              <button
+                type="submit"
+                disabled={saving}
+                className="
+                  inline-flex
+                  h-11
+                  items-center
+                  justify-center
+                  rounded-xl
+                  bg-theme-primary
+                  px-5
+                  text-sm
+                  font-semibold
+                  text-white
+                  shadow-sm
+                  transition-all
+                  duration-200
+                  hover:opacity-90
+                  hover:shadow-md
+                  disabled:cursor-not-allowed
+                  disabled:opacity-60
+                "
+              >
+                {saving
+                  ? "Saving..."
+                  : editingId !== null
+                  ? "Update Work Location"
+                  : "Save Work Location"}
+              </button>
+            </Can>
 
             {editingId !== null && (
               <button
@@ -709,11 +893,10 @@ export default function WorkLocation() {
         "
       >
 
-        {/* TABLE HEADER */}
-
         <div
           className="
             flex
+            flex-wrap
             items-center
             justify-between
             gap-4
@@ -748,25 +931,91 @@ export default function WorkLocation() {
 
           </div>
 
-          <div
-            className="
-              flex
-              h-11
-              w-11
-              shrink-0
-              items-center
-              justify-center
-              rounded-xl
-              bg-theme-primary-soft
-              text-theme-primary
-            "
-          >
-            <MapPin size={21} />
+          <div className="flex items-center gap-2">
+            <Can module="location" action="export">
+              <button
+                type="button"
+                onClick={handleExport}
+                disabled={
+                  loading ||
+                  exporting ||
+                  printing ||
+                  locations.length === 0
+                }
+                className="
+                  inline-flex
+                  h-10
+                  items-center
+                  justify-center
+                  gap-2
+                  rounded-lg
+                  bg-blue-600
+                  px-4
+                  text-sm
+                  font-semibold
+                  text-white
+                  transition
+                  hover:bg-blue-700
+                  disabled:cursor-not-allowed
+                  disabled:opacity-60
+                "
+              >
+                <Download size={16} />
+                {exporting ? "Exporting…" : "Export"}
+              </button>
+            </Can>
+
+            <Can module="location" action="print">
+              <button
+                type="button"
+                onClick={handlePrint}
+                disabled={
+                  loading ||
+                  exporting ||
+                  printing ||
+                  locations.length === 0
+                }
+                className="
+                  inline-flex
+                  h-10
+                  items-center
+                  justify-center
+                  gap-2
+                  rounded-lg
+                  bg-emerald-600
+                  px-4
+                  text-sm
+                  font-semibold
+                  text-white
+                  transition
+                  hover:bg-emerald-700
+                  disabled:cursor-not-allowed
+                  disabled:opacity-60
+                "
+              >
+                <Printer size={16} />
+                {printing ? "Preparing…" : "Print"}
+              </button>
+            </Can>
+
+            <div
+              className="
+                flex
+                h-11
+                w-11
+                shrink-0
+                items-center
+                justify-center
+                rounded-xl
+                bg-theme-primary-soft
+                text-theme-primary
+              "
+            >
+              <MapPin size={21} />
+            </div>
           </div>
 
         </div>
-
-        {/* LOADING */}
 
         {loading && (
           <div
@@ -781,8 +1030,6 @@ export default function WorkLocation() {
             Loading work locations...
           </div>
         )}
-
-        {/* EMPTY STATE */}
 
         {!loading &&
           locations.length === 0 &&
@@ -836,8 +1083,6 @@ export default function WorkLocation() {
 
           </div>
         )}
-
-        {/* TABLE */}
 
         {!loading && locations.length > 0 && (
           <div className="overflow-x-auto">
@@ -954,52 +1199,56 @@ export default function WorkLocation() {
                         "
                       >
 
-                        <button
-                          type="button"
-                          onClick={() =>
-                            handleEdit(item)
-                          }
-                          className="
-                            flex
-                            h-9
-                            w-9
-                            items-center
-                            justify-center
-                            rounded-lg
-                            text-theme-primary
-                            transition
-                            hover:bg-theme-primary-soft
-                          "
-                          title="Edit Work Location"
-                        >
-                          <Pencil size={17} />
-                        </button>
+                        <Can module="location" action="edit">
+                          <button
+                            type="button"
+                            onClick={() =>
+                              handleEdit(item)
+                            }
+                            className="
+                              flex
+                              h-9
+                              w-9
+                              items-center
+                              justify-center
+                              rounded-lg
+                              text-theme-primary
+                              transition
+                              hover:bg-theme-primary-soft
+                            "
+                            title="Edit Work Location"
+                          >
+                            <Pencil size={17} />
+                          </button>
+                        </Can>
 
-                        <button
-                          type="button"
-                          onClick={() =>
-                            handleDelete(item)
-                          }
-                          disabled={
-                            deletingId === item.pkHLId
-                          }
-                          className="
-                            flex
-                            h-9
-                            w-9
-                            items-center
-                            justify-center
-                            rounded-lg
-                            text-theme-danger
-                            transition
-                            hover:bg-theme-danger-soft
-                            disabled:cursor-not-allowed
-                            disabled:opacity-50
-                          "
-                          title="Delete Work Location"
-                        >
-                          <Trash2 size={17} />
-                        </button>
+                        <Can module="location" action="delete">
+                          <button
+                            type="button"
+                            onClick={() =>
+                              handleDelete(item)
+                            }
+                            disabled={
+                              deletingId === item.pkHLId
+                            }
+                            className="
+                              flex
+                              h-9
+                              w-9
+                              items-center
+                              justify-center
+                              rounded-lg
+                              text-theme-danger
+                              transition
+                              hover:bg-theme-danger-soft
+                              disabled:cursor-not-allowed
+                              disabled:opacity-50
+                            "
+                            title="Delete Work Location"
+                          >
+                            <Trash2 size={17} />
+                          </button>
+                        </Can>
 
                       </div>
 

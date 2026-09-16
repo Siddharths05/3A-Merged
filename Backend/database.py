@@ -150,3 +150,5 @@ def get_db():
     finally:
 
         db.close()
+
+        #end of file
