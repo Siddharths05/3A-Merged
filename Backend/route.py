@@ -30,6 +30,7 @@ from model import (
     create_ksa,
     create_ksa_category,
     create_position_grade,
+    create_role_in_offense,
     create_language,
     create_location,
     create_meeting_location,
@@ -46,6 +47,7 @@ from model import (
     deactivate_ksa,
     deactivate_ksa_category,
     deactivate_position_grade,
+    deactivate_role_in_offense,
     deactivate_language,
     deactivate_location,
     deactivate_meeting_location,
@@ -70,6 +72,8 @@ from model import (
     get_ksa_category_by_id,
     get_position_grade_by_id,
     get_position_grades,
+    get_role_in_offense_by_id,
+    get_role_in_offenses,
     get_ksas,
     get_language_by_id,
     get_languages,
@@ -98,6 +102,9 @@ from model import (
     position_grade_exists,
     position_grade_exists_for_other,
     position_grade_to_dict,
+    role_in_offense_exists,
+    role_in_offense_exists_for_other,
+    role_in_offense_to_dict,
     ksa_exists,
     ksa_exists_for_other,
     ksa_to_dict,
@@ -132,6 +139,7 @@ from model import (
     update_ksa,
     update_ksa_category,
     update_position_grade,
+    update_role_in_offense,
     update_language,
     update_location,
     update_meeting_location,
@@ -159,6 +167,8 @@ from schema import (
     KSACategoryUpdateRequest,
     PositionGradeCreateRequest,
     PositionGradeUpdateRequest,
+    RoleInOffenseCreateRequest,
+    RoleInOffenseUpdateRequest,
     KSACreateRequest,
     KSAUpdateRequest,
     LanguageCreateRequest,
@@ -4249,6 +4259,243 @@ def delete_position_grade(
     return {
 
         "message": "Position grade deleted successfully",
+    }
+
+
+
+# ==================================================
+# GET ROLE IN OFFENSES
+# ==================================================
+
+@router.get(
+    "/role-in-offenses",
+)
+def list_role_in_offenses(
+
+    db: Session = Depends(get_db),
+
+    current_user: dict = Depends(
+        get_current_user
+    ),
+):
+
+    items = get_role_in_offenses(
+        db
+    )
+
+    return {
+
+        "total": len(items),
+
+        "role_in_offenses": [
+
+            role_in_offense_to_dict(item)
+
+            for item in items
+        ],
+    }
+
+
+# ==================================================
+# GET ROLE IN OFFENSE BY ID
+# ==================================================
+
+@router.get(
+    "/role-in-offenses/{role_in_offense_id}",
+)
+def get_role_in_offense(
+
+    role_in_offense_id: int,
+
+    db: Session = Depends(get_db),
+
+    current_user: dict = Depends(
+        get_current_user
+    ),
+):
+
+    item = get_role_in_offense_by_id(
+        db,
+        role_in_offense_id,
+    )
+
+    if not item:
+
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Role in offense not found",
+        )
+
+    return {
+
+        "role_in_offense": role_in_offense_to_dict(
+            item
+        ),
+    }
+
+
+# ==================================================
+# CREATE ROLE IN OFFENSE
+# REQUIRES: role_in_offense / add
+# ==================================================
+
+@router.post(
+    "/role-in-offenses",
+    status_code=status.HTTP_201_CREATED,
+)
+def create_new_role_in_offense(
+
+    request: RoleInOffenseCreateRequest,
+
+    db: Session = Depends(get_db),
+
+    current_user: dict = Depends(
+        require_permission("role_in_offense", "add")
+    ),
+):
+
+    if request.minimum_penalty > request.maximum_penalty:
+
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Minimum penalty cannot be greater than maximum penalty",
+        )
+
+    if role_in_offense_exists(
+        db,
+        request.role_in_offense,
+    ):
+
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Role in offense already exists",
+        )
+
+    item = create_role_in_offense(
+        db,
+        request.role_in_offense,
+        request.minimum_penalty,
+        request.maximum_penalty,
+    )
+
+    return {
+
+        "message": "Role in offense created successfully",
+
+        "role_in_offense": role_in_offense_to_dict(
+            item
+        ),
+    }
+
+
+# ==================================================
+# UPDATE ROLE IN OFFENSE
+# REQUIRES: role_in_offense / edit
+# ==================================================
+
+@router.put(
+    "/role-in-offenses/{role_in_offense_id}",
+)
+def update_existing_role_in_offense(
+
+    role_in_offense_id: int,
+
+    request: RoleInOffenseUpdateRequest,
+
+    db: Session = Depends(get_db),
+
+    current_user: dict = Depends(
+        require_permission("role_in_offense", "edit")
+    ),
+):
+
+    existing = get_role_in_offense_by_id(
+        db,
+        role_in_offense_id,
+    )
+
+    if not existing:
+
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Role in offense not found",
+        )
+
+    if request.minimum_penalty > request.maximum_penalty:
+
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Minimum penalty cannot be greater than maximum penalty",
+        )
+
+    if role_in_offense_exists_for_other(
+        db,
+        request.role_in_offense,
+        role_in_offense_id,
+    ):
+
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Role in offense already exists",
+        )
+
+    item = update_role_in_offense(
+        db,
+        role_in_offense_id,
+        request.role_in_offense,
+        request.minimum_penalty,
+        request.maximum_penalty,
+    )
+
+    return {
+
+        "message": "Role in offense updated successfully",
+
+        "role_in_offense": role_in_offense_to_dict(
+            item
+        ),
+    }
+
+
+# ==================================================
+# DELETE ROLE IN OFFENSE
+# REQUIRES: role_in_offense / delete
+# ==================================================
+
+@router.delete(
+    "/role-in-offenses/{role_in_offense_id}",
+)
+def delete_role_in_offense(
+
+    role_in_offense_id: int,
+
+    db: Session = Depends(get_db),
+
+    current_user: dict = Depends(
+        require_permission("role_in_offense", "delete")
+    ),
+):
+
+    existing = get_role_in_offense_by_id(
+        db,
+        role_in_offense_id,
+    )
+
+    if not existing:
+
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Role in offense not found",
+        )
+
+    deactivate_role_in_offense(
+        db,
+        role_in_offense_id,
+    )
+
+    return {
+
+        "message": "Role in offense deleted successfully",
     }
 
 

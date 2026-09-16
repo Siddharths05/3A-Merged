@@ -833,6 +833,68 @@ class PositionGrade(Base):
     )
 
 
+
+# ==================================================
+# ROLE IN OFFENSE SQLALCHEMY MODEL
+# MAPPED TO REAL TABLE: hrroleinoffense
+# REAL COLUMNS (per user):
+#   pkrioid (PK, integer), roleinoffense (varchar 200),
+#   minimumpenalty numeric(15,2), maximumpenalty numeric(15,2),
+#   updated_at, deleted_at
+# ==================================================
+
+class RoleInOffense(Base):
+
+    __tablename__ = "hrroleinoffense"
+
+
+    pkRIOId = Column(
+        "pkrioid",
+        Integer,
+        primary_key=True,
+        index=True,
+    )
+
+
+    RoleInOffense = Column(
+        "roleinoffense",
+        String(200),
+        nullable=False,
+        unique=True,
+    )
+
+
+    MinimumPenalty = Column(
+        "minimumpenalty",
+        Float,
+        nullable=False,
+    )
+
+
+    MaximumPenalty = Column(
+        "maximumpenalty",
+        Float,
+        nullable=False,
+    )
+
+
+    updated_at = Column(
+        "updated_at",
+        DateTime,
+        nullable=True,
+        server_default=func.now(),
+        onupdate=func.now(),
+    )
+
+
+    deleted_at = Column(
+        "deleted_at",
+        DateTime,
+        nullable=True,
+        default=None,
+    )
+
+
 # ==================================================
 # SALARY EMPLOYEE SQLALCHEMY MODEL
 # ==================================================
@@ -6511,6 +6573,300 @@ def deactivate_position_grade(
         db.commit()
 
         db.refresh(position_grade)
+
+        return True
+
+
+    except Exception:
+
+        db.rollback()
+
+        raise
+
+
+
+# ==================================================
+# ROLE IN OFFENSE SERIALIZER
+# ==================================================
+
+def role_in_offense_to_dict(role_in_offense):
+
+    if not role_in_offense:
+
+        return None
+
+
+    return {
+
+        "pkRIOId": role_in_offense.pkRIOId,
+
+        "RoleInOffense": role_in_offense.RoleInOffense,
+
+        "MinimumPenalty": role_in_offense.MinimumPenalty,
+
+        "MaximumPenalty": role_in_offense.MaximumPenalty,
+
+        "updated_at": (
+            role_in_offense.updated_at.isoformat()
+            if role_in_offense.updated_at
+            else None
+        ),
+
+        "deleted_at": (
+            role_in_offense.deleted_at.isoformat()
+            if role_in_offense.deleted_at
+            else None
+        ),
+
+    }
+
+
+# ==================================================
+# ROLE IN OFFENSE FUNCTIONS
+# ==================================================
+
+def get_role_in_offenses(
+
+    db: Session,
+
+):
+
+    return (
+
+        db.query(RoleInOffense)
+
+        .filter(
+
+            RoleInOffense.deleted_at.is_(None),
+
+        )
+
+        .order_by(RoleInOffense.pkRIOId)
+
+        .all()
+
+    )
+
+
+def get_role_in_offense_by_id(
+
+    db: Session,
+
+    role_in_offense_id: int,
+
+):
+
+    return (
+
+        db.query(RoleInOffense)
+
+        .filter(
+
+            RoleInOffense.pkRIOId == role_in_offense_id,
+
+            RoleInOffense.deleted_at.is_(None),
+
+        )
+
+        .first()
+
+    )
+
+
+def role_in_offense_exists(
+
+    db: Session,
+
+    role_in_offense: str,
+
+):
+
+    if not role_in_offense:
+
+        return False
+
+
+    return (
+
+        db.query(RoleInOffense)
+
+        .filter(
+
+            func.lower(RoleInOffense.RoleInOffense)
+            == role_in_offense.strip().lower(),
+
+            RoleInOffense.deleted_at.is_(None),
+
+        )
+
+        .first()
+
+        is not None
+
+    )
+
+
+def role_in_offense_exists_for_other(
+
+    db: Session,
+
+    role_in_offense: str,
+
+    role_in_offense_id: int,
+
+):
+
+    if not role_in_offense:
+
+        return False
+
+
+    return (
+
+        db.query(RoleInOffense)
+
+        .filter(
+
+            func.lower(RoleInOffense.RoleInOffense)
+            == role_in_offense.strip().lower(),
+
+            RoleInOffense.pkRIOId != role_in_offense_id,
+
+            RoleInOffense.deleted_at.is_(None),
+
+        )
+
+        .first()
+
+        is not None
+
+    )
+
+
+def create_role_in_offense(
+
+    db: Session,
+
+    role_in_offense: str,
+
+    minimum_penalty: float,
+
+    maximum_penalty: float,
+
+):
+
+    new_item = RoleInOffense(
+
+        RoleInOffense=role_in_offense.strip(),
+
+        MinimumPenalty=minimum_penalty,
+
+        MaximumPenalty=maximum_penalty,
+
+        deleted_at=None,
+
+    )
+
+
+    try:
+
+        db.add(new_item)
+
+        db.commit()
+
+        db.refresh(new_item)
+
+        return new_item
+
+
+    except Exception:
+
+        db.rollback()
+
+        raise
+
+
+def update_role_in_offense(
+
+    db: Session,
+
+    role_in_offense_id: int,
+
+    role_in_offense: str,
+
+    minimum_penalty: float,
+
+    maximum_penalty: float,
+
+):
+
+    existing = get_role_in_offense_by_id(
+
+        db,
+
+        role_in_offense_id,
+
+    )
+
+
+    if not existing:
+
+        return None
+
+
+    existing.RoleInOffense = role_in_offense.strip()
+
+    existing.MinimumPenalty = minimum_penalty
+
+    existing.MaximumPenalty = maximum_penalty
+
+
+    try:
+
+        db.commit()
+
+        db.refresh(existing)
+
+        return existing
+
+
+    except Exception:
+
+        db.rollback()
+
+        raise
+
+
+def deactivate_role_in_offense(
+
+    db: Session,
+
+    role_in_offense_id: int,
+
+):
+
+    item = get_role_in_offense_by_id(
+
+        db,
+
+        role_in_offense_id,
+
+    )
+
+
+    if not item:
+
+        return None
+
+
+    item.deleted_at = datetime.utcnow()
+
+
+    try:
+
+        db.commit()
+
+        db.refresh(item)
 
         return True
 

@@ -496,6 +496,38 @@ class PositionGradeUpdateRequest(BaseModel):
     maximum_pay: float = Field(ge=0)
 
 
+
+# ==================================================
+# ROLE IN OFFENSE MASTER
+# Real columns: roleinoffense varchar(200),
+# minimumpenalty numeric(15,2), maximumpenalty numeric(15,2),
+# table hrroleinoffense, PK pkrioid — per the user.
+# ==================================================
+
+class RoleInOffenseCreateRequest(BaseModel):
+
+    role_in_offense: str = Field(
+        min_length=1,
+        max_length=200,
+    )
+
+    minimum_penalty: float = Field(ge=0)
+
+    maximum_penalty: float = Field(ge=0)
+
+
+class RoleInOffenseUpdateRequest(BaseModel):
+
+    role_in_offense: str = Field(
+        min_length=1,
+        max_length=200,
+    )
+
+    minimum_penalty: float = Field(ge=0)
+
+    maximum_penalty: float = Field(ge=0)
+
+
 # ==================================================
 # ANNOUNCEMENT
 # ==================================================
