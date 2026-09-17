@@ -349,7 +349,6 @@ class AdvertisingMediaUpdateRequest(BaseModel):
     )
 
 
-
 # ==================================================
 # ADVERTISING PURPOSE MASTER
 # Real column is `advertisingpurpose` varchar(200), table
@@ -370,7 +369,6 @@ class AdvertisingPurposeUpdateRequest(BaseModel):
         min_length=1,
         max_length=200,
     )
-
 
 
 # ==================================================
@@ -395,7 +393,6 @@ class OfficeTypeUpdateRequest(BaseModel):
     )
 
 
-
 # ==================================================
 # MEETING LOCATION MASTER
 # Real column is `meetinglocation` varchar(200), table
@@ -416,7 +413,6 @@ class MeetingLocationUpdateRequest(BaseModel):
         min_length=1,
         max_length=200,
     )
-
 
 
 # ==================================================
@@ -441,7 +437,6 @@ class KSAUpdateRequest(BaseModel):
     )
 
 
-
 # ==================================================
 # KSA CATEGORY MASTER
 # Real column is `ksacategory` varchar(200), table
@@ -462,7 +457,6 @@ class KSACategoryUpdateRequest(BaseModel):
         min_length=1,
         max_length=200,
     )
-
 
 
 # ==================================================
@@ -496,7 +490,6 @@ class PositionGradeUpdateRequest(BaseModel):
     maximum_pay: float = Field(ge=0)
 
 
-
 # ==================================================
 # ROLE IN OFFENSE MASTER
 # Real columns: roleinoffense varchar(200),
@@ -528,6 +521,160 @@ class RoleInOffenseUpdateRequest(BaseModel):
     maximum_penalty: float = Field(ge=0)
 
 
+# ==================================================
+# JOB FUNCTION MASTER
+# Real column is `jobfunction` varchar(200), table
+# hrjobfunction, PK pkjfid.
+# ==================================================
+
+class JobFunctionCreateRequest(BaseModel):
+
+    job_function: str = Field(
+        min_length=1,
+        max_length=200,
+    )
+
+
+class JobFunctionUpdateRequest(BaseModel):
+
+    job_function: str = Field(
+        min_length=1,
+        max_length=200,
+    )
+
+
+# ==================================================
+# SALARY — NATURE OF WORK
+# TABLE: salnatureofwork — natureofwork varchar(40)
+# ==================================================
+
+class NatureOfWorkCreateRequest(BaseModel):
+
+    nature_of_work: str = Field(
+        min_length=1,
+        max_length=40,
+    )
+
+
+class NatureOfWorkUpdateRequest(BaseModel):
+
+    nature_of_work: str = Field(
+        min_length=1,
+        max_length=40,
+    )
+
+
+# ==================================================
+# SALARY — SCHEDULE TYPE
+# TABLE: salscheduletype — type varchar(100)
+# ==================================================
+
+class ScheduleTypeCreateRequest(BaseModel):
+
+    schedule_type: str = Field(
+        min_length=1,
+        max_length=100,
+    )
+
+
+class ScheduleTypeUpdateRequest(BaseModel):
+
+    schedule_type: str = Field(
+        min_length=1,
+        max_length=100,
+    )
+
+
+# ==================================================
+# SALARY — RELIGION
+# TABLE: salreligion — religion varchar(50)
+# ==================================================
+
+class ReligionCreateRequest(BaseModel):
+
+    religion: str = Field(
+        min_length=1,
+        max_length=50,
+    )
+
+
+class ReligionUpdateRequest(BaseModel):
+
+    religion: str = Field(
+        min_length=1,
+        max_length=50,
+    )
+
+
+# ==================================================
+# SALARY — CASTES
+# TABLE: salcastes — caste varchar(40)
+# ==================================================
+
+class CasteCreateRequest(BaseModel):
+
+    caste: str = Field(
+        min_length=1,
+        max_length=40,
+    )
+
+
+class CasteUpdateRequest(BaseModel):
+
+    caste: str = Field(
+        min_length=1,
+        max_length=40,
+    )
+
+
+# ==================================================
+# SALARY — SKIN TONES
+# TABLE: salskintones — colour varchar(25)
+# ==================================================
+
+class SkinToneCreateRequest(BaseModel):
+
+    colour: str = Field(
+        min_length=1,
+        max_length=25,
+    )
+
+
+class SkinToneUpdateRequest(BaseModel):
+
+    colour: str = Field(
+        min_length=1,
+        max_length=25,
+    )
+
+
+# ==================================================
+# SALARY — TASK STATUS
+# TABLE: saltaskstatus — status, finish, cancel
+# ==================================================
+
+class TaskStatusCreateRequest(BaseModel):
+
+    status: str = Field(
+        min_length=1,
+        max_length=30,
+    )
+
+    finish: bool = False
+
+    cancel: bool = False
+
+
+class TaskStatusUpdateRequest(BaseModel):
+
+    status: str = Field(
+        min_length=1,
+        max_length=30,
+    )
+
+    finish: bool
+
+    cancel: bool
 # ==================================================
 # ANNOUNCEMENT
 # ==================================================

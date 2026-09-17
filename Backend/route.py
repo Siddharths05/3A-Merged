@@ -156,6 +156,53 @@ from model import (
     update_office_type,
     update_requirement,
     update_user,
+    # --- Salary masters ---
+    caste_exists,
+    caste_exists_for_other,
+    caste_to_dict,
+    create_caste,
+    create_nature_of_work,
+    create_religion,
+    create_schedule_type,
+    create_skin_tone,
+    create_task_status,
+    delete_caste as hard_delete_caste,
+    delete_nature_of_work as hard_delete_nature_of_work,
+    delete_religion as hard_delete_religion,
+    delete_schedule_type as hard_delete_schedule_type,
+    delete_skin_tone as hard_delete_skin_tone,
+    delete_task_status as hard_delete_task_status,
+    get_caste_by_id,
+    get_castes,
+    get_nature_of_work_by_id,
+    get_nature_of_works,
+    get_religion_by_id,
+    get_religions,
+    get_schedule_type_by_id,
+    get_schedule_types,
+    get_skin_tone_by_id,
+    get_skin_tones,
+    get_task_status_by_id,
+    get_task_statuses,
+    nature_of_work_exists,
+    nature_of_work_exists_for_other,
+    nature_of_work_to_dict,
+    religion_exists,
+    religion_exists_for_other,
+    religion_to_dict,
+    schedule_type_exists,
+    schedule_type_exists_for_other,
+    schedule_type_to_dict,
+    skin_tone_exists,
+    skin_tone_exists_for_other,
+    skin_tone_to_dict,
+    task_status_to_dict,
+    update_caste,
+    update_nature_of_work,
+    update_religion,
+    update_schedule_type,
+    update_skin_tone,
+    update_task_status,
     user_right_to_dict,
 )
 
@@ -197,6 +244,18 @@ from schema import (
     RequirementUpdateRequest,
     SetUserRightsRequest,
     UpdateUserRequest,
+    CasteCreateRequest,
+    CasteUpdateRequest,
+    NatureOfWorkCreateRequest,
+    NatureOfWorkUpdateRequest,
+    ReligionCreateRequest,
+    ReligionUpdateRequest,
+    ScheduleTypeCreateRequest,
+    ScheduleTypeUpdateRequest,
+    SkinToneCreateRequest,
+    SkinToneUpdateRequest,
+    TaskStatusCreateRequest,
+    TaskStatusUpdateRequest,
     UpdateUserStatusRequest,
 )
 
@@ -913,6 +972,239 @@ def print_role_in_offenses(
         media_type="application/vnd.openxmlformats-officedocument.wordprocessingml.document",
         headers={"Content-Disposition": f"attachment; filename={filename}"},
     )
+
+
+# ==================================================
+# SALARY MASTERS — EXPORT / PRINT
+# ==================================================
+
+@router.get("/nature-of-works/export")
+def export_nature_of_works(
+    db: Session = Depends(get_db),
+    current_user: dict = Depends(
+        require_permission("salary_nature_of_work", "export")
+    ),
+):
+    records = get_nature_of_works(db)
+    columns = [("ID", "pkNWId"), ("Nature of Work", "NatureOfWork")]
+    stream = _export_to_excel(records, columns, sheet_title="NatureOfWork")
+    filename = f"export_NatureOfWork_{_file_date()}.xlsx"
+    return StreamingResponse(
+        stream,
+        media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+        headers={"Content-Disposition": f"attachment; filename={filename}"},
+    )
+
+
+@router.get("/nature-of-works/print")
+def print_nature_of_works(
+    db: Session = Depends(get_db),
+    current_user: dict = Depends(
+        require_permission("salary_nature_of_work", "print")
+    ),
+):
+    records = get_nature_of_works(db)
+    columns = [("ID", "pkNWId"), ("Nature of Work", "NatureOfWork")]
+    stream = _export_to_word(
+        records, columns, title="Nature of Work Report"
+    )
+    filename = f"print_NatureOfWork_{_file_date()}.docx"
+    return StreamingResponse(
+        stream,
+        media_type="application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+        headers={"Content-Disposition": f"attachment; filename={filename}"},
+    )
+
+
+@router.get("/schedule-types/export")
+def export_schedule_types(
+    db: Session = Depends(get_db),
+    current_user: dict = Depends(
+        require_permission("salary_schedule_type", "export")
+    ),
+):
+    records = get_schedule_types(db)
+    columns = [("ID", "pkSTId"), ("Schedule Type", "Type")]
+    stream = _export_to_excel(records, columns, sheet_title="ScheduleType")
+    filename = f"export_ScheduleType_{_file_date()}.xlsx"
+    return StreamingResponse(
+        stream,
+        media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+        headers={"Content-Disposition": f"attachment; filename={filename}"},
+    )
+
+
+@router.get("/schedule-types/print")
+def print_schedule_types(
+    db: Session = Depends(get_db),
+    current_user: dict = Depends(
+        require_permission("salary_schedule_type", "print")
+    ),
+):
+    records = get_schedule_types(db)
+    columns = [("ID", "pkSTId"), ("Schedule Type", "Type")]
+    stream = _export_to_word(
+        records, columns, title="Schedule Type Report"
+    )
+    filename = f"print_ScheduleType_{_file_date()}.docx"
+    return StreamingResponse(
+        stream,
+        media_type="application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+        headers={"Content-Disposition": f"attachment; filename={filename}"},
+    )
+
+
+@router.get("/religions/export")
+def export_religions(
+    db: Session = Depends(get_db),
+    current_user: dict = Depends(
+        require_permission("salary_religion", "export")
+    ),
+):
+    records = get_religions(db)
+    columns = [("ID", "pkRGId"), ("Religion", "Religion")]
+    stream = _export_to_excel(records, columns, sheet_title="Religion")
+    filename = f"export_Religion_{_file_date()}.xlsx"
+    return StreamingResponse(
+        stream,
+        media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+        headers={"Content-Disposition": f"attachment; filename={filename}"},
+    )
+
+
+@router.get("/religions/print")
+def print_religions(
+    db: Session = Depends(get_db),
+    current_user: dict = Depends(
+        require_permission("salary_religion", "print")
+    ),
+):
+    records = get_religions(db)
+    columns = [("ID", "pkRGId"), ("Religion", "Religion")]
+    stream = _export_to_word(
+        records, columns, title="Religion Report"
+    )
+    filename = f"print_Religion_{_file_date()}.docx"
+    return StreamingResponse(
+        stream,
+        media_type="application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+        headers={"Content-Disposition": f"attachment; filename={filename}"},
+    )
+
+
+@router.get("/castes/export")
+def export_castes(
+    db: Session = Depends(get_db),
+    current_user: dict = Depends(
+        require_permission("salary_caste", "export")
+    ),
+):
+    records = get_castes(db)
+    columns = [("ID", "pkCSId"), ("Caste", "Caste")]
+    stream = _export_to_excel(records, columns, sheet_title="Caste")
+    filename = f"export_Caste_{_file_date()}.xlsx"
+    return StreamingResponse(
+        stream,
+        media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+        headers={"Content-Disposition": f"attachment; filename={filename}"},
+    )
+
+
+@router.get("/castes/print")
+def print_castes(
+    db: Session = Depends(get_db),
+    current_user: dict = Depends(
+        require_permission("salary_caste", "print")
+    ),
+):
+    records = get_castes(db)
+    columns = [("ID", "pkCSId"), ("Caste", "Caste")]
+    stream = _export_to_word(
+        records, columns, title="Caste Report"
+    )
+    filename = f"print_Caste_{_file_date()}.docx"
+    return StreamingResponse(
+        stream,
+        media_type="application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+        headers={"Content-Disposition": f"attachment; filename={filename}"},
+    )
+
+
+@router.get("/skin-tones/export")
+def export_skin_tones(
+    db: Session = Depends(get_db),
+    current_user: dict = Depends(
+        require_permission("salary_skin_tone", "export")
+    ),
+):
+    records = get_skin_tones(db)
+    columns = [("ID", "pkSkinId"), ("Colour", "Colour")]
+    stream = _export_to_excel(records, columns, sheet_title="SkinTone")
+    filename = f"export_SkinTone_{_file_date()}.xlsx"
+    return StreamingResponse(
+        stream,
+        media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+        headers={"Content-Disposition": f"attachment; filename={filename}"},
+    )
+
+
+@router.get("/skin-tones/print")
+def print_skin_tones(
+    db: Session = Depends(get_db),
+    current_user: dict = Depends(
+        require_permission("salary_skin_tone", "print")
+    ),
+):
+    records = get_skin_tones(db)
+    columns = [("ID", "pkSkinId"), ("Colour", "Colour")]
+    stream = _export_to_word(
+        records, columns, title="Skin Tone Report"
+    )
+    filename = f"print_SkinTone_{_file_date()}.docx"
+    return StreamingResponse(
+        stream,
+        media_type="application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+        headers={"Content-Disposition": f"attachment; filename={filename}"},
+    )
+
+
+@router.get("/task-statuses/export")
+def export_task_statuses(
+    db: Session = Depends(get_db),
+    current_user: dict = Depends(
+        require_permission("salary_task_status", "export")
+    ),
+):
+    records = get_task_statuses(db)
+    columns = [("ID", "pkStaId"), ("Finish", "Finish"), ("Cancel", "Cancel")]
+    stream = _export_to_excel(records, columns, sheet_title="TaskStatus")
+    filename = f"export_TaskStatus_{_file_date()}.xlsx"
+    return StreamingResponse(
+        stream,
+        media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+        headers={"Content-Disposition": f"attachment; filename={filename}"},
+    )
+
+
+@router.get("/task-statuses/print")
+def print_task_statuses(
+    db: Session = Depends(get_db),
+    current_user: dict = Depends(
+        require_permission("salary_task_status", "print")
+    ),
+):
+    records = get_task_statuses(db)
+    columns = [("ID", "pkStaId"), ("Finish", "Finish"), ("Cancel", "Cancel")]
+    stream = _export_to_word(
+        records, columns, title="Task Status Report"
+    )
+    filename = f"print_TaskStatus_{_file_date()}.docx"
+    return StreamingResponse(
+        stream,
+        media_type="application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+        headers={"Content-Disposition": f"attachment; filename={filename}"},
+    )
+
 
 # ==================================================
 # REGISTER
@@ -5219,6 +5511,583 @@ def delete_role_in_offense(
     }
 
 
+
+# ==================================================
+# SALARY — NATURE OF WORK
+# ==================================================
+
+@router.get("/nature-of-works")
+def list_nature_of_works(
+    db: Session = Depends(get_db),
+    current_user: dict = Depends(get_current_user),
+):
+    items = get_nature_of_works(db)
+    return {
+        "total": len(items),
+        "nature_of_works": [nature_of_work_to_dict(i) for i in items],
+    }
+
+
+@router.get("/nature-of-works/{item_id}")
+def get_nature_of_work(
+    item_id: int,
+    db: Session = Depends(get_db),
+    current_user: dict = Depends(get_current_user),
+):
+    item = get_nature_of_work_by_id(db, item_id)
+    if not item:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Nature of work not found",
+        )
+    return {"nature_of_work": nature_of_work_to_dict(item)}
+
+
+@router.post("/nature-of-works", status_code=status.HTTP_201_CREATED)
+def create_new_nature_of_work(
+    request: NatureOfWorkCreateRequest,
+    db: Session = Depends(get_db),
+    current_user: dict = Depends(
+        require_permission("salary_nature_of_work", "add")
+    ),
+):
+    if nature_of_work_exists(db, request.nature_of_work):
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Nature of work already exists",
+        )
+    item = create_nature_of_work(db, request.nature_of_work)
+    return {
+        "message": "Nature of work created successfully",
+        "nature_of_work": nature_of_work_to_dict(item),
+    }
+
+
+@router.put("/nature-of-works/{item_id}")
+def update_existing_nature_of_work(
+    item_id: int,
+    request: NatureOfWorkUpdateRequest,
+    db: Session = Depends(get_db),
+    current_user: dict = Depends(
+        require_permission("salary_nature_of_work", "edit")
+    ),
+):
+    existing = get_nature_of_work_by_id(db, item_id)
+    if not existing:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Nature of work not found",
+        )
+    if nature_of_work_exists_for_other(db, request.nature_of_work, item_id):
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Nature of work already exists",
+        )
+    item = update_nature_of_work(db, item_id, request.nature_of_work)
+    return {
+        "message": "Nature of work updated successfully",
+        "nature_of_work": nature_of_work_to_dict(item),
+    }
+
+
+@router.delete("/nature-of-works/{item_id}")
+def delete_nature_of_work_route(
+    item_id: int,
+    db: Session = Depends(get_db),
+    current_user: dict = Depends(
+        require_permission("salary_nature_of_work", "delete")
+    ),
+):
+    existing = get_nature_of_work_by_id(db, item_id)
+    if not existing:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Nature of work not found",
+        )
+    hard_delete_nature_of_work(db, item_id)
+    return {"message": "Nature of work deleted successfully"}
+
+
+# ==================================================
+# SALARY — SCHEDULE TYPE
+# ==================================================
+
+@router.get("/schedule-types")
+def list_schedule_types(
+    db: Session = Depends(get_db),
+    current_user: dict = Depends(get_current_user),
+):
+    items = get_schedule_types(db)
+    return {
+        "total": len(items),
+        "schedule_types": [schedule_type_to_dict(i) for i in items],
+    }
+
+
+@router.get("/schedule-types/{item_id}")
+def get_schedule_type(
+    item_id: int,
+    db: Session = Depends(get_db),
+    current_user: dict = Depends(get_current_user),
+):
+    item = get_schedule_type_by_id(db, item_id)
+    if not item:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Schedule type not found",
+        )
+    return {"schedule_type": schedule_type_to_dict(item)}
+
+
+@router.post("/schedule-types", status_code=status.HTTP_201_CREATED)
+def create_new_schedule_type(
+    request: ScheduleTypeCreateRequest,
+    db: Session = Depends(get_db),
+    current_user: dict = Depends(
+        require_permission("salary_schedule_type", "add")
+    ),
+):
+    if schedule_type_exists(db, request.schedule_type):
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Schedule type already exists",
+        )
+    item = create_schedule_type(db, request.schedule_type)
+    return {
+        "message": "Schedule type created successfully",
+        "schedule_type": schedule_type_to_dict(item),
+    }
+
+
+@router.put("/schedule-types/{item_id}")
+def update_existing_schedule_type(
+    item_id: int,
+    request: ScheduleTypeUpdateRequest,
+    db: Session = Depends(get_db),
+    current_user: dict = Depends(
+        require_permission("salary_schedule_type", "edit")
+    ),
+):
+    existing = get_schedule_type_by_id(db, item_id)
+    if not existing:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Schedule type not found",
+        )
+    if schedule_type_exists_for_other(db, request.schedule_type, item_id):
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Schedule type already exists",
+        )
+    item = update_schedule_type(db, item_id, request.schedule_type)
+    return {
+        "message": "Schedule type updated successfully",
+        "schedule_type": schedule_type_to_dict(item),
+    }
+
+
+@router.delete("/schedule-types/{item_id}")
+def delete_schedule_type_route(
+    item_id: int,
+    db: Session = Depends(get_db),
+    current_user: dict = Depends(
+        require_permission("salary_schedule_type", "delete")
+    ),
+):
+    existing = get_schedule_type_by_id(db, item_id)
+    if not existing:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Schedule type not found",
+        )
+    hard_delete_schedule_type(db, item_id)
+    return {"message": "Schedule type deleted successfully"}
+
+
+# ==================================================
+# SALARY — RELIGION
+# ==================================================
+
+@router.get("/religions")
+def list_religions(
+    db: Session = Depends(get_db),
+    current_user: dict = Depends(get_current_user),
+):
+    items = get_religions(db)
+    return {
+        "total": len(items),
+        "religions": [religion_to_dict(i) for i in items],
+    }
+
+
+@router.get("/religions/{item_id}")
+def get_religion(
+    item_id: int,
+    db: Session = Depends(get_db),
+    current_user: dict = Depends(get_current_user),
+):
+    item = get_religion_by_id(db, item_id)
+    if not item:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Religion not found",
+        )
+    return {"religion": religion_to_dict(item)}
+
+
+@router.post("/religions", status_code=status.HTTP_201_CREATED)
+def create_new_religion(
+    request: ReligionCreateRequest,
+    db: Session = Depends(get_db),
+    current_user: dict = Depends(
+        require_permission("salary_religion", "add")
+    ),
+):
+    if religion_exists(db, request.religion):
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Religion already exists",
+        )
+    item = create_religion(db, request.religion)
+    return {
+        "message": "Religion created successfully",
+        "religion": religion_to_dict(item),
+    }
+
+
+@router.put("/religions/{item_id}")
+def update_existing_religion(
+    item_id: int,
+    request: ReligionUpdateRequest,
+    db: Session = Depends(get_db),
+    current_user: dict = Depends(
+        require_permission("salary_religion", "edit")
+    ),
+):
+    existing = get_religion_by_id(db, item_id)
+    if not existing:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Religion not found",
+        )
+    if religion_exists_for_other(db, request.religion, item_id):
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Religion already exists",
+        )
+    item = update_religion(db, item_id, request.religion)
+    return {
+        "message": "Religion updated successfully",
+        "religion": religion_to_dict(item),
+    }
+
+
+@router.delete("/religions/{item_id}")
+def delete_religion_route(
+    item_id: int,
+    db: Session = Depends(get_db),
+    current_user: dict = Depends(
+        require_permission("salary_religion", "delete")
+    ),
+):
+    existing = get_religion_by_id(db, item_id)
+    if not existing:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Religion not found",
+        )
+    hard_delete_religion(db, item_id)
+    return {"message": "Religion deleted successfully"}
+
+
+# ==================================================
+# SALARY — CASTES
+# ==================================================
+
+@router.get("/castes")
+def list_castes(
+    db: Session = Depends(get_db),
+    current_user: dict = Depends(get_current_user),
+):
+    items = get_castes(db)
+    return {
+        "total": len(items),
+        "castes": [caste_to_dict(i) for i in items],
+    }
+
+
+@router.get("/castes/{item_id}")
+def get_caste(
+    item_id: int,
+    db: Session = Depends(get_db),
+    current_user: dict = Depends(get_current_user),
+):
+    item = get_caste_by_id(db, item_id)
+    if not item:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Caste not found",
+        )
+    return {"caste": caste_to_dict(item)}
+
+
+@router.post("/castes", status_code=status.HTTP_201_CREATED)
+def create_new_caste(
+    request: CasteCreateRequest,
+    db: Session = Depends(get_db),
+    current_user: dict = Depends(
+        require_permission("salary_caste", "add")
+    ),
+):
+    if caste_exists(db, request.caste):
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Caste already exists",
+        )
+    item = create_caste(db, request.caste)
+    return {
+        "message": "Caste created successfully",
+        "caste": caste_to_dict(item),
+    }
+
+
+@router.put("/castes/{item_id}")
+def update_existing_caste(
+    item_id: int,
+    request: CasteUpdateRequest,
+    db: Session = Depends(get_db),
+    current_user: dict = Depends(
+        require_permission("salary_caste", "edit")
+    ),
+):
+    existing = get_caste_by_id(db, item_id)
+    if not existing:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Caste not found",
+        )
+    if caste_exists_for_other(db, request.caste, item_id):
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Caste already exists",
+        )
+    item = update_caste(db, item_id, request.caste)
+    return {
+        "message": "Caste updated successfully",
+        "caste": caste_to_dict(item),
+    }
+
+
+@router.delete("/castes/{item_id}")
+def delete_caste_route(
+    item_id: int,
+    db: Session = Depends(get_db),
+    current_user: dict = Depends(
+        require_permission("salary_caste", "delete")
+    ),
+):
+    existing = get_caste_by_id(db, item_id)
+    if not existing:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Caste not found",
+        )
+    hard_delete_caste(db, item_id)
+    return {"message": "Caste deleted successfully"}
+
+
+# ==================================================
+# SALARY — SKIN TONES
+# ==================================================
+
+@router.get("/skin-tones")
+def list_skin_tones(
+    db: Session = Depends(get_db),
+    current_user: dict = Depends(get_current_user),
+):
+    items = get_skin_tones(db)
+    return {
+        "total": len(items),
+        "skin_tones": [skin_tone_to_dict(i) for i in items],
+    }
+
+
+@router.get("/skin-tones/{item_id}")
+def get_skin_tone(
+    item_id: int,
+    db: Session = Depends(get_db),
+    current_user: dict = Depends(get_current_user),
+):
+    item = get_skin_tone_by_id(db, item_id)
+    if not item:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Skin tone not found",
+        )
+    return {"skin_tone": skin_tone_to_dict(item)}
+
+
+@router.post("/skin-tones", status_code=status.HTTP_201_CREATED)
+def create_new_skin_tone(
+    request: SkinToneCreateRequest,
+    db: Session = Depends(get_db),
+    current_user: dict = Depends(
+        require_permission("salary_skin_tone", "add")
+    ),
+):
+    if skin_tone_exists(db, request.colour):
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Skin tone already exists",
+        )
+    item = create_skin_tone(db, request.colour)
+    return {
+        "message": "Skin tone created successfully",
+        "skin_tone": skin_tone_to_dict(item),
+    }
+
+
+@router.put("/skin-tones/{item_id}")
+def update_existing_skin_tone(
+    item_id: int,
+    request: SkinToneUpdateRequest,
+    db: Session = Depends(get_db),
+    current_user: dict = Depends(
+        require_permission("salary_skin_tone", "edit")
+    ),
+):
+    existing = get_skin_tone_by_id(db, item_id)
+    if not existing:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Skin tone not found",
+        )
+    if skin_tone_exists_for_other(db, request.colour, item_id):
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Skin tone already exists",
+        )
+    item = update_skin_tone(db, item_id, request.colour)
+    return {
+        "message": "Skin tone updated successfully",
+        "skin_tone": skin_tone_to_dict(item),
+    }
+
+
+@router.delete("/skin-tones/{item_id}")
+def delete_skin_tone_route(
+    item_id: int,
+    db: Session = Depends(get_db),
+    current_user: dict = Depends(
+        require_permission("salary_skin_tone", "delete")
+    ),
+):
+    existing = get_skin_tone_by_id(db, item_id)
+    if not existing:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Skin tone not found",
+        )
+    hard_delete_skin_tone(db, item_id)
+    return {"message": "Skin tone deleted successfully"}
+
+
+# # ==================================================
+# SALARY — TASK STATUS
+# ==================================================
+
+@router.get("/task-statuses")
+def list_task_statuses(
+    db: Session = Depends(get_db),
+    current_user: dict = Depends(get_current_user),
+):
+    items = get_task_statuses(db)
+    return {
+        "total": len(items),
+        "task_statuses": [task_status_to_dict(i) for i in items],
+    }
+
+
+@router.get("/task-statuses/{item_id}")
+def get_task_status(
+    item_id: int,
+    db: Session = Depends(get_db),
+    current_user: dict = Depends(get_current_user),
+):
+    item = get_task_status_by_id(db, item_id)
+    if not item:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Task status not found",
+        )
+    return {"task_status": task_status_to_dict(item)}
+
+
+@router.post("/task-statuses", status_code=status.HTTP_201_CREATED)
+def create_new_task_status(
+    request: TaskStatusCreateRequest,
+    db: Session = Depends(get_db),
+    current_user: dict = Depends(
+        require_permission("salary_task_status", "add")
+    ),
+):
+    item = create_task_status(
+        db,
+        request.status,
+        request.finish,
+        request.cancel,
+    )
+    return {
+        "message": "Task status created successfully",
+        "task_status": task_status_to_dict(item),
+    }
+
+
+@router.put("/task-statuses/{item_id}")
+def update_existing_task_status(
+    item_id: int,
+    request: TaskStatusUpdateRequest,
+    db: Session = Depends(get_db),
+    current_user: dict = Depends(
+        require_permission("salary_task_status", "edit")
+    ),
+):
+    existing = get_task_status_by_id(db, item_id)
+    if not existing:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Task status not found",
+        )
+
+    item = update_task_status(
+        db,
+        item_id,
+        request.status,
+        request.finish,
+        request.cancel,
+    )
+    return {
+        "message": "Task status updated successfully",
+        "task_status": task_status_to_dict(item),
+    }
+
+
+@router.delete("/task-statuses/{item_id}")
+def delete_task_status_route(
+    item_id: int,
+    db: Session = Depends(get_db),
+    current_user: dict = Depends(
+        require_permission("salary_task_status", "delete")
+    ),
+):
+    existing = get_task_status_by_id(db, item_id)
+    if not existing:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Task status not found",
+        )
+    hard_delete_task_status(db, item_id)
+    return {"message": "Task status deleted successfully"}
 
 # ==================================================
 # GET MY OWN RIGHTS

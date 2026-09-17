@@ -587,6 +587,179 @@ class RoleInOffense(Base):
     )
 
 
+
+# ==================================================
+# SALARY — NATURE OF WORK
+# TABLE: salnatureofwork
+# COLUMNS: pknwid, natureofwork
+# ==================================================
+
+class NatureOfWork(Base):
+
+    __tablename__ = "salnatureofwork"
+
+
+    pkNWId = Column(
+        "pknwid",
+        Integer,
+        primary_key=True,
+        index=True,
+    )
+
+
+    NatureOfWork = Column(
+        "natureofwork",
+        String(40),
+        nullable=False,
+        unique=True,
+    )
+
+
+# ==================================================
+# SALARY — SCHEDULE TYPE
+# TABLE: salscheduletype
+# COLUMNS: pkstid, type
+# ==================================================
+
+class ScheduleType(Base):
+
+    __tablename__ = "salscheduletype"
+
+
+    pkSTId = Column(
+        "pkstid",
+        Integer,
+        primary_key=True,
+        index=True,
+    )
+
+
+    Type = Column(
+        "type",
+        String(100),
+        nullable=False,
+        unique=True,
+    )
+
+
+# ==================================================
+# SALARY — RELIGION
+# TABLE: salreligion
+# COLUMNS: pkrgid, religion
+# ==================================================
+
+class Religion(Base):
+
+    __tablename__ = "salreligion"
+
+
+    pkRGId = Column(
+        "pkrgid",
+        Integer,
+        primary_key=True,
+        index=True,
+    )
+
+
+    Religion = Column(
+        "religion",
+        String(50),
+        nullable=False,
+        unique=True,
+    )
+
+
+# ==================================================
+# SALARY — CASTES
+# TABLE: salcastes
+# COLUMNS: pkcsid, caste
+# ==================================================
+
+class Caste(Base):
+
+    __tablename__ = "salcastes"
+
+
+    pkCSId = Column(
+        "pkcsid",
+        Integer,
+        primary_key=True,
+        index=True,
+    )
+
+
+    Caste = Column(
+        "caste",
+        String(40),
+        nullable=False,
+        unique=True,
+    )
+
+
+# ==================================================
+# SALARY — SKIN TONES
+# TABLE: salskintones
+# COLUMNS: pkstid, colour
+# ==================================================
+
+class SkinTone(Base):
+
+    __tablename__ = "salskintones"
+
+
+    pkSkinId = Column(
+        "pkstid",
+        Integer,
+        primary_key=True,
+        index=True,
+    )
+
+
+    Colour = Column(
+        "colour",
+        String(25),
+        nullable=False,
+        unique=True,
+    )
+
+
+# ==================================================
+# SALARY — TASK STATUS
+# TABLE: saltaskstatus
+# COLUMNS: pkstaid, finish, cancel, status
+# ==================================================
+
+class TaskStatus(Base):
+
+    __tablename__ = "saltaskstatus"
+
+    pkStaId = Column(
+        "pkstaid",
+        Integer,
+        primary_key=True,
+        index=True,
+    )
+
+    Finish = Column(
+        "finish",
+        Boolean,
+        nullable=False,
+        default=False,
+    )
+
+    Cancel = Column(
+        "cancel",
+        Boolean,
+        nullable=False,
+        default=False,
+    )
+
+    Status = Column(
+        "status",
+        String(30),
+        nullable=False,
+    )
+
 # ==================================================
 # SALARY EMPLOYEE SQLALCHEMY MODEL
 # ==================================================
@@ -6086,6 +6259,1402 @@ def delete_role_in_offense(
     try:
 
         db.delete(item)
+
+        db.commit()
+
+        return True
+
+
+    except Exception:
+
+        db.rollback()
+
+        raise
+
+
+
+# ==================================================
+# NATURE OF WORK — SERIALIZER + FUNCTIONS
+# ==================================================
+
+def nature_of_work_to_dict(item):
+
+    if not item:
+
+        return None
+
+
+    return {
+
+        "pkNWId": item.pkNWId,
+
+        "NatureOfWork": item.NatureOfWork,
+
+    }
+
+
+def get_nature_of_works(
+
+    db: Session,
+
+):
+
+    return (
+
+        db.query(NatureOfWork)
+
+        .order_by(NatureOfWork.pkNWId)
+
+        .all()
+
+    )
+
+
+def get_nature_of_work_by_id(
+
+    db: Session,
+
+    item_id: int,
+
+):
+
+    return (
+
+        db.query(NatureOfWork)
+
+        .filter(
+
+            NatureOfWork.pkNWId == item_id,
+
+        )
+
+        .first()
+
+    )
+
+
+def nature_of_work_exists(
+
+    db: Session,
+
+    value: str,
+
+):
+
+    if not value:
+
+        return False
+
+
+    return (
+
+        db.query(NatureOfWork)
+
+        .filter(
+
+            func.lower(NatureOfWork.NatureOfWork)
+            == value.strip().lower(),
+
+        )
+
+        .first()
+
+        is not None
+
+    )
+
+
+def nature_of_work_exists_for_other(
+
+    db: Session,
+
+    value: str,
+
+    item_id: int,
+
+):
+
+    if not value:
+
+        return False
+
+
+    return (
+
+        db.query(NatureOfWork)
+
+        .filter(
+
+            func.lower(NatureOfWork.NatureOfWork)
+            == value.strip().lower(),
+
+            NatureOfWork.pkNWId != item_id,
+
+        )
+
+        .first()
+
+        is not None
+
+    )
+
+
+def create_nature_of_work(
+
+    db: Session,
+
+    value: str,
+
+):
+
+    row = NatureOfWork(
+
+        NatureOfWork=value.strip(),
+
+    )
+
+
+    try:
+
+        db.add(row)
+
+        db.commit()
+
+        db.refresh(row)
+
+        return row
+
+
+    except Exception:
+
+        db.rollback()
+
+        raise
+
+
+def update_nature_of_work(
+
+    db: Session,
+
+    item_id: int,
+
+    value: str,
+
+):
+
+    row = get_nature_of_work_by_id(
+
+        db,
+
+        item_id,
+
+    )
+
+
+    if not row:
+
+        return None
+
+
+    row.NatureOfWork = value.strip()
+
+
+    try:
+
+        db.commit()
+
+        db.refresh(row)
+
+        return row
+
+
+    except Exception:
+
+        db.rollback()
+
+        raise
+
+
+def delete_nature_of_work(
+
+    db: Session,
+
+    item_id: int,
+
+):
+
+    row = get_nature_of_work_by_id(
+
+        db,
+
+        item_id,
+
+    )
+
+
+    if not row:
+
+        return None
+
+
+    try:
+
+        db.delete(row)
+
+        db.commit()
+
+        return True
+
+
+    except Exception:
+
+        db.rollback()
+
+        raise
+
+
+# ==================================================
+# SCHEDULE TYPE — SERIALIZER + FUNCTIONS
+# ==================================================
+
+def schedule_type_to_dict(item):
+
+    if not item:
+
+        return None
+
+
+    return {
+
+        "pkSTId": item.pkSTId,
+
+        "Type": item.Type,
+
+    }
+
+
+def get_schedule_types(
+
+    db: Session,
+
+):
+
+    return (
+
+        db.query(ScheduleType)
+
+        .order_by(ScheduleType.pkSTId)
+
+        .all()
+
+    )
+
+
+def get_schedule_type_by_id(
+
+    db: Session,
+
+    item_id: int,
+
+):
+
+    return (
+
+        db.query(ScheduleType)
+
+        .filter(
+
+            ScheduleType.pkSTId == item_id,
+
+        )
+
+        .first()
+
+    )
+
+
+def schedule_type_exists(
+
+    db: Session,
+
+    value: str,
+
+):
+
+    if not value:
+
+        return False
+
+
+    return (
+
+        db.query(ScheduleType)
+
+        .filter(
+
+            func.lower(ScheduleType.Type)
+            == value.strip().lower(),
+
+        )
+
+        .first()
+
+        is not None
+
+    )
+
+
+def schedule_type_exists_for_other(
+
+    db: Session,
+
+    value: str,
+
+    item_id: int,
+
+):
+
+    if not value:
+
+        return False
+
+
+    return (
+
+        db.query(ScheduleType)
+
+        .filter(
+
+            func.lower(ScheduleType.Type)
+            == value.strip().lower(),
+
+            ScheduleType.pkSTId != item_id,
+
+        )
+
+        .first()
+
+        is not None
+
+    )
+
+
+def create_schedule_type(
+
+    db: Session,
+
+    value: str,
+
+):
+
+    row = ScheduleType(
+
+        Type=value.strip(),
+
+    )
+
+
+    try:
+
+        db.add(row)
+
+        db.commit()
+
+        db.refresh(row)
+
+        return row
+
+
+    except Exception:
+
+        db.rollback()
+
+        raise
+
+
+def update_schedule_type(
+
+    db: Session,
+
+    item_id: int,
+
+    value: str,
+
+):
+
+    row = get_schedule_type_by_id(
+
+        db,
+
+        item_id,
+
+    )
+
+
+    if not row:
+
+        return None
+
+
+    row.Type = value.strip()
+
+
+    try:
+
+        db.commit()
+
+        db.refresh(row)
+
+        return row
+
+
+    except Exception:
+
+        db.rollback()
+
+        raise
+
+
+def delete_schedule_type(
+
+    db: Session,
+
+    item_id: int,
+
+):
+
+    row = get_schedule_type_by_id(
+
+        db,
+
+        item_id,
+
+    )
+
+
+    if not row:
+
+        return None
+
+
+    try:
+
+        db.delete(row)
+
+        db.commit()
+
+        return True
+
+
+    except Exception:
+
+        db.rollback()
+
+        raise
+
+
+# ==================================================
+# RELIGION — SERIALIZER + FUNCTIONS
+# ==================================================
+
+def religion_to_dict(item):
+
+    if not item:
+
+        return None
+
+
+    return {
+
+        "pkRGId": item.pkRGId,
+
+        "Religion": item.Religion,
+
+    }
+
+
+def get_religions(
+
+    db: Session,
+
+):
+
+    return (
+
+        db.query(Religion)
+
+        .order_by(Religion.pkRGId)
+
+        .all()
+
+    )
+
+
+def get_religion_by_id(
+
+    db: Session,
+
+    item_id: int,
+
+):
+
+    return (
+
+        db.query(Religion)
+
+        .filter(
+
+            Religion.pkRGId == item_id,
+
+        )
+
+        .first()
+
+    )
+
+
+def religion_exists(
+
+    db: Session,
+
+    value: str,
+
+):
+
+    if not value:
+
+        return False
+
+
+    return (
+
+        db.query(Religion)
+
+        .filter(
+
+            func.lower(Religion.Religion)
+            == value.strip().lower(),
+
+        )
+
+        .first()
+
+        is not None
+
+    )
+
+
+def religion_exists_for_other(
+
+    db: Session,
+
+    value: str,
+
+    item_id: int,
+
+):
+
+    if not value:
+
+        return False
+
+
+    return (
+
+        db.query(Religion)
+
+        .filter(
+
+            func.lower(Religion.Religion)
+            == value.strip().lower(),
+
+            Religion.pkRGId != item_id,
+
+        )
+
+        .first()
+
+        is not None
+
+    )
+
+
+def create_religion(
+
+    db: Session,
+
+    value: str,
+
+):
+
+    row = Religion(
+
+        Religion=value.strip(),
+
+    )
+
+
+    try:
+
+        db.add(row)
+
+        db.commit()
+
+        db.refresh(row)
+
+        return row
+
+
+    except Exception:
+
+        db.rollback()
+
+        raise
+
+
+def update_religion(
+
+    db: Session,
+
+    item_id: int,
+
+    value: str,
+
+):
+
+    row = get_religion_by_id(
+
+        db,
+
+        item_id,
+
+    )
+
+
+    if not row:
+
+        return None
+
+
+    row.Religion = value.strip()
+
+
+    try:
+
+        db.commit()
+
+        db.refresh(row)
+
+        return row
+
+
+    except Exception:
+
+        db.rollback()
+
+        raise
+
+
+def delete_religion(
+
+    db: Session,
+
+    item_id: int,
+
+):
+
+    row = get_religion_by_id(
+
+        db,
+
+        item_id,
+
+    )
+
+
+    if not row:
+
+        return None
+
+
+    try:
+
+        db.delete(row)
+
+        db.commit()
+
+        return True
+
+
+    except Exception:
+
+        db.rollback()
+
+        raise
+
+
+# ==================================================
+# CASTE — SERIALIZER + FUNCTIONS
+# ==================================================
+
+def caste_to_dict(item):
+
+    if not item:
+
+        return None
+
+
+    return {
+
+        "pkCSId": item.pkCSId,
+
+        "Caste": item.Caste,
+
+    }
+
+
+def get_castes(
+
+    db: Session,
+
+):
+
+    return (
+
+        db.query(Caste)
+
+        .order_by(Caste.pkCSId)
+
+        .all()
+
+    )
+
+
+def get_caste_by_id(
+
+    db: Session,
+
+    item_id: int,
+
+):
+
+    return (
+
+        db.query(Caste)
+
+        .filter(
+
+            Caste.pkCSId == item_id,
+
+        )
+
+        .first()
+
+    )
+
+
+def caste_exists(
+
+    db: Session,
+
+    value: str,
+
+):
+
+    if not value:
+
+        return False
+
+
+    return (
+
+        db.query(Caste)
+
+        .filter(
+
+            func.lower(Caste.Caste)
+            == value.strip().lower(),
+
+        )
+
+        .first()
+
+        is not None
+
+    )
+
+
+def caste_exists_for_other(
+
+    db: Session,
+
+    value: str,
+
+    item_id: int,
+
+):
+
+    if not value:
+
+        return False
+
+
+    return (
+
+        db.query(Caste)
+
+        .filter(
+
+            func.lower(Caste.Caste)
+            == value.strip().lower(),
+
+            Caste.pkCSId != item_id,
+
+        )
+
+        .first()
+
+        is not None
+
+    )
+
+
+def create_caste(
+
+    db: Session,
+
+    value: str,
+
+):
+
+    row = Caste(
+
+        Caste=value.strip(),
+
+    )
+
+
+    try:
+
+        db.add(row)
+
+        db.commit()
+
+        db.refresh(row)
+
+        return row
+
+
+    except Exception:
+
+        db.rollback()
+
+        raise
+
+
+def update_caste(
+
+    db: Session,
+
+    item_id: int,
+
+    value: str,
+
+):
+
+    row = get_caste_by_id(
+
+        db,
+
+        item_id,
+
+    )
+
+
+    if not row:
+
+        return None
+
+
+    row.Caste = value.strip()
+
+
+    try:
+
+        db.commit()
+
+        db.refresh(row)
+
+        return row
+
+
+    except Exception:
+
+        db.rollback()
+
+        raise
+
+
+def delete_caste(
+
+    db: Session,
+
+    item_id: int,
+
+):
+
+    row = get_caste_by_id(
+
+        db,
+
+        item_id,
+
+    )
+
+
+    if not row:
+
+        return None
+
+
+    try:
+
+        db.delete(row)
+
+        db.commit()
+
+        return True
+
+
+    except Exception:
+
+        db.rollback()
+
+        raise
+
+
+# ==================================================
+# SKIN TONE — SERIALIZER + FUNCTIONS
+# ==================================================
+
+def skin_tone_to_dict(item):
+
+    if not item:
+
+        return None
+
+
+    return {
+
+        "pkSkinId": item.pkSkinId,
+
+        "Colour": item.Colour,
+
+    }
+
+
+def get_skin_tones(
+
+    db: Session,
+
+):
+
+    return (
+
+        db.query(SkinTone)
+
+        .order_by(SkinTone.pkSkinId)
+
+        .all()
+
+    )
+
+
+def get_skin_tone_by_id(
+
+    db: Session,
+
+    item_id: int,
+
+):
+
+    return (
+
+        db.query(SkinTone)
+
+        .filter(
+
+            SkinTone.pkSkinId == item_id,
+
+        )
+
+        .first()
+
+    )
+
+
+def skin_tone_exists(
+
+    db: Session,
+
+    value: str,
+
+):
+
+    if not value:
+
+        return False
+
+
+    return (
+
+        db.query(SkinTone)
+
+        .filter(
+
+            func.lower(SkinTone.Colour)
+            == value.strip().lower(),
+
+        )
+
+        .first()
+
+        is not None
+
+    )
+
+
+def skin_tone_exists_for_other(
+
+    db: Session,
+
+    value: str,
+
+    item_id: int,
+
+):
+
+    if not value:
+
+        return False
+
+
+    return (
+
+        db.query(SkinTone)
+
+        .filter(
+
+            func.lower(SkinTone.Colour)
+            == value.strip().lower(),
+
+            SkinTone.pkSkinId != item_id,
+
+        )
+
+        .first()
+
+        is not None
+
+    )
+
+
+def create_skin_tone(
+
+    db: Session,
+
+    value: str,
+
+):
+
+    row = SkinTone(
+
+        Colour=value.strip(),
+
+    )
+
+
+    try:
+
+        db.add(row)
+
+        db.commit()
+
+        db.refresh(row)
+
+        return row
+
+
+    except Exception:
+
+        db.rollback()
+
+        raise
+
+
+def update_skin_tone(
+
+    db: Session,
+
+    item_id: int,
+
+    value: str,
+
+):
+
+    row = get_skin_tone_by_id(
+
+        db,
+
+        item_id,
+
+    )
+
+
+    if not row:
+
+        return None
+
+
+    row.Colour = value.strip()
+
+
+    try:
+
+        db.commit()
+
+        db.refresh(row)
+
+        return row
+
+
+    except Exception:
+
+        db.rollback()
+
+        raise
+
+
+def delete_skin_tone(
+
+    db: Session,
+
+    item_id: int,
+
+):
+
+    row = get_skin_tone_by_id(
+
+        db,
+
+        item_id,
+
+    )
+
+
+    if not row:
+
+        return None
+
+
+    try:
+
+        db.delete(row)
+
+        db.commit()
+
+        return True
+
+
+    except Exception:
+
+        db.rollback()
+
+        raise
+
+
+# ==================================================
+# TASK STATUS — SERIALIZER + FUNCTIONS
+# TABLE: saltaskstatus — status, finish, cancel
+# ==================================================
+
+def task_status_to_dict(item):
+
+    if not item:
+
+        return None
+
+
+    return {
+
+        "pkStaId": item.pkStaId,
+
+        "Status": item.Status,
+
+        "Finish": item.Finish,
+
+        "Cancel": item.Cancel,
+
+    }
+
+
+def get_task_statuses(
+
+    db: Session,
+
+):
+
+    return (
+
+        db.query(TaskStatus)
+
+        .order_by(TaskStatus.pkStaId)
+
+        .all()
+
+    )
+
+
+def get_task_status_by_id(
+
+    db: Session,
+
+    item_id: int,
+
+):
+
+    return (
+
+        db.query(TaskStatus)
+
+        .filter(
+
+            TaskStatus.pkStaId == item_id,
+
+        )
+
+        .first()
+
+    )
+
+
+def create_task_status(
+
+    db: Session,
+
+    status: str,
+
+    finish: bool = False,
+
+    cancel: bool = False,
+
+):
+
+    row = TaskStatus(
+
+        Status=status.strip(),
+
+        Finish=bool(finish),
+
+        Cancel=bool(cancel),
+
+    )
+
+
+    try:
+
+        db.add(row)
+
+        db.commit()
+
+        db.refresh(row)
+
+        return row
+
+
+    except Exception:
+
+        db.rollback()
+
+        raise
+
+
+def update_task_status(
+
+    db: Session,
+
+    item_id: int,
+
+    status: str,
+
+    finish: bool,
+
+    cancel: bool,
+
+):
+
+    row = get_task_status_by_id(
+
+        db,
+
+        item_id,
+
+    )
+
+
+    if not row:
+
+        return None
+
+
+    row.Status = status.strip()
+
+    row.Finish = bool(finish)
+
+    row.Cancel = bool(cancel)
+
+
+    try:
+
+        db.commit()
+
+        db.refresh(row)
+
+        return row
+
+
+    except Exception:
+
+        db.rollback()
+
+        raise
+
+
+def delete_task_status(
+
+    db: Session,
+
+    item_id: int,
+
+):
+
+    row = get_task_status_by_id(
+
+        db,
+
+        item_id,
+
+    )
+
+
+    if not row:
+
+        return None
+
+
+    try:
+
+        db.delete(row)
 
         db.commit()
 

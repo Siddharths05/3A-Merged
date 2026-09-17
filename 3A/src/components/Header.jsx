@@ -36,6 +36,12 @@ import {
   UsersRound,
   Moon,
   Sun,
+  Clock,
+  ListChecks,
+  BookOpen,
+  Palette,
+  HandCoins,
+  ChevronLeft,
 } from "lucide-react";
 
 import {
@@ -115,10 +121,41 @@ export default function Header() {
   ] = useState(false);
 
 
+  // ==================================================
+  // DESKTOP MASTERS DRILL-DOWN VIEW
+  // "categories" = showing the HR / Salary category
+  // tiles; "hr" / "salary" = showing that category's
+  // list of master cards (with a Back control).
+  // ==================================================
+
+  const [
+    mastersView,
+    setMastersView,
+  ] = useState("categories");
+
+
   const [
     usersOpen,
     setUsersOpen,
   ] = useState(false);
+
+
+  // ==================================================
+  // MOBILE MASTERS SUBMENU TOGGLES
+  // HR / Salary each expand independently inside the
+  // mobile "Masters" section.
+  // ==================================================
+
+  const [
+    mobileHrOpen,
+    setMobileHrOpen,
+  ] = useState(true);
+
+
+  const [
+    mobileSalaryOpen,
+    setMobileSalaryOpen,
+  ] = useState(true);
 
 
   // ==================================================
@@ -247,6 +284,8 @@ export default function Header() {
 
     setMastersOpen(false);
 
+    setMastersView("categories");
+
     setUsersOpen(false);
 
     setMobileMenuOpen(false);
@@ -296,6 +335,8 @@ export default function Header() {
         ) {
 
           setMastersOpen(false);
+
+          setMastersView("categories");
 
         }
 
@@ -376,6 +417,8 @@ export default function Header() {
   useEffect(() => {
 
     setMastersOpen(false);
+
+    setMastersView("categories");
 
     setUsersOpen(false);
 
@@ -481,10 +524,12 @@ export default function Header() {
 
 
   // ==================================================
-  // MASTERS MENU
+  // HR MASTERS
+  // (unchanged — same 17 items, same paths, same
+  // module keys, as before the Phase 4 redesign)
   // ==================================================
 
-  const masters = [
+  const hrMasters = [
 
     {
       module: "ability",
@@ -846,21 +891,150 @@ export default function Header() {
 
 
   // ==================================================
-  // VISIBLE MASTERS
+  // SALARY MASTERS
+  // NEW (Phase 4) — backend/permissions for these don't
+  // exist yet, so module keys below are a placeholder
+  // convention (salary_*) and paths 404 until Phase 5
+  // builds the actual pages. Names are plain strings,
+  // not t(), since there are no translation keys for
+  // these yet — swap in t("header.mastersItems.xxx")
+  // once added to the translation files.
+  // ==================================================
+
+  const salaryMasters = [
+
+    {
+      module: "salary_nature_of_work",
+
+      name: "Nature of Work",
+
+      description:
+        "Manage nature-of-work classifications for salary records.",
+
+      path:
+        "/masters/salary/nature-of-work",
+
+      icon:
+        BriefcaseBusiness,
+    },
+
+
+    {
+      module: "salary_schedule_type",
+
+      name: "Schedule Type",
+
+      description:
+        "Manage work schedule types used in salary processing.",
+
+      path:
+        "/masters/salary/schedule-type",
+
+      icon:
+        Clock,
+    },
+
+
+    {
+      module: "salary_task_status",
+
+      name: "Task Status",
+
+      description:
+        "Manage task status values used across salary workflows.",
+
+      path:
+        "/masters/salary/task-status",
+
+      icon:
+        ListChecks,
+    },
+
+
+    {
+      module: "salary_religion",
+
+      name: "Religion",
+
+      description:
+        "Manage religion classifications for employee records.",
+
+      path:
+        "/masters/salary/religion",
+
+      icon:
+        BookOpen,
+    },
+
+
+    {
+      module: "salary_castes",
+
+      name: "Castes / Sub-Castes",
+
+      description:
+        "Manage caste and sub-caste classifications.",
+
+      path:
+        "/masters/salary/castes",
+
+      icon:
+        UsersRound,
+    },
+
+
+    {
+      module: "salary_skin_tones",
+
+      name: "Skin Tones",
+
+      description:
+        "Manage skin tone classifications for employee records.",
+
+      path:
+        "/masters/salary/skin-tones",
+
+      icon:
+        Palette,
+    },
+
+  ];
+
+
+  // ==================================================
+  // VISIBLE MASTERS (HR + SALARY)
   // Admins see everything. Everyone else only sees
   // modules they have View rights on. While rights are
   // still loading, show nothing rather than flashing
   // items the person may not actually have access to.
+  // Salary items use the same gating pattern so they
+  // start working automatically once their backend
+  // permissions exist — until then, only admins see them.
   // ==================================================
 
-  const visibleMasters =
+  const visibleHrMasters =
     role === "admin"
-      ? masters
+      ? hrMasters
       : rightsLoading
         ? []
-        : masters.filter((master) =>
+        : hrMasters.filter((master) =>
             can(master.module, "view")
           );
+
+
+  const visibleSalaryMasters =
+    role === "admin"
+      ? salaryMasters
+      : rightsLoading
+        ? []
+        : salaryMasters.filter((master) =>
+            can(master.module, "view")
+          );
+
+
+  const hasAnyVisibleMasters =
+    visibleHrMasters.length > 0 ||
+    visibleSalaryMasters.length > 0;
 
 
   // ==================================================
@@ -868,7 +1042,7 @@ export default function Header() {
   // ==================================================
 
   const isMasterActive =
-    masters.some(
+    [...hrMasters, ...salaryMasters].some(
       (master) =>
         master.path ===
         location.pathname
@@ -949,6 +1123,117 @@ export default function Header() {
       }
 
     `;
+
+
+  // ==================================================
+  // MASTERS ITEM CARD
+  // Shared render for one master link, used inside both
+  // the HR and Salary sections of the desktop dropdown.
+  // ==================================================
+
+  const renderMasterCard = (master) => {
+
+    const Icon =
+      master.icon;
+
+
+    const isActive =
+      location.pathname ===
+      master.path;
+
+
+    return (
+
+      <Link
+        key={master.path}
+        to={master.path}
+
+        className={`
+          flex
+          items-start
+          gap-3
+          rounded-xl
+          p-3
+          transition
+          duration-200
+
+          ${
+            isActive
+              ? "bg-theme-primary-soft"
+              : "hover:bg-theme-primary-soft"
+          }
+        `}
+      >
+
+        <div
+          className={`
+            flex
+            h-9
+            w-9
+            shrink-0
+            items-center
+            justify-center
+            rounded-lg
+
+            ${
+              isActive
+                ? `
+                  bg-theme-primary
+                  text-white
+                `
+                : `
+                  bg-theme-primary-soft
+                  text-theme-primary
+                `
+            }
+          `}
+        >
+
+          <Icon size={17} />
+
+        </div>
+
+
+        <div className="min-w-0">
+
+          <p
+            className={`
+              text-sm
+              font-semibold
+
+              ${
+                isActive
+                  ? "text-theme-primary"
+                  : "text-theme-text"
+              }
+            `}
+          >
+
+            {master.name}
+
+          </p>
+
+
+          <p
+            className="
+              mt-0.5
+              truncate
+              text-xs
+              text-theme-muted
+            "
+          >
+
+            {master.description}
+
+          </p>
+
+        </div>
+
+      </Link>
+
+    );
+
+  };
 
 
   // ==================================================
@@ -1066,6 +1351,8 @@ export default function Header() {
                 );
 
                 setMastersOpen(false);
+
+                setMastersView("categories");
 
               }}
 
@@ -1278,7 +1565,8 @@ export default function Header() {
 
 
           {/* ======================================== */}
-          {/* MASTERS */}
+          {/* MASTERS (HR + SALARY) — drill-down: */}
+          {/* categories -> hr OR salary list        */}
           {/* ======================================== */}
 
           <div
@@ -1292,8 +1580,22 @@ export default function Header() {
               onClick={() => {
 
                 setMastersOpen(
-                  (previous) =>
-                    !previous
+                  (previous) => {
+
+                    const next =
+                      !previous;
+
+
+                    if (!next) {
+
+                      setMastersView("categories");
+
+                    }
+
+
+                    return next;
+
+                  }
                 );
 
                 setUsersOpen(false);
@@ -1345,8 +1647,10 @@ export default function Header() {
                   absolute
                   right-0
                   mt-3
-                  w-[720px]
-                  overflow-hidden
+                  w-[360px]
+                  max-h-[80vh]
+                  overflow-y-auto
+                  overflow-x-hidden
                   rounded-2xl
                   border
                   border-theme-border
@@ -1355,8 +1659,16 @@ export default function Header() {
                 "
               >
 
+                {/* ============================== */}
+                {/* PANEL HEADER — swaps title/back */}
+                {/* depending on drill-down level   */}
+                {/* ============================== */}
+
                 <div
                   className="
+                    flex
+                    items-center
+                    gap-2
                     border-b
                     border-theme-border
                     bg-theme-primary-soft
@@ -1365,168 +1677,300 @@ export default function Header() {
                   "
                 >
 
-                  <p
-                    className="
-                      text-sm
-                      font-bold
-                      text-theme-text
-                    "
-                  >
+                  {mastersView !== "categories" && (
 
-                    {t("header.mastersTitle")}
+                    <button
+                      type="button"
 
-                  </p>
+                      onClick={() =>
+                        setMastersView("categories")
+                      }
 
-                  <p
-                    className="
-                      mt-1
-                      text-xs
-                      text-theme-muted
-                    "
-                  >
-
-                    {t("header.mastersDescription")}
-
-                  </p>
-
-                </div>
-
-
-                <div
-                  className="
-                    grid
-                    grid-cols-2
-                    gap-1
-                    p-3
-                  "
-                >
-
-                  {visibleMasters.length === 0 ? (
-
-                    <p
                       className="
-                        col-span-2
-                        px-3
-                        py-6
-                        text-center
-                        text-sm
-                        text-theme-faint
+                        flex
+                        h-8
+                        w-8
+                        shrink-0
+                        items-center
+                        justify-center
+                        rounded-lg
+                        text-theme-primary
+                        transition
+                        hover:bg-theme-primary/10
                       "
+
+                      aria-label="Back"
                     >
-                      {t("header.noMastersAccess")}
-                    </p>
 
-                  ) : (
+                      <ChevronLeft size={18} />
 
-                    visibleMasters.map(
-                    (master) => {
-
-                      const Icon =
-                        master.icon;
-
-
-                      const isActive =
-                        location.pathname ===
-                        master.path;
-
-
-                      return (
-
-                        <Link
-                          key={master.path}
-                          to={master.path}
-
-                          className={`
-                            flex
-                            items-start
-                            gap-3
-                            rounded-xl
-                            p-3
-                            transition
-                            duration-200
-
-                            ${
-                              isActive
-                                ? "bg-theme-primary-soft"
-                                : "hover:bg-theme-primary-soft"
-                            }
-                          `}
-                        >
-
-                          <div
-                            className={`
-                              flex
-                              h-9
-                              w-9
-                              shrink-0
-                              items-center
-                              justify-center
-                              rounded-lg
-
-                              ${
-                                isActive
-                                  ? `
-                                    bg-theme-primary
-                                    text-white
-                                  `
-                                  : `
-                                    bg-theme-primary-soft
-                                    text-theme-primary
-                                  `
-                              }
-                            `}
-                          >
-
-                            <Icon size={17} />
-
-                          </div>
-
-
-                          <div className="min-w-0">
-
-                            <p
-                              className={`
-                                text-sm
-                                font-semibold
-
-                                ${
-                                  isActive
-                                    ? "text-theme-primary"
-                                    : "text-theme-text"
-                                }
-                              `}
-                            >
-
-                              {master.name}
-
-                            </p>
-
-
-                            <p
-                              className="
-                                mt-0.5
-                                truncate
-                                text-xs
-                                text-theme-muted
-                              "
-                            >
-
-                              {master.description}
-
-                            </p>
-
-                          </div>
-
-                        </Link>
-
-                      );
-
-                    }
-                    )
+                    </button>
 
                   )}
 
+
+                  <div className="min-w-0">
+
+                    <p
+                      className="
+                        text-sm
+                        font-bold
+                        text-theme-text
+                      "
+                    >
+
+                      {mastersView === "categories" &&
+                        t("header.mastersTitle")}
+
+                      {mastersView === "hr" && "HR Masters"}
+
+                      {mastersView === "salary" && "Salary Masters"}
+
+                    </p>
+
+                    <p
+                      className="
+                        mt-1
+                        text-xs
+                        text-theme-muted
+                      "
+                    >
+
+                      {mastersView === "categories"
+                        ? t("header.mastersDescription")
+                        : "Select a form to open it."}
+
+                    </p>
+
+                  </div>
+
                 </div>
+
+
+                {/* ============================== */}
+                {/* NO ACCESS AT ALL                */}
+                {/* ============================== */}
+
+                {!hasAnyVisibleMasters && (
+
+                  <p
+                    className="
+                      px-3
+                      py-6
+                      text-center
+                      text-sm
+                      text-theme-faint
+                    "
+                  >
+                    {t("header.noMastersAccess")}
+                  </p>
+
+                )}
+
+
+                {/* ============================== */}
+                {/* LEVEL 1 — CATEGORY TILES        */}
+                {/* ============================== */}
+
+                {hasAnyVisibleMasters &&
+                  mastersView === "categories" && (
+
+                  <div className="p-2">
+
+                    {visibleHrMasters.length > 0 && (
+
+                      <button
+                        type="button"
+
+                        onClick={() =>
+                          setMastersView("hr")
+                        }
+
+                        className="
+                          flex
+                          w-full
+                          items-start
+                          gap-3
+                          rounded-xl
+                          p-3
+                          text-left
+                          transition
+                          duration-200
+                          hover:bg-theme-primary-soft
+                        "
+                      >
+
+                        <div
+                          className="
+                            flex
+                            h-10
+                            w-10
+                            shrink-0
+                            items-center
+                            justify-center
+                            rounded-lg
+                            bg-theme-primary-soft
+                            text-theme-primary
+                          "
+                        >
+
+                          <UsersRound size={18} />
+
+                        </div>
+
+
+                        <div className="min-w-0">
+
+                          <p
+                            className="
+                              text-sm
+                              font-semibold
+                              text-theme-text
+                            "
+                          >
+                            HR
+                          </p>
+
+
+                          <p
+                            className="
+                              mt-0.5
+                              text-xs
+                              text-theme-muted
+                            "
+                          >
+                            Manage HR reference data masters.
+                          </p>
+
+                        </div>
+
+                      </button>
+
+                    )}
+
+
+                    {visibleSalaryMasters.length > 0 && (
+
+                      <button
+                        type="button"
+
+                        onClick={() =>
+                          setMastersView("salary")
+                        }
+
+                        className="
+                          flex
+                          w-full
+                          items-start
+                          gap-3
+                          rounded-xl
+                          p-3
+                          text-left
+                          transition
+                          duration-200
+                          hover:bg-theme-primary-soft
+                        "
+                      >
+
+                        <div
+                          className="
+                            flex
+                            h-10
+                            w-10
+                            shrink-0
+                            items-center
+                            justify-center
+                            rounded-lg
+                            bg-theme-primary-soft
+                            text-theme-primary
+                          "
+                        >
+
+                          <HandCoins size={18} />
+
+                        </div>
+
+
+                        <div className="min-w-0">
+
+                          <p
+                            className="
+                              text-sm
+                              font-semibold
+                              text-theme-text
+                            "
+                          >
+                            Salary
+                          </p>
+
+
+                          <p
+                            className="
+                              mt-0.5
+                              text-xs
+                              text-theme-muted
+                            "
+                          >
+                            Manage salary reference data masters.
+                          </p>
+
+                        </div>
+
+                      </button>
+
+                    )}
+
+                  </div>
+
+                )}
+
+
+                {/* ============================== */}
+                {/* LEVEL 2 — HR LIST               */}
+                {/* ============================== */}
+
+                {mastersView === "hr" && (
+
+                  <div
+                    className="
+                      grid
+                      grid-cols-2
+                      gap-1
+                      p-3
+                    "
+                  >
+
+                    {visibleHrMasters.map(
+                      renderMasterCard
+                    )}
+
+                  </div>
+
+                )}
+
+
+                {/* ============================== */}
+                {/* LEVEL 2 — SALARY LIST           */}
+                {/* ============================== */}
+
+                {mastersView === "salary" && (
+
+                  <div
+                    className="
+                      grid
+                      grid-cols-2
+                      gap-1
+                      p-3
+                    "
+                  >
+
+                    {visibleSalaryMasters.map(
+                      renderMasterCard
+                    )}
+
+                  </div>
+
+                )}
 
               </div>
 
@@ -2104,73 +2548,268 @@ export default function Header() {
           </div>
 
 
-          {/* MASTERS */}
+          {/* MASTERS (HR + SALARY) */}
 
-          <div
-            className="
-              mt-4
-              border-t
-              border-theme-border
-              pt-4
-            "
-          >
-
-            <p
-              className="
-                mb-2
-                px-3
-                text-xs
-                font-bold
-                uppercase
-                tracking-wider
-                text-theme-faint
-              "
-            >
-
-              {t("header.masters")}
-
-            </p>
-
+          {hasAnyVisibleMasters && (
 
             <div
               className="
-                flex
-                flex-col
-                gap-1
+                mt-4
+                border-t
+                border-theme-border
+                pt-4
               "
             >
 
-              {visibleMasters.map(
-                (master) => {
+              <p
+                className="
+                  mb-2
+                  px-3
+                  text-xs
+                  font-bold
+                  uppercase
+                  tracking-wider
+                  text-theme-faint
+                "
+              >
 
-                  const Icon =
-                    master.icon;
+                {t("header.masters")}
+
+              </p>
 
 
-                  return (
+              {/* HR SUBSECTION */}
 
-                    <NavLink
-                      key={master.path}
-                      to={master.path}
-                      className={navItemClass}
+              {visibleHrMasters.length > 0 && (
+
+                <div className="mb-3">
+
+                  <button
+                    type="button"
+
+                    onClick={() =>
+                      setMobileHrOpen(
+                        (previous) =>
+                          !previous
+                      )
+                    }
+
+                    className="
+                      flex
+                      w-full
+                      items-center
+                      justify-between
+                      rounded-lg
+                      px-3
+                      py-2
+                      text-xs
+                      font-bold
+                      uppercase
+                      tracking-wider
+                      text-theme-muted
+                      transition
+                      hover:bg-theme-primary-soft
+                    "
+                  >
+
+                    <span
+                      className="
+                        flex
+                        items-center
+                        gap-2
+                      "
                     >
 
-                      <Icon size={18} />
+                      <UsersRound size={14} />
 
-                      <span>
-                        {master.name}
-                      </span>
+                      HR
 
-                    </NavLink>
+                    </span>
 
-                  );
 
-                }
+                    <ChevronDown
+                      size={14}
+
+                      className={`
+                        transition-transform
+                        duration-200
+
+                        ${
+                          mobileHrOpen
+                            ? "rotate-180"
+                            : ""
+                        }
+                      `}
+                    />
+
+                  </button>
+
+
+                  {mobileHrOpen && (
+
+                    <div
+                      className="
+                        mt-1
+                        flex
+                        flex-col
+                        gap-1
+                      "
+                    >
+
+                      {visibleHrMasters.map(
+                        (master) => {
+
+                          const Icon =
+                            master.icon;
+
+
+                          return (
+
+                            <NavLink
+                              key={master.path}
+                              to={master.path}
+                              className={navItemClass}
+                            >
+
+                              <Icon size={18} />
+
+                              <span>
+                                {master.name}
+                              </span>
+
+                            </NavLink>
+
+                          );
+
+                        }
+                      )}
+
+                    </div>
+
+                  )}
+
+                </div>
+
+              )}
+
+
+              {/* SALARY SUBSECTION */}
+
+              {visibleSalaryMasters.length > 0 && (
+
+                <div>
+
+                  <button
+                    type="button"
+
+                    onClick={() =>
+                      setMobileSalaryOpen(
+                        (previous) =>
+                          !previous
+                      )
+                    }
+
+                    className="
+                      flex
+                      w-full
+                      items-center
+                      justify-between
+                      rounded-lg
+                      px-3
+                      py-2
+                      text-xs
+                      font-bold
+                      uppercase
+                      tracking-wider
+                      text-theme-muted
+                      transition
+                      hover:bg-theme-primary-soft
+                    "
+                  >
+
+                    <span
+                      className="
+                        flex
+                        items-center
+                        gap-2
+                      "
+                    >
+
+                      <HandCoins size={14} />
+
+                      Salary
+
+                    </span>
+
+
+                    <ChevronDown
+                      size={14}
+
+                      className={`
+                        transition-transform
+                        duration-200
+
+                        ${
+                          mobileSalaryOpen
+                            ? "rotate-180"
+                            : ""
+                        }
+                      `}
+                    />
+
+                  </button>
+
+
+                  {mobileSalaryOpen && (
+
+                    <div
+                      className="
+                        mt-1
+                        flex
+                        flex-col
+                        gap-1
+                      "
+                    >
+
+                      {visibleSalaryMasters.map(
+                        (master) => {
+
+                          const Icon =
+                            master.icon;
+
+
+                          return (
+
+                            <NavLink
+                              key={master.path}
+                              to={master.path}
+                              className={navItemClass}
+                            >
+
+                              <Icon size={18} />
+
+                              <span>
+                                {master.name}
+                              </span>
+
+                            </NavLink>
+
+                          );
+
+                        }
+                      )}
+
+                    </div>
+
+                  )}
+
+                </div>
+
               )}
 
             </div>
 
-          </div>
+          )}
 
 
           {/* LOGOUT */}

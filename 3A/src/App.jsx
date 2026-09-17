@@ -52,6 +52,19 @@ import OfficeType from "./Pages/HR/OfficeType";
 import OfficeLevel from "./Pages/HR/OfficeLevel";
 import RoleInOffense from "./Pages/HR/RoleInOffense";
 import Hobbies from "./Pages/HR/Hobbies";
+import ScheduleType from "./Pages/Salary/ScheduleType";
+import Religion from "./Pages/Salary/Religion";
+import Caste from "./Pages/Salary/Caste";
+import SkinTone from "./Pages/Salary/SkinTone";
+import TaskStatus from "./Pages/Salary/TaskStatus";
+
+// ==================================================
+// SALARY MASTER FORMS
+// NatureOfWork, ScheduleType, Religion, Caste, SkinTone,
+// and TaskStatus are all wired in below.
+// ==================================================
+
+import NatureOfWork from "./Pages/Salary/NatureofWork";
 
 
 // ==================================================
@@ -293,6 +306,48 @@ export default function App() {
         <Route
           path="/hobbies"
           element={<Hobbies />}
+        />
+
+
+        {/* ==============================================
+            SALARY MASTERS
+            Paths match the "path" values set on each
+            master's entry in salaryMasters in Header.jsx.
+        ============================================== */}
+
+        <Route
+          path="/masters/salary/nature-of-work"
+          element={<NatureOfWork />}
+        />
+
+
+        <Route
+          path="/masters/salary/schedule-type"
+          element={<ScheduleType />}
+        />
+
+
+        <Route
+          path="/masters/salary/religion"
+          element={<Religion />}
+        />
+
+
+        <Route
+          path="/masters/salary/castes"
+          element={<Caste />}
+        />
+
+
+        <Route
+          path="/masters/salary/skin-tones"
+          element={<SkinTone />}
+        />
+
+
+        <Route
+          path="/masters/salary/task-status"
+          element={<TaskStatus />}
         />
 
 
