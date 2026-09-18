@@ -892,13 +892,6 @@ export default function Header() {
 
   // ==================================================
   // SALARY MASTERS
-  // NEW (Phase 4) — backend/permissions for these don't
-  // exist yet, so module keys below are a placeholder
-  // convention (salary_*) and paths 404 until Phase 5
-  // builds the actual pages. Names are plain strings,
-  // not t(), since there are no translation keys for
-  // these yet — swap in t("header.mastersItems.xxx")
-  // once added to the translation files.
   // ==================================================
 
   const salaryMasters = [
@@ -998,6 +991,42 @@ export default function Header() {
         Palette,
     },
 
+
+    {
+      module: "salary_employee_relation",
+
+      name: "Relationship",
+
+      description:
+        "Manage employee relationship classifications.",
+
+      path:
+        "/masters/salary/relationship",
+
+      icon:
+        Users,
+    },
+
+
+    // ==================================================
+    // NEW — SHIFT TIMING
+    // ==================================================
+
+    {
+      module: "salary_shift_timing",
+
+      name: "Shift Timing",
+
+      description:
+        "Manage work shifts, working hours, and break timings.",
+
+      path:
+        "/masters/salary/shift-timing",
+
+      icon:
+        Clock,
+    },
+
   ];
 
 
@@ -1007,9 +1036,6 @@ export default function Header() {
   // modules they have View rights on. While rights are
   // still loading, show nothing rather than flashing
   // items the person may not actually have access to.
-  // Salary items use the same gating pattern so they
-  // start working automatically once their backend
-  // permissions exist — until then, only admins see them.
   // ==================================================
 
   const visibleHrMasters =

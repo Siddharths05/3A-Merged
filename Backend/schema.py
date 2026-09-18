@@ -1,4 +1,7 @@
-from datetime import datetime
+from datetime import datetime, time
+from decimal import Decimal 
+
+
 
 from pydantic import BaseModel, Field
 
@@ -675,6 +678,90 @@ class TaskStatusUpdateRequest(BaseModel):
     finish: bool
 
     cancel: bool
+
+# ==================================================
+# SALARY — SHIFT TIMING MASTER
+# TABLE: salshifttiming
+#
+# Columns:
+# pkstid   NUMERIC(18,0) PRIMARY KEY
+# shift    VARCHAR(50)
+# swork    TIME
+# ework    TIME
+# twork    NUMERIC(18,2)
+# sbreak   TIME
+# ebreak   TIME
+# tbreak   NUMERIC(18,2)
+# ==================================================
+
+class ShiftTimingCreateRequest(BaseModel):
+
+    pkSTId: int
+
+    shift: str = Field(
+        min_length=1,
+        max_length=50,
+    )
+
+    start_work: time
+
+    end_work: time
+
+    total_work: float = Field(
+        ge=0,
+    )
+
+    start_break: time
+
+    end_break: time
+
+    total_break: float = Field(
+        ge=0,
+    )
+
+
+class ShiftTimingUpdateRequest(BaseModel):
+
+    shift: str = Field(
+        min_length=1,
+        max_length=50,
+    )
+
+    start_work: time
+
+    end_work: time
+
+    total_work: float = Field(
+        ge=0,
+    )
+
+    start_break: time
+
+    end_break: time
+
+    total_break: float = Field(
+        ge=0,
+    )
+
+
+
+    # ==================================================
+# SALARY — EMPLOYEE RELATION
+# TABLE: SalEmpRelation — relativename varchar(50)
+# ==================================================
+
+class EmployeeRelationCreateRequest(BaseModel):
+    relative_name: str = Field(
+        min_length=1,
+        max_length=50,
+    )
+
+
+class EmployeeRelationUpdateRequest(BaseModel):
+    relative_name: str = Field(
+        min_length=1,
+        max_length=50,
+    )
 # ==================================================
 # ANNOUNCEMENT
 # ==================================================

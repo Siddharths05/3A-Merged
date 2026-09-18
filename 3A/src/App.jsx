@@ -52,19 +52,20 @@ import OfficeType from "./Pages/HR/OfficeType";
 import OfficeLevel from "./Pages/HR/OfficeLevel";
 import RoleInOffense from "./Pages/HR/RoleInOffense";
 import Hobbies from "./Pages/HR/Hobbies";
+
+
+// ==================================================
+// SALARY MASTER FORMS
+// ==================================================
+
+import NatureOfWork from "./Pages/Salary/NatureofWork";
 import ScheduleType from "./Pages/Salary/ScheduleType";
 import Religion from "./Pages/Salary/Religion";
 import Caste from "./Pages/Salary/Caste";
 import SkinTone from "./Pages/Salary/SkinTone";
 import TaskStatus from "./Pages/Salary/TaskStatus";
-
-// ==================================================
-// SALARY MASTER FORMS
-// NatureOfWork, ScheduleType, Religion, Caste, SkinTone,
-// and TaskStatus are all wired in below.
-// ==================================================
-
-import NatureOfWork from "./Pages/Salary/NatureofWork";
+import Relationship from "./Pages/Salary/Relationship";
+import ShiftTiming from "./Pages/Salary/ShiftTiming";
 
 
 // ==================================================
@@ -312,7 +313,7 @@ export default function App() {
         {/* ==============================================
             SALARY MASTERS
             Paths match the "path" values set on each
-            master's entry in salaryMasters in Header.jsx.
+            master's entry in Header.jsx.
         ============================================== */}
 
         <Route
@@ -348,6 +349,18 @@ export default function App() {
         <Route
           path="/masters/salary/task-status"
           element={<TaskStatus />}
+        />
+
+
+        <Route
+          path="/masters/salary/relationship"
+          element={<Relationship />}
+        />
+
+
+        <Route
+          path="/masters/salary/shift-timing"
+          element={<ShiftTiming />}
         />
 
 

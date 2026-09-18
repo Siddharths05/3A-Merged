@@ -156,22 +156,32 @@ from model import (
     update_office_type,
     update_requirement,
     update_user,
+
     # --- Salary masters ---
     caste_exists,
     caste_exists_for_other,
     caste_to_dict,
     create_caste,
+
     create_nature_of_work,
     create_religion,
     create_schedule_type,
     create_skin_tone,
     create_task_status,
+
+    # Shift Timing
+    create_shift_timing,
+
     delete_caste as hard_delete_caste,
     delete_nature_of_work as hard_delete_nature_of_work,
     delete_religion as hard_delete_religion,
     delete_schedule_type as hard_delete_schedule_type,
     delete_skin_tone as hard_delete_skin_tone,
     delete_task_status as hard_delete_task_status,
+
+    # Shift Timing
+    delete_shift_timing,
+
     get_caste_by_id,
     get_castes,
     get_nature_of_work_by_id,
@@ -184,26 +194,52 @@ from model import (
     get_skin_tones,
     get_task_status_by_id,
     get_task_statuses,
+
+    # Shift Timing
+    get_shift_timing_by_id,
+    get_shift_timings,
+
     nature_of_work_exists,
     nature_of_work_exists_for_other,
     nature_of_work_to_dict,
+
     religion_exists,
     religion_exists_for_other,
     religion_to_dict,
+
     schedule_type_exists,
     schedule_type_exists_for_other,
     schedule_type_to_dict,
+
     skin_tone_exists,
     skin_tone_exists_for_other,
     skin_tone_to_dict,
+
     task_status_to_dict,
+
+    # Shift Timing
+    shift_timing_to_dict,
+
     update_caste,
     update_nature_of_work,
     update_religion,
     update_schedule_type,
     update_skin_tone,
     update_task_status,
+
+    # Shift Timing
+    update_shift_timing,
+
     user_right_to_dict,
+
+    create_employee_relation,
+    delete_employee_relation as hard_delete_employee_relation,
+    employee_relation_exists,
+    employee_relation_exists_for_other,
+    employee_relation_to_dict,
+    get_employee_relation_by_id,
+    get_employee_relations,
+    update_employee_relation,
 )
 
 from schema import (
@@ -257,6 +293,10 @@ from schema import (
     TaskStatusCreateRequest,
     TaskStatusUpdateRequest,
     UpdateUserStatusRequest,
+    EmployeeRelationCreateRequest,
+    EmployeeRelationUpdateRequest,
+    ShiftTimingCreateRequest,
+    ShiftTimingUpdateRequest,
 )
 
 from security import (
@@ -1203,6 +1243,122 @@ def print_task_statuses(
         stream,
         media_type="application/vnd.openxmlformats-officedocument.wordprocessingml.document",
         headers={"Content-Disposition": f"attachment; filename={filename}"},
+    )
+
+@router.get("/employee-relations/export")
+def export_employee_relations(
+    db: Session = Depends(get_db),
+    current_user: dict = Depends(
+        require_permission("salary_employee_relation", "export")
+    ),
+):
+    records = get_employee_relations(db)
+    columns = [("ID", "pkMRelId"), ("Relative Name", "RelativeName")]
+    stream = _export_to_excel(records, columns, sheet_title="EmployeeRelation")
+    filename = f"export_EmployeeRelation_{_file_date()}.xlsx"
+    return StreamingResponse(
+        stream,
+        media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+        headers={"Content-Disposition": f"attachment; filename={filename}"},
+    )
+
+
+@router.get("/employee-relations/print")
+def print_employee_relations(
+    db: Session = Depends(get_db),
+    current_user: dict = Depends(
+        require_permission("salary_employee_relation", "print")
+    ),
+):
+    records = get_employee_relations(db)
+    columns = [("ID", "pkMRelId"), ("Relative Name", "RelativeName")]
+    stream = _export_to_word(records, columns, title="Employee Relation Report")
+    filename = f"print_EmployeeRelation_{_file_date()}.docx"
+    return StreamingResponse(
+        stream,
+        media_type="application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+        headers={"Content-Disposition": f"attachment; filename={filename}"},
+    )
+
+# ==================================================
+# SALARY — SHIFT TIMING — EXPORT
+# ==================================================
+
+@router.get("/shift-timings/export")
+def export_shift_timings(
+    db: Session = Depends(get_db),
+    current_user: dict = Depends(
+        require_permission("salary_shift_timing", "export")
+    ),
+):
+    records = get_shift_timings(db)
+
+    columns = [
+        ("ID", "pkSTId"),
+        ("Shift", "Shift"),
+        ("Start Work", "StartWork"),
+        ("End Work", "EndWork"),
+        ("Total Work", "TotalWork"),
+        ("Start Break", "StartBreak"),
+        ("End Break", "EndBreak"),
+        ("Total Break", "TotalBreak"),
+    ]
+
+    stream = _export_to_excel(
+        records,
+        columns,
+        sheet_title="ShiftTiming",
+    )
+
+    filename = f"export_ShiftTiming_{_file_date()}.xlsx"
+
+    return StreamingResponse(
+        stream,
+        media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+        headers={
+            "Content-Disposition": f"attachment; filename={filename}"
+        },
+    )
+
+
+# ==================================================
+# SALARY — SHIFT TIMING — PRINT
+# ==================================================
+
+@router.get("/shift-timings/print")
+def print_shift_timings(
+    db: Session = Depends(get_db),
+    current_user: dict = Depends(
+        require_permission("salary_shift_timing", "print")
+    ),
+):
+    records = get_shift_timings(db)
+
+    columns = [
+        ("ID", "pkSTId"),
+        ("Shift", "Shift"),
+        ("Start Work", "StartWork"),
+        ("End Work", "EndWork"),
+        ("Total Work", "TotalWork"),
+        ("Start Break", "StartBreak"),
+        ("End Break", "EndBreak"),
+        ("Total Break", "TotalBreak"),
+    ]
+
+    stream = _export_to_word(
+        records,
+        columns,
+        title="Shift Timing Report",
+    )
+
+    filename = f"print_ShiftTiming_{_file_date()}.docx"
+
+    return StreamingResponse(
+        stream,
+        media_type="application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+        headers={
+            "Content-Disposition": f"attachment; filename={filename}"
+        },
     )
 
 
@@ -5992,9 +6148,9 @@ def delete_skin_tone_route(
     return {"message": "Skin tone deleted successfully"}
 
 
-# # ==================================================
+#  ==================================================
 # SALARY — TASK STATUS
-# ==================================================
+# ====#==============================================
 
 @router.get("/task-statuses")
 def list_task_statuses(
@@ -6089,6 +6245,221 @@ def delete_task_status_route(
     hard_delete_task_status(db, item_id)
     return {"message": "Task status deleted successfully"}
 
+# ==================================================
+# SALARY — EMPLOYEE RELATION
+# ==================================================
+
+@router.get("/employee-relations")
+def list_employee_relations(
+    db: Session = Depends(get_db),
+    current_user: dict = Depends(get_current_user),
+):
+    items = get_employee_relations(db)
+    return {
+        "total": len(items),
+        "employee_relations": [employee_relation_to_dict(i) for i in items],
+    }
+
+
+@router.get("/employee-relations/{item_id}")
+def get_employee_relation(
+    item_id: int,
+    db: Session = Depends(get_db),
+    current_user: dict = Depends(get_current_user),
+):
+    item = get_employee_relation_by_id(db, item_id)
+    if not item:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Employee relation not found",
+        )
+    return {"employee_relation": employee_relation_to_dict(item)}
+
+
+@router.post("/employee-relations", status_code=status.HTTP_201_CREATED)
+def create_new_employee_relation(
+    request: EmployeeRelationCreateRequest,
+    db: Session = Depends(get_db),
+    current_user: dict = Depends(
+        require_permission("salary_employee_relation", "add")
+    ),
+):
+    if employee_relation_exists(db, request.relative_name):
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Employee relation already exists",
+        )
+    item = create_employee_relation(db, request.relative_name)
+    return {
+        "message": "Employee relation created successfully",
+        "employee_relation": employee_relation_to_dict(item),
+    }
+
+
+@router.put("/employee-relations/{item_id}")
+def update_existing_employee_relation(
+    item_id: int,
+    request: EmployeeRelationUpdateRequest,
+    db: Session = Depends(get_db),
+    current_user: dict = Depends(
+        require_permission("salary_employee_relation", "edit")
+    ),
+):
+    existing = get_employee_relation_by_id(db, item_id)
+    if not existing:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Employee relation not found",
+        )
+    if employee_relation_exists_for_other(db, request.relative_name, item_id):
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Employee relation already exists",
+        )
+    item = update_employee_relation(db, item_id, request.relative_name)
+    return {
+        "message": "Employee relation updated successfully",
+        "employee_relation": employee_relation_to_dict(item),
+    }
+
+
+@router.delete("/employee-relations/{item_id}")
+def delete_employee_relation_route(
+    item_id: int,
+    db: Session = Depends(get_db),
+    current_user: dict = Depends(
+        require_permission("salary_employee_relation", "delete")
+    ),
+):
+    existing = get_employee_relation_by_id(db, item_id)
+    if not existing:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Employee relation not found",
+        )
+    hard_delete_employee_relation(db, item_id)
+    return {"message": "Employee relation deleted successfully"}
+
+# ==================================================
+# SALARY — SHIFT TIMING
+# ==================================================
+
+@router.get("/shift-timings")
+def list_shift_timings(
+    db: Session = Depends(get_db),
+    current_user: dict = Depends(get_current_user),
+):
+    items = get_shift_timings(db)
+    return {
+        "total": len(items),
+        "shift_timings": [shift_timing_to_dict(i) for i in items],
+    }
+
+
+@router.get("/shift-timings/{item_id}")
+def get_shift_timing(
+    item_id: int,
+    db: Session = Depends(get_db),
+    current_user: dict = Depends(get_current_user),
+):
+    item = get_shift_timing_by_id(db, item_id)
+
+    if not item:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Shift timing not found",
+        )
+
+    return {
+        "shift_timing": shift_timing_to_dict(item)
+    }
+
+
+@router.post(
+    "/shift-timings",
+    status_code=status.HTTP_201_CREATED,
+)
+def create_new_shift_timing(
+    request: ShiftTimingCreateRequest,
+    db: Session = Depends(get_db),
+    current_user: dict = Depends(
+        require_permission("salary_shift_timing", "add")
+    ),
+):
+    item = create_shift_timing(
+        db,
+        request.pkSTId,
+        request.shift,
+        request.start_work,
+        request.end_work,
+        request.total_work,
+        request.start_break,
+        request.end_break,
+        request.total_break,
+    )
+
+    return {
+        "message": "Shift timing created successfully",
+        "shift_timing": shift_timing_to_dict(item),
+    }
+
+
+@router.put("/shift-timings/{item_id}")
+def update_existing_shift_timing(
+    item_id: int,
+    request: ShiftTimingUpdateRequest,
+    db: Session = Depends(get_db),
+    current_user: dict = Depends(
+        require_permission("salary_shift_timing", "edit")
+    ),
+):
+    existing = get_shift_timing_by_id(db, item_id)
+
+    if not existing:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Shift timing not found",
+        )
+
+    item = update_shift_timing(
+        db,
+        item_id,
+        request.shift,
+        request.start_work,
+        request.end_work,
+        request.total_work,
+        request.start_break,
+        request.end_break,
+        request.total_break,
+    )
+
+    return {
+        "message": "Shift timing updated successfully",
+        "shift_timing": shift_timing_to_dict(item),
+    }
+
+
+@router.delete("/shift-timings/{item_id}")
+def delete_shift_timing_route(
+    item_id: int,
+    db: Session = Depends(get_db),
+    current_user: dict = Depends(
+        require_permission("salary_shift_timing", "delete")
+    ),
+):
+    existing = get_shift_timing_by_id(db, item_id)
+
+    if not existing:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Shift timing not found",
+        )
+
+    delete_shift_timing(db, item_id)
+
+    return {
+        "message": "Shift timing deleted successfully"
+    }
 # ==================================================
 # GET MY OWN RIGHTS
 # ANY LOGGED-IN USER

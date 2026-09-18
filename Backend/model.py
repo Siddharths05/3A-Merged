@@ -9,6 +9,7 @@ from sqlalchemy import (
     LargeBinary,
     String,
     Text,
+    Time,
     func,
 )
 
@@ -86,8 +87,6 @@ class User(Base):
 # ABILITY SQLALCHEMY MODEL
 # MAPPED TO REAL TABLE: hrabilities
 # REAL COLUMNS: pkabid, abilities
-# (Python attribute names kept the same as before so
-#  route.py and AbilityMaster.jsx need NO changes)
 # ==================================================
 
 class Ability(Base):
@@ -115,8 +114,6 @@ class Ability(Base):
 # LOCATION SQLALCHEMY MODEL
 # MAPPED TO REAL TABLE: hrlocation
 # REAL COLUMNS: pkhlid, location
-# (Python attribute names kept the same as before so
-#  route.py and WorkLocation.jsx need NO changes)
 # ==================================================
 
 class Location(Base):
@@ -224,8 +221,6 @@ class AnnouncementType(Base):
 # ==================================================
 # OFFICE LEVEL SQLALCHEMY MODEL
 # MAPPED TO REAL TABLE: hrofficelevel
-# REAL COLUMNS (confirmed by user via pgAdmin):
-#   pkolid (PK, integer), officelevel (varchar 200)
 # ==================================================
 
 class OfficeLevel(Base):
@@ -252,8 +247,6 @@ class OfficeLevel(Base):
 # ==================================================
 # MEETING TYPE SQLALCHEMY MODEL
 # MAPPED TO REAL TABLE: hrmeetingtype
-# REAL COLUMNS (confirmed by user via pgAdmin):
-#   pkmtid (PK, integer), meetingtype (varchar 200)
 # ==================================================
 
 class MeetingType(Base):
@@ -280,8 +273,6 @@ class MeetingType(Base):
 # ==================================================
 # LANGUAGE SQLALCHEMY MODEL
 # MAPPED TO REAL TABLE: hrlanguage
-# REAL COLUMNS (per user):
-#   pklid (PK, integer), language (varchar 200)
 # ==================================================
 
 class Language(Base):
@@ -308,8 +299,6 @@ class Language(Base):
 # ==================================================
 # REQUIREMENT SQLALCHEMY MODEL
 # MAPPED TO REAL TABLE: hrrequirement
-# REAL COLUMNS (per user):
-#   pkrid (PK, integer), requirement (varchar 300)
 # ==================================================
 
 class Requirement(Base):
@@ -336,8 +325,6 @@ class Requirement(Base):
 # ==================================================
 # ADVERTISING MEDIA SQLALCHEMY MODEL
 # MAPPED TO REAL TABLE: hradvertisingmedia
-# REAL COLUMNS (per user):
-#   pkamid (PK, integer), advertisingmedia (varchar 200)
 # ==================================================
 
 class AdvertisingMedia(Base):
@@ -364,8 +351,6 @@ class AdvertisingMedia(Base):
 # ==================================================
 # ADVERTISING PURPOSE SQLALCHEMY MODEL
 # MAPPED TO REAL TABLE: hradvertisingpurpose
-# REAL COLUMNS (per user):
-#   pkapid (PK, integer), advertisingpurpose (varchar 200)
 # ==================================================
 
 class AdvertisingPurpose(Base):
@@ -392,8 +377,6 @@ class AdvertisingPurpose(Base):
 # ==================================================
 # OFFICE TYPE SQLALCHEMY MODEL
 # MAPPED TO REAL TABLE: hrofficetype
-# REAL COLUMNS (per user):
-#   pkotid (PK, integer), officetype (varchar 200)
 # ==================================================
 
 class OfficeType(Base):
@@ -420,8 +403,6 @@ class OfficeType(Base):
 # ==================================================
 # MEETING LOCATION SQLALCHEMY MODEL
 # MAPPED TO REAL TABLE: hrmeetinglocation
-# REAL COLUMNS (per user):
-#   pkmlid (PK, integer), meetinglocation (varchar 200)
 # ==================================================
 
 class MeetingLocation(Base):
@@ -448,8 +429,6 @@ class MeetingLocation(Base):
 # ==================================================
 # KSA SQLALCHEMY MODEL
 # MAPPED TO REAL TABLE: hrksa
-# REAL COLUMNS (per user pgAdmin):
-#   pkksaid (PK, integer), ksa (varchar 300)
 # ==================================================
 
 class KSA(Base):
@@ -476,8 +455,6 @@ class KSA(Base):
 # ==================================================
 # KSA CATEGORY SQLALCHEMY MODEL
 # MAPPED TO REAL TABLE: hrksacategory
-# REAL COLUMNS (per user):
-#   pkksacid (PK, integer), ksacategory (varchar 200)
 # ==================================================
 
 class KSACategory(Base):
@@ -504,9 +481,6 @@ class KSACategory(Base):
 # ==================================================
 # POSITION GRADE SQLALCHEMY MODEL
 # MAPPED TO REAL TABLE: hrpositiongrade
-# REAL COLUMNS (per user):
-#   pkpgid (PK, integer), positiongrade (varchar 200),
-#   minimumpay numeric(15,2), maximumpay numeric(15,2)
 # ==================================================
 
 class PositionGrade(Base):
@@ -547,9 +521,6 @@ class PositionGrade(Base):
 # ==================================================
 # ROLE IN OFFENSE SQLALCHEMY MODEL
 # MAPPED TO REAL TABLE: hrroleinoffense
-# REAL COLUMNS (per user):
-#   pkrioid (PK, integer), roleinoffense (varchar 200),
-#   minimumpenalty numeric(15,2), maximumpenalty numeric(15,2)
 # ==================================================
 
 class RoleInOffense(Base):
@@ -759,6 +730,204 @@ class TaskStatus(Base):
         String(30),
         nullable=False,
     )
+
+
+# ==================================================
+# SALARY — SHIFT TIMING
+# TABLE: salshifttiming
+# COLUMNS: pkstid numeric(18,0), shift varchar(50),
+# swork time, ework time, twork numeric(18,2),
+# sbreak time, ebreak time, tbreak numeric(18,2)
+#
+# NOTE: pkSTId here is a separate class from
+# ScheduleType.pkSTId — same attribute name, different
+# unrelated model, no FK link between them (confirmed
+# with user). twork/tbreak are stored as independent
+# entered values here, not auto-computed from the
+# start/end pairs — flag if that assumption is wrong.
+# The real CREATE TABLE has no UNIQUE constraint on
+# `shift`, so unique=True is NOT set on Shift below,
+# unlike every other single-field Salary master.
+# ==================================================
+
+class ShiftTiming(Base):
+
+    __tablename__ = "salshifttiming"
+
+    pkSTId = Column(
+        "pkstid",
+        Integer,
+        primary_key=True,
+        index=True,
+    )
+
+    Shift = Column(
+        "shift",
+        String(50),
+        nullable=False,
+    )
+
+    StartWork = Column(
+        "swork",
+        Time,
+        nullable=False,
+    )
+
+    EndWork = Column(
+        "ework",
+        Time,
+        nullable=False,
+    )
+
+    TotalWork = Column(
+        "twork",
+        Float,
+        nullable=False,
+    )
+
+    StartBreak = Column(
+        "sbreak",
+        Time,
+        nullable=False,
+    )
+
+    EndBreak = Column(
+        "ebreak",
+        Time,
+        nullable=False,
+    )
+
+    TotalBreak = Column(
+        "tbreak",
+        Float,
+        nullable=False,
+    )
+
+
+# ==================================================
+# SALARY — EMPLOYEE RELATION
+# TABLE: salemprelation (mixed-case, quoted — like
+# SalaryEmployee/SalaryStructure, NOT lowercase like
+# the other 6 Salary masters)
+# COLUMNS: pkmrelid numeric(18), relativename varchar(50)
+# ==================================================
+
+class EmployeeRelation(Base):
+
+    __tablename__ = "salemprelation"
+
+    pkMRelId = Column(
+        "pkmrelid",
+        Integer,
+        primary_key=True,
+        index=True,
+    )
+
+    RelativeName = Column(
+        "relativename",
+        String(50),
+        nullable=False,
+        unique=True,
+    )
+
+
+# ==================================================
+# EMPLOYEE RELATION — SERIALIZER + FUNCTIONS
+# ==================================================
+
+def employee_relation_to_dict(item):
+    if not item:
+        return None
+    return {
+        "pkMRelId": item.pkMRelId,
+        "RelativeName": item.RelativeName,
+    }
+
+
+def get_employee_relations(db: Session):
+    return (
+        db.query(EmployeeRelation)
+        .order_by(EmployeeRelation.pkMRelId)
+        .all()
+    )
+
+
+def get_employee_relation_by_id(db: Session, item_id: int):
+    return (
+        db.query(EmployeeRelation)
+        .filter(EmployeeRelation.pkMRelId == item_id)
+        .first()
+    )
+
+
+def employee_relation_exists(db: Session, value: str):
+    if not value:
+        return False
+    return (
+        db.query(EmployeeRelation)
+        .filter(
+            func.lower(EmployeeRelation.RelativeName)
+            == value.strip().lower(),
+        )
+        .first()
+        is not None
+    )
+
+
+def employee_relation_exists_for_other(db: Session, value: str, item_id: int):
+    if not value:
+        return False
+    return (
+        db.query(EmployeeRelation)
+        .filter(
+            func.lower(EmployeeRelation.RelativeName)
+            == value.strip().lower(),
+            EmployeeRelation.pkMRelId != item_id,
+        )
+        .first()
+        is not None
+    )
+
+
+def create_employee_relation(db: Session, value: str):
+    row = EmployeeRelation(RelativeName=value.strip())
+    try:
+        db.add(row)
+        db.commit()
+        db.refresh(row)
+        return row
+    except Exception:
+        db.rollback()
+        raise
+
+
+def update_employee_relation(db: Session, item_id: int, value: str):
+    row = get_employee_relation_by_id(db, item_id)
+    if not row:
+        return None
+    row.RelativeName = value.strip()
+    try:
+        db.commit()
+        db.refresh(row)
+        return row
+    except Exception:
+        db.rollback()
+        raise
+
+
+def delete_employee_relation(db: Session, item_id: int):
+    row = get_employee_relation_by_id(db, item_id)
+    if not row:
+        return None
+    try:
+        db.delete(row)
+        db.commit()
+        return True
+    except Exception:
+        db.rollback()
+        raise
+
+
 
 # ==================================================
 # SALARY EMPLOYEE SQLALCHEMY MODEL
@@ -1293,9 +1462,6 @@ class SalaryStructure(Base):
 
 # ==================================================
 # USER RIGHT SQLALCHEMY MODEL
-# GENERIC: "module" is a free-text string, so adding
-# a new master/section never requires a migration.
-# One row per (user, module) pair.
 # ==================================================
 
 class UserRight(Base):
@@ -1487,13 +1653,6 @@ def get_user_rights_map(
 
 ):
 
-    """
-    Returns { module: { add, edit, delete, view, print, export } }
-    for every module this user has a row for. Modules with no
-    row are simply absent — the frontend should treat a missing
-    module as all-False ("deny by default").
-    """
-
     rows = get_user_rights(
         db,
 
@@ -1631,15 +1790,6 @@ def set_user_rights_bulk(
 
 ):
 
-    """
-    rights_list: list of dicts, each shaped like
-    { "module": str, "add": bool, "edit": bool, "delete": bool,
-      "view": bool, "print": bool, "export": bool }
-
-    Upserts every module in the list inside one transaction —
-    either all rows save, or none do.
-    """
-
     try:
 
         for item in rights_list:
@@ -1719,7 +1869,6 @@ def set_user_rights_bulk(
 
 # ==================================================
 # USER FUNCTIONS
-# MATCHES route.py
 # ==================================================
 
 def get_user_by_email(
@@ -2020,7 +2169,6 @@ def full_name_exists_for_other_user(
 
 # ==================================================
 # CREATE USER
-# route.py sends password_hash
 # ==================================================
 
 def create_user(
@@ -2074,7 +2222,6 @@ def create_user(
 
 # ==================================================
 # UPDATE USER
-# route.py sends the USER OBJECT
 # ==================================================
 
 def update_user(
@@ -2091,10 +2238,6 @@ def update_user(
 
         return None
 
-
-    # ==============================================
-    # UPDATE PROVIDED FIELDS
-    # ==============================================
 
     for key, value in update_data.items():
 
@@ -2225,7 +2368,6 @@ def restore_user(
 
 # ==================================================
 # DEACTIVATE USER
-# OPTIONAL FUNCTION
 # ==================================================
 
 def deactivate_user(
@@ -2271,7 +2413,6 @@ def deactivate_user(
 
 # ==================================================
 # ACTIVATE USER
-# OPTIONAL FUNCTION
 # ==================================================
 
 def activate_user(
@@ -4280,6 +4421,7 @@ def delete_requirement(
         raise
 
 
+
 # ==================================================
 # ADVERTISING MEDIA SERIALIZER
 # ==================================================
@@ -4522,6 +4664,7 @@ def delete_advertising_media(
         db.rollback()
 
         raise
+
 
 
 # ==================================================
@@ -4768,6 +4911,7 @@ def delete_advertising_purpose(
         raise
 
 
+
 # ==================================================
 # OFFICE TYPE SERIALIZER
 # ==================================================
@@ -5010,6 +5154,7 @@ def delete_office_type(
         db.rollback()
 
         raise
+
 
 
 # ==================================================
@@ -5256,6 +5401,7 @@ def delete_meeting_location(
         raise
 
 
+
 # ==================================================
 # KSA SERIALIZER
 # ==================================================
@@ -5500,6 +5646,7 @@ def delete_ksa(
         raise
 
 
+
 # ==================================================
 # KSA CATEGORY SERIALIZER
 # ==================================================
@@ -5742,6 +5889,7 @@ def delete_ksa_category(
         db.rollback()
 
         raise
+
 
 
 # ==================================================
@@ -6006,6 +6154,7 @@ def delete_position_grade(
         db.rollback()
 
         raise
+
 
 
 # ==================================================
@@ -7667,7 +7816,324 @@ def delete_task_status(
 
         raise
 
+# ==================================================
+# SHIFT TIMING — SERIALIZER + FUNCTIONS
+# ==================================================
 
+def shift_timing_to_dict(item):
+
+    if not item:
+
+        return None
+
+
+    return {
+
+        "pkSTId": item.pkSTId,
+
+        "Shift": item.Shift,
+
+        "StartWork": (
+            item.StartWork.isoformat()
+            if item.StartWork
+            else None
+        ),
+
+        "EndWork": (
+            item.EndWork.isoformat()
+            if item.EndWork
+            else None
+        ),
+
+        "TotalWork": item.TotalWork,
+
+        "StartBreak": (
+            item.StartBreak.isoformat()
+            if item.StartBreak
+            else None
+        ),
+
+        "EndBreak": (
+            item.EndBreak.isoformat()
+            if item.EndBreak
+            else None
+        ),
+
+        "TotalBreak": item.TotalBreak,
+
+    }
+
+
+def get_shift_timings(
+
+    db: Session,
+
+):
+
+    return (
+
+        db.query(ShiftTiming)
+
+        .order_by(ShiftTiming.pkSTId)
+
+        .all()
+
+    )
+
+
+def get_shift_timing_by_id(
+
+    db: Session,
+
+    item_id: int,
+
+):
+
+    return (
+
+        db.query(ShiftTiming)
+
+        .filter(
+
+            ShiftTiming.pkSTId == item_id,
+
+        )
+
+        .first()
+
+    )
+
+
+def shift_timing_exists(
+
+    db: Session,
+
+    value: str,
+
+):
+
+    if not value:
+
+        return False
+
+
+    return (
+
+        db.query(ShiftTiming)
+
+        .filter(
+
+            func.lower(ShiftTiming.Shift)
+            == value.strip().lower(),
+
+        )
+
+        .first()
+
+        is not None
+
+    )
+
+
+def shift_timing_exists_for_other(
+
+    db: Session,
+
+    value: str,
+
+    item_id: int,
+
+):
+
+    if not value:
+
+        return False
+
+
+    return (
+
+        db.query(ShiftTiming)
+
+        .filter(
+
+            func.lower(ShiftTiming.Shift)
+            == value.strip().lower(),
+
+            ShiftTiming.pkSTId != item_id,
+
+        )
+
+        .first()
+
+        is not None
+
+    )
+
+
+def create_shift_timing(
+
+    db: Session,
+
+    pkSTId: int,
+
+    shift: str,
+
+    start_work,
+
+    end_work,
+
+    total_work: float,
+
+    start_break,
+
+    end_break,
+
+    total_break: float,
+
+):
+
+    row = ShiftTiming(
+
+        pkSTId=pkSTId,
+
+        Shift=shift.strip(),
+
+        StartWork=start_work,
+
+        EndWork=end_work,
+
+        TotalWork=total_work,
+
+        StartBreak=start_break,
+
+        EndBreak=end_break,
+
+        TotalBreak=total_break,
+
+    )
+
+
+    try:
+
+        db.add(row)
+
+        db.commit()
+
+        db.refresh(row)
+
+        return row
+
+
+    except Exception:
+
+        db.rollback()
+
+        raise
+
+
+def update_shift_timing(
+
+    db: Session,
+
+    item_id: int,
+
+    shift: str,
+
+    start_work,
+
+    end_work,
+
+    total_work: float,
+
+    start_break,
+
+    end_break,
+
+    total_break: float,
+
+):
+
+    row = get_shift_timing_by_id(
+
+        db,
+
+        item_id,
+
+    )
+
+
+    if not row:
+
+        return None
+
+
+    row.Shift = shift.strip()
+
+    row.StartWork = start_work
+
+    row.EndWork = end_work
+
+    row.TotalWork = total_work
+
+    row.StartBreak = start_break
+
+    row.EndBreak = end_break
+
+    row.TotalBreak = total_break
+
+
+    try:
+
+        db.commit()
+
+        db.refresh(row)
+
+        return row
+
+
+    except Exception:
+
+        db.rollback()
+
+        raise
+
+
+def delete_shift_timing(
+
+    db: Session,
+
+    item_id: int,
+
+):
+
+    row = get_shift_timing_by_id(
+
+        db,
+
+        item_id,
+
+    )
+
+
+    if not row:
+
+        return None
+
+
+    try:
+
+        db.delete(row)
+
+        db.commit()
+
+        return True
+
+
+    except Exception:
+
+        db.rollback()
+
+        raise
 # ==================================================
 # SALARY EMPLOYEE SERIALIZER
 # ==================================================
