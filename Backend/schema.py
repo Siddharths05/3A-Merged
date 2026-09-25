@@ -1,9 +1,10 @@
+import re
 from datetime import datetime, time
 from decimal import Decimal 
 
 
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, field_validator, model_validator
 
 
 # ==================================================
@@ -808,6 +809,242 @@ class AnnouncementUpdateRequest(BaseModel):
 # SALARY EMPLOYEE - CREATE
 # ==================================================
 
+
+
+# ==================================================
+# SALARY EMPLOYEE - UPDATE
+# ==================================================
+
+
+
+# ==================================================
+# SALARY STRUCTURE - CREATE
+# ==================================================
+
+
+
+# ==================================================
+# SALARY STRUCTURE - UPDATE
+# ==================================================
+
+
+# ==================================================
+# PORTED FROM schema_mine.py — SALARY VALIDATION HELPERS
+# ==================================================
+
+# ==================================================
+# SALARY EMPLOYEE — STATUTORY IDENTIFIER FORMATS
+# Shared by SalEmployeeCreateRequest and SalEmployeeUpdateRequest.
+# All six columns are nullable in SalEmployee (see model.py), so an
+# empty/omitted value is always valid -- these patterns only apply
+# once a value is actually provided. Values are normalized (stripped,
+# case-folded) before the pattern check and before being stored, so
+# uniqueness checks in route.py compare consistently.
+#
+# UAN: user-specified as 10 digits for this deployment -- note the
+# official UIDAI/EPFO UAN format is actually 12 digits. Flagged here
+# in case that 10 was a typo; change UAN_PATTERN if so.
+# ==================================================
+
+PAN_PATTERN = re.compile(r"^[A-Z]{5}[0-9]{4}[A-Z]$")
+AADHAR_PATTERN = re.compile(r"^[0-9]{12}$")
+ESIC_PATTERN = re.compile(r"^[0-9]{17}$")
+UAN_PATTERN = re.compile(r"^[0-9]{10}$")
+IFSC_PATTERN = re.compile(r"^[A-Z]{4}0[A-Z0-9]{6}$")
+ACCOUNT_NO_PATTERN = re.compile(r"^[0-9]{9,18}$")
+
+
+def _normalize_identifier(value: str | None) -> str | None:
+
+    if value is None:
+
+        return None
+
+    text = value.strip().upper()
+
+    return text or None
+
+
+def _validate_identifier_pattern(
+    value: str | None,
+    pattern: re.Pattern,
+    field_label: str,
+    example: str,
+) -> str | None:
+
+    normalized = _normalize_identifier(value)
+
+    if normalized is None:
+
+        return None
+
+    if not pattern.match(normalized):
+
+        raise ValueError(
+            f"{field_label} must be in the format {example} "
+            f"(got {value!r})"
+        )
+
+    return normalized
+
+
+# ==================================================
+# SALARY EMPLOYEE — CONTACT NUMBER / E-MAIL FORMATS
+# Shared by the three free-text "Contact No." columns on
+# SalEmployee (ContPolice, P1Contact, P2Contact) and by the
+# SalEmpContact grid's Contact column.
+#
+# IMPORTANT — "N/A" SENTINELS:
+# SalaryEmployeeMaster.jsx's REQUIRED_TEXT_DEFAULTS sends the
+# literal string "N/A" for every one of these columns when the
+# user leaves it blank (because the real SalEmployee table
+# appears to have them NOT NULL -- see the note in model.py).
+# A strict pattern check would therefore 422 on every save of
+# an employee with no police / personality contact entered.
+# So the sentinels below are treated as "not supplied" and skip
+# the check. That is a workaround for the sentinel design, not
+# an endorsement of it -- once those columns are confirmed
+# nullable, drop _BLANK_SENTINELS and let real blanks be None.
+# ==================================================
+
+_BLANK_SENTINELS = {"", "N/A", "NA", "-", "--", "NONE", "NIL"}
+
+# Digits only, after stripping +, spaces, dashes, brackets and
+# dots. 7-15 digits covers local landlines through full E.164
+# international numbers (ITU-T E.164 caps the subscriber number
+# at 15 digits).
+_PHONE_STRIP_PATTERN = re.compile(r"[\s\-().]")
+PHONE_PATTERN = re.compile(r"^\+?[0-9]{7,15}$")
+
+# Deliberately permissive: one @, a non-empty local part, and a
+# dotted domain. Anything stricter starts rejecting valid real
+# addresses, and delivery is the only true test of an address.
+EMAIL_PATTERN = re.compile(
+    r"^[A-Za-z0-9._%+\-]+@[A-Za-z0-9\-]+(\.[A-Za-z0-9\-]+)+$"
+)
+
+
+def _is_blank_sentinel(value: str | None) -> bool:
+
+    if value is None:
+
+        return True
+
+    return value.strip().upper() in _BLANK_SENTINELS
+
+
+def _normalize_phone(value: str) -> str:
+
+    return _PHONE_STRIP_PATTERN.sub("", value.strip())
+
+
+def _validate_phone(
+    value: str | None,
+    field_label: str,
+) -> str | None:
+    """
+    Phone-only columns (ContPolice, P1Contact, P2Contact).
+    Returns the original trimmed text -- NOT the stripped digits --
+    so existing formatting like "022-2756 1234" is preserved in the
+    DB exactly as the legacy app stored it. Only the check is done
+    on the stripped form.
+    """
+
+    if value is None:
+
+        return None
+
+    trimmed = value.strip()
+
+    if _is_blank_sentinel(trimmed):
+
+        return trimmed or None
+
+    if not PHONE_PATTERN.match(_normalize_phone(trimmed)):
+
+        raise ValueError(
+            f"{field_label} must be a valid phone number "
+            f"(7-15 digits, optional leading +) (got {value!r})"
+        )
+
+    return trimmed
+
+
+def _validate_phone_or_email(
+    value: str | None,
+    field_label: str,
+) -> str | None:
+    """
+    The SalEmpContact grid's single Contact column holds whatever
+    the row's mode of contact (fkMOCId) says -- a phone number, a
+    fax number or an e-mail address. The server only receives the
+    ContMOC *code*, not its label, so it can't tell which mode a
+    row is in without a second query. It therefore accepts either
+    shape here; the frontend, which does have the resolved mode
+    label, applies the tighter per-mode rule (phone vs e-mail).
+    """
+
+    if value is None:
+
+        return None
+
+    trimmed = value.strip()
+
+    if _is_blank_sentinel(trimmed):
+
+        return trimmed or None
+
+    if EMAIL_PATTERN.match(trimmed):
+
+        return trimmed
+
+    if PHONE_PATTERN.match(_normalize_phone(trimmed)):
+
+        return trimmed
+
+    raise ValueError(
+        f"{field_label} must be a valid phone number "
+        f"(7-15 digits, optional leading +) or e-mail address "
+        f"(got {value!r})"
+    )
+
+
+# ==================================================
+# PORTED FROM schema_mine.py — SALARY EMPLOYEE / STRUCTURE REQUESTS
+# ==================================================
+
+# ==================================================
+# SALARY EMPLOYEE - SHARED CROSS-FIELD RULES
+# Same two rules the Employee form enforces in the browser
+# (SalaryEmployeeMaster.jsx -> validateCrossFields). Checked here
+# too so a direct API call can't bypass them. Each rule only runs
+# when BOTH fields are present, so a partial update that sends just
+# one of them isn't rejected.
+# ==================================================
+
+def _check_employee_cross_fields(model):
+
+    doj, dol = model.DOJ, model.DOL
+
+    if doj is not None and dol is not None and dol.date() < doj.date():
+        raise ValueError(
+            "Leaving Date cannot be before Joining Date."
+        )
+
+    witness_1, witness_2 = model.fkW1EmpId, model.fkW2EmpId
+
+    if witness_1 is not None and witness_2 is not None and witness_1 == witness_2:
+        raise ValueError(
+            "Witness 1 and Witness 2 cannot be the same employee."
+        )
+
+    return model
+
+
+# ==================================================
+# SALARY EMPLOYEE - CREATE
+# ==================================================
+
 class SalEmployeeCreateRequest(BaseModel):
 
     pkEmpId: int
@@ -1061,6 +1298,77 @@ class SalEmployeeCreateRequest(BaseModel):
 
     InformESIC: bool | None = None
 
+    @field_validator("PANNo")
+    @classmethod
+    def validate_pan(cls, value):
+
+        return _validate_identifier_pattern(
+            value, PAN_PATTERN, "PAN", "ABCDE1234F"
+        )
+
+    @field_validator("Aadhar")
+    @classmethod
+    def validate_aadhar(cls, value):
+
+        return _validate_identifier_pattern(
+            value, AADHAR_PATTERN, "Aadhar number", "12 digits"
+        )
+
+    @field_validator("ESICNo")
+    @classmethod
+    def validate_esic(cls, value):
+
+        return _validate_identifier_pattern(
+            value, ESIC_PATTERN, "ESIC number", "17 digits"
+        )
+
+    @field_validator("PFNo")
+    @classmethod
+    def validate_uan(cls, value):
+
+        return _validate_identifier_pattern(
+            value, UAN_PATTERN, "UAN (PF No.)", "10 digits"
+        )
+
+    @field_validator("RTGS")
+    @classmethod
+    def validate_ifsc(cls, value):
+
+        return _validate_identifier_pattern(
+            value, IFSC_PATTERN, "IFSC code", "AAAA0XXXXXX (e.g. HDFC0001234)"
+        )
+
+    @field_validator("AccountNo")
+    @classmethod
+    def validate_account_no(cls, value):
+
+        return _validate_identifier_pattern(
+            value, ACCOUNT_NO_PATTERN, "Bank account number", "9-18 digits"
+        )
+
+    @field_validator("ContPolice")
+    @classmethod
+    def validate_police_contact(cls, value):
+
+        return _validate_phone(value, "Police station contact no.")
+
+    @field_validator("P1Contact")
+    @classmethod
+    def validate_p1_contact(cls, value):
+
+        return _validate_phone(value, "Personality 1 contact no.")
+
+    @field_validator("P2Contact")
+    @classmethod
+    def validate_p2_contact(cls, value):
+
+        return _validate_phone(value, "Personality 2 contact no.")
+
+    @model_validator(mode="after")
+    def validate_leaving_and_witnesses(self):
+
+        return _check_employee_cross_fields(self)
+
 
 # ==================================================
 # SALARY EMPLOYEE - UPDATE
@@ -1174,310 +1482,283 @@ class SalEmployeeUpdateRequest(BaseModel):
     InformPF: bool | None = None
     InformESIC: bool | None = None
 
+    @field_validator("PANNo")
+    @classmethod
+    def validate_pan(cls, value):
+
+        return _validate_identifier_pattern(
+            value, PAN_PATTERN, "PAN", "ABCDE1234F"
+        )
+
+    @field_validator("Aadhar")
+    @classmethod
+    def validate_aadhar(cls, value):
+
+        return _validate_identifier_pattern(
+            value, AADHAR_PATTERN, "Aadhar number", "12 digits"
+        )
+
+    @field_validator("ESICNo")
+    @classmethod
+    def validate_esic(cls, value):
+
+        return _validate_identifier_pattern(
+            value, ESIC_PATTERN, "ESIC number", "17 digits"
+        )
+
+    @field_validator("PFNo")
+    @classmethod
+    def validate_uan(cls, value):
+
+        return _validate_identifier_pattern(
+            value, UAN_PATTERN, "UAN (PF No.)", "10 digits"
+        )
+
+    @field_validator("RTGS")
+    @classmethod
+    def validate_ifsc(cls, value):
+
+        return _validate_identifier_pattern(
+            value, IFSC_PATTERN, "IFSC code", "AAAA0XXXXXX (e.g. HDFC0001234)"
+        )
+
+    @field_validator("AccountNo")
+    @classmethod
+    def validate_account_no(cls, value):
+
+        return _validate_identifier_pattern(
+            value, ACCOUNT_NO_PATTERN, "Bank account number", "9-18 digits"
+        )
+
+    @field_validator("ContPolice")
+    @classmethod
+    def validate_police_contact(cls, value):
+
+        return _validate_phone(value, "Police station contact no.")
+
+    @field_validator("P1Contact")
+    @classmethod
+    def validate_p1_contact(cls, value):
+
+        return _validate_phone(value, "Personality 1 contact no.")
+
+    @field_validator("P2Contact")
+    @classmethod
+    def validate_p2_contact(cls, value):
+
+        return _validate_phone(value, "Personality 2 contact no.")
+
+    @model_validator(mode="after")
+    def validate_leaving_and_witnesses(self):
+
+        return _check_employee_cross_fields(self)
+
 
 # ==================================================
 # SALARY STRUCTURE - CREATE
 # ==================================================
 
+
+
+class PaidHolidayRequest(BaseModel):
+    HolidayDate: datetime
+
+
 class SalStructureCreateRequest(BaseModel):
-
-    pkSSId: int
-
-    fkEmpId: int | None = None
-
-    SalStart: datetime | None = None
-
-    Basic: float | None = None
-
-    BType: str | None = Field(
-        default=None,
-        max_length=100,
-    )
-
+    fkEmpId: int
+    SalaryStart: datetime
+    SalaryEnd: datetime | None = None
+    Basic: float = 0
+    BasicType: str = Field(default="Monthly", max_length=7)
+    DailySalary: float | None = None
+    GrossSalary: float | None = None
     Allowance: float | None = None
-    TAllowance: float | None = None
-
-    Travelling: float | None = None
-    TTravelling: float | None = None
-
-    Housing: float | None = None
-    THousing: float | None = None
-
-    Daily: float | None = None
-    TDaily: float | None = None
-
+    AllowanceType: str = Field(default="Fixed Amount", max_length=5)
+    TravelAllowance: float | None = None
+    TravelAllowanceType: str = Field(default="Fixed Amount", max_length=5)
+    HousingAllowance: float | None = None
+    HousingAllowanceType: str = Field(default="Fixed Amount", max_length=5)
+    DearnessAllowance: float | None = None
+    DearnessAllowanceType: str = Field(default="Fixed Amount", max_length=5)
     Incentive: float | None = None
-    TIncentive: float | None = None
-
-    Education: float | None = None
-    TEducation: float | None = None
-
-    Medical: float | None = None
-    TMedical: float | None = None
-
-    Other: float | None = None
-    TOther: float | None = None
-
-    OTI: float | None = None
-    TOTI: float | None = None
-
-    OTII: float | None = None
-    TOTII: float | None = None
-
-    RDayI: float | None = None
-    RDayII: float | None = None
-
-    PH: float | None = None
-    SL: float | None = None
-    CL: float | None = None
-    UCL: float | None = None
-
-    WH: float | None = None
-    RWH: float | None = None
-
-    BL: float | None = None
-    BLD: float | None = None
-
-    ARule: bool | None = None
-    OTB: bool | None = None
-
-    CalPT: bool | None = None
-    CalPF: bool | None = None
-    CalESIC: bool | None = None
-    CalTDS: bool | None = None
-
-    SlabTDS: bool | None = None
-    Revise: bool | None = None
-    ScanMB: bool | None = None
-
-    fkSAcctId: str | None = Field(default=None, max_length=100)
-
-    Remarks: str | None = None
-
-    fkUserId: str | None = Field(default=None, max_length=100)
-
-    LastStatus: str | None = Field(default=None, max_length=100)
-
-    OtherBasic: float | None = None
-
-    EOT: bool | None = None
-
-    EWHour: float | None = None
-    LYEWHour: float | None = None
-
-    fkLAcctId: str | None = Field(default=None, max_length=100)
-
-    MABasic: float | None = None
-    EABasic: float | None = None
-    IncentiveBasic: float | None = None
-    DABasic: float | None = None
-    HABasic: float | None = None
-    TABasic: float | None = None
-    AllowanceBasic: float | None = None
-
-    fkFContId: int | None = None
-    fkTContId: int | None = None
-
-    SalGross: float | None = None
-
-    fkIAcctId: str | None = Field(default=None, max_length=100)
-
-    AbPenalty: float | None = None
-
-    Variant: str | None = Field(default=None, max_length=100)
-
-    PFA: float | None = None
-    PFTA: float | None = None
-    PFHA: float | None = None
-    PFI: float | None = None
-    PFEA: float | None = None
-    PFMA: float | None = None
-    PFOA: float | None = None
-
-    RDVariant: str | None = Field(default=None, max_length=100)
-
-    Retention: float | None = None
-
-    fkEmp1Id: int | None = None
-    fkEmp2Id: int | None = None
-
-    fkRAcctId: str | None = Field(default=None, max_length=100)
-
-    SalDaily: float | None = None
-
-    SetPF: bool | None = None
-
-    Sandwich: bool | None = None
-
-    GHA: float | None = None
-    RDA: float | None = None
-
-    IORF: bool | None = None
-    OAOP: bool | None = None
-
-    LTimeROff: int | None = None
-
+    IncentiveType: str = Field(default="Fixed Amount", max_length=5)
+    EducationAllowance: float | None = None
+    EducationAllowanceType: str = Field(default="Fixed Amount", max_length=5)
+    MedicalAllowance: float | None = None
+    MedicalAllowanceType: str = Field(default="Fixed Amount", max_length=5)
+    OtherAllowance: float | None = None
+    OtherAllowanceType: str = Field(default="Fixed Amount", max_length=5)
+    OvertimeI: float | None = None
+    OvertimeII: float | None = None
+    RestDay1: str = Field(default="Sunday", max_length=10)
+    RestDay1Variant: bool = False
+    RestDay2: str = Field(default="", max_length=10)
+    AdjustmentExtraWorkingHour: bool = False
+    LastYearExtraWorkingHour: float = 0
+    NoticeRetentionAmount: float | None = None
+    SuppliedTo: str | None = Field(default=None, max_length=10)
+    ManpowerAgency: str | None = Field(default=None, max_length=10)
+    PaidHoliday: int = 0
+    SickLeave: float = 0
+    PaidCasualLeave: float = 0
+    UnpaidCasualLeave: float = 0
+    WorkingHoursPerDay: float = 8
+    WorkingHoursVariant: bool = False
+    ConsiderHoursPerRestDay: float = 8
+    ExcludeRestDayFromOT: bool = False
+    BufferLateEarlyMinutes: int = 0
+    BufferDaysAllowedPerMonth: int = 0
+    BreakDuringOvertimeMinutes: int = 0
+    PenaltyPerAbsentDay: float = 0
+    CalcProfessionalTax: bool = False
+    CalcProvidentFund: bool = False
+    CalcProvidentFundAsPerSetting: bool = True
+    CalcESIC: bool = False
+    CalcTDS: bool = False
+    IncomeTaxSlab: int | None = None
+    AttendanceRules: str = Field(default="", max_length=10)
+    fkSalAcctId: str = Field(default="", max_length=10)
+    fkLoanAcctId: str = Field(default="", max_length=10)
+    fkNoticeAcctId: str | None = Field(default=None, max_length=10)
+    fkIncentiveAcctId: str | None = Field(default=None, max_length=10)
+    Remarks: str = Field(default="", max_length=100)
+    SandwichRuleForLeaves: bool = True
+    SwipingScanningForMealBreak: bool = True
+    fkReportTo1EmpId: int | None = None
+    fkReportTo2EmpId: int | None = None
+    OTIncludeAllowance: bool = False
+    OTIncludeTravelAllowance: bool = False
+    OTIncludeHousingAllowance: bool = False
+    OTIncludeDearnessAllowance: bool = False
+    OTIncludeIncentive: bool = False
+    OTIncludeEducationAllowance: bool = False
+    OTIncludeMedicalAllowance: bool = False
+    OTIncludeOtherAllowance: bool = False
+    PFIncludeAllowance: bool = False
+    PFIncludeTravelAllowance: bool = False
+    PFIncludeHousingAllowance: bool = False
+    PFIncludeIncentive: bool = False
+    PFIncludeEducationAllowance: bool = False
+    PFIncludeMedicalAllowance: bool = False
+    PFIncludeOtherAllowance: bool = False
+    GovtHolidaysPartOfAllowances: bool = False
+    RestDaysPartOfAllowances: bool = False
+    IncentiveOnlyIfOvertimeFulfilled: bool = False
+    OtherOnlyIfOvertimePerformed: bool = False
+    LeavingTimeRounding: int | None = None
     Latitude: float | None = None
     Longitude: float | None = None
-    Radius: float | None = None
+    fkAllowanceDesId: str | None = Field(default=None, max_length=5)
+    TDSDeductionPercent: float | None = None
+    MonthlyDeduction: float | None = None
+    DeductionDescription: str | None = Field(default=None, max_length=100)
+    paid_holidays: list[PaidHolidayRequest] = Field(default_factory=list)
 
-    TDSDeduct: int | None = None
 
-    MDeduction: float | None = None
-
-    DedDescription: str | None = None
-
-    fkDesId: str | None = Field(default=None, max_length=100)
+class SalStructureUpdateRequest(SalStructureCreateRequest):
+    fkEmpId: int | None = None
+    SalaryStart: datetime | None = None
 
 
 # ==================================================
-# SALARY STRUCTURE - UPDATE
+# PORTED FROM schema_mine.py — GRIDS, GENERIC LOOKUP, USER-ACCOUNT MAP
 # ==================================================
 
-class SalStructureUpdateRequest(BaseModel):
+# ==================================================
+# SALARY EMPLOYEE — CONTACT GRID
+# (legacy table: SalEmpContact)
+# ==================================================
 
-    fkEmpId: int | None = None
+class SalEmpContactRow(BaseModel):
 
-    SalStart: datetime | None = None
+    # Mode of contact code (ContMOC). Free text until a
+    # master table exists for it.
+    fkMOCId: str | None = Field(default=None, max_length=5)
 
-    Basic: float | None = None
+    Contact: str | None = Field(default=None, max_length=50)
 
-    BType: str | None = Field(
-        default=None,
+    Ext: str | None = Field(default=None, max_length=10)
+
+    SrNo: int | None = None
+
+    @field_validator("Contact")
+    @classmethod
+    def validate_contact(cls, value):
+
+        return _validate_phone_or_email(value, "Contact detail")
+
+
+class SalEmpContactListRequest(BaseModel):
+
+    # Full replacement set for this employee's grid.
+    rows: list[SalEmpContactRow] = Field(
+        default_factory=list,
         max_length=100,
     )
 
-    Allowance: float | None = None
-    TAllowance: float | None = None
 
-    Travelling: float | None = None
-    TTravelling: float | None = None
+# ==================================================
+# SALARY EMPLOYEE — RELATIVES GRID
+# (legacy table: SalEmpRelation)
+# ==================================================
 
-    Housing: float | None = None
-    THousing: float | None = None
+class SalEmpRelationRow(BaseModel):
 
-    Daily: float | None = None
-    TDaily: float | None = None
+    RelativeName: str | None = Field(default=None, max_length=50)
 
-    Incentive: float | None = None
-    TIncentive: float | None = None
+    fkRelId: str | None = Field(default=None, max_length=5)
 
-    Education: float | None = None
-    TEducation: float | None = None
+    DOB: datetime | None = None
 
-    Medical: float | None = None
-    TMedical: float | None = None
+    fkQuaId: str | None = Field(default=None, max_length=5)
 
-    Other: float | None = None
-    TOther: float | None = None
+    fkSchId: str | None = Field(default=None, max_length=10)
 
-    OTI: float | None = None
-    TOTI: float | None = None
+    MS: str | None = Field(default=None, max_length=15)
 
-    OTII: float | None = None
-    TOTII: float | None = None
+    fkDesId: str | None = Field(default=None, max_length=5)
 
-    RDayI: float | None = None
-    RDayII: float | None = None
 
-    PH: float | None = None
-    SL: float | None = None
-    CL: float | None = None
-    UCL: float | None = None
+class SalEmpRelationListRequest(BaseModel):
 
-    WH: float | None = None
-    RWH: float | None = None
+    rows: list[SalEmpRelationRow] = Field(
+        default_factory=list,
+        max_length=100,
+    )
 
-    BL: float | None = None
-    BLD: float | None = None
 
-    ARule: bool | None = None
-    OTB: bool | None = None
+# ==================================================
+# SALARY EMPLOYEE — DOCUMENTS GRID
+# (legacy table: SalEmpDocuments)
+#
+# There's no create-request model here: documents arrive
+# as multipart/form-data (the file itself plus form
+# fields), so the route declares those directly.
+# ==================================================
 
-    CalPT: bool | None = None
-    CalPF: bool | None = None
-    CalESIC: bool | None = None
-    CalTDS: bool | None = None
 
-    SlabTDS: bool | None = None
-    Revise: bool | None = None
-    ScanMB: bool | None = None
+# ==================================================
+# GENERIC LOOKUP MASTER (fk* dropdown "add new" flow)
+# One schema for all 12 tables in LOOKUP_TABLE_CONFIG.
+# ==================================================
 
-    fkSAcctId: str | None = Field(default=None, max_length=100)
+class LookupCreateRequest(BaseModel):
 
-    Remarks: str | None = None
+    label: str = Field(
+        min_length=1,
+        max_length=200,
+    )
 
-    fkUserId: str | None = Field(default=None, max_length=100)
 
-    LastStatus: str | None = Field(default=None, max_length=100)
+# ==================================================
+# USER ACCOUNT MAP (JWT user -> legacy AppUser code)
+# ==================================================
 
-    OtherBasic: float | None = None
+class UserAccountMapRequest(BaseModel):
 
-    EOT: bool | None = None
+    fkAppUserId: int
 
-    EWHour: float | None = None
-    LYEWHour: float | None = None
-
-    fkLAcctId: str | None = Field(default=None, max_length=100)
-
-    MABasic: float | None = None
-    EABasic: float | None = None
-    IncentiveBasic: float | None = None
-    DABasic: float | None = None
-    HABasic: float | None = None
-    TABasic: float | None = None
-    AllowanceBasic: float | None = None
-
-    fkFContId: int | None = None
-    fkTContId: int | None = None
-
-    SalGross: float | None = None
-
-    fkIAcctId: str | None = Field(default=None, max_length=100)
-
-    AbPenalty: float | None = None
-
-    Variant: str | None = Field(default=None, max_length=100)
-
-    PFA: float | None = None
-    PFTA: float | None = None
-    PFHA: float | None = None
-    PFI: float | None = None
-    PFEA: float | None = None
-    PFMA: float | None = None
-    PFOA: float | None = None
-
-    RDVariant: str | None = Field(default=None, max_length=100)
-
-    Retention: float | None = None
-
-    fkEmp1Id: int | None = None
-    fkEmp2Id: int | None = None
-
-    fkRAcctId: str | None = Field(default=None, max_length=100)
-
-    SalDaily: float | None = None
-
-    SetPF: bool | None = None
-
-    Sandwich: bool | None = None
-
-    GHA: float | None = None
-    RDA: float | None = None
-
-    IORF: bool | None = None
-    OAOP: bool | None = None
-
-    LTimeROff: int | None = None
-
-    Latitude: float | None = None
-    Longitude: float | None = None
-    Radius: float | None = None
-
-    TDSDeduct: int | None = None
-
-    MDeduction: float | None = None
-
-    DedDescription: str | None = None
-
-    fkDesId: str | None = Field(default=None, max_length=100)
+    LegacyUserId: str = Field(
+        min_length=1,
+        max_length=100,
+    )

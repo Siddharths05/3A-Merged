@@ -42,6 +42,8 @@ import {
   Palette,
   HandCoins,
   ChevronLeft,
+  Banknote,
+  Calculator,
 } from "lucide-react";
 
 import {
@@ -892,9 +894,59 @@ export default function Header() {
 
   // ==================================================
   // SALARY MASTERS
+  // Salary Employee / Salary Structure point at the create/edit
+  // form (matches the legacy app's default landing view); the
+  // form itself has a "List" tab for browsing existing records.
+  // The remaining entries are the salary reference masters.
   // ==================================================
 
   const salaryMasters = [
+
+    {
+      module: "salary_employee",
+
+      name:
+        t(
+          "header.salaryMastersItems.salaryEmployee",
+          "Salary Employee"
+        ),
+
+      description:
+        t(
+          "header.salaryMastersItems.salaryEmployeeDescription",
+          "Browse, edit and add salary employee records"
+        ),
+
+      path:
+        "/salary-employee",
+
+      icon:
+        Banknote,
+    },
+
+
+    {
+      module: "salary_structure",
+
+      name:
+        t(
+          "header.salaryMastersItems.salaryStructure",
+          "Salary Structure"
+        ),
+
+      description:
+        t(
+          "header.salaryMastersItems.salaryStructureDescription",
+          "Set up pay components, leave, and deductions per employee"
+        ),
+
+      path:
+        "/salary-structure",
+
+      icon:
+        Calculator,
+    },
+
 
     {
       module: "salary_nature_of_work",
@@ -961,7 +1013,7 @@ export default function Header() {
 
 
     {
-      module: "salary_castes",
+      module: "salary_caste",
 
       name: "Castes / Sub-Castes",
 
@@ -977,7 +1029,7 @@ export default function Header() {
 
 
     {
-      module: "salary_skin_tones",
+      module: "salary_skin_tone",
 
       name: "Skin Tones",
 
@@ -1067,11 +1119,20 @@ export default function Header() {
   // ACTIVE MENU CHECKS
   // ==================================================
 
+  // Salary Employee / Salary Structure also have edit routes
+  // (/salary-employee/:id), so match by prefix for those two
+  // rather than only an exact path === comparison.
   const isMasterActive =
     [...hrMasters, ...salaryMasters].some(
       (master) =>
         master.path ===
         location.pathname
+    ) ||
+    location.pathname.startsWith(
+      "/salary-employee"
+    ) ||
+    location.pathname.startsWith(
+      "/salary-structure"
     );
 
 

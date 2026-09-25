@@ -1,4 +1,10 @@
+import base64
+import binascii
+import re
+
+from collections import Counter
 from datetime import datetime
+from decimal import Decimal
 
 from sqlalchemy import (
     Boolean,
@@ -7,6 +13,7 @@ from sqlalchemy import (
     Float,
     Integer,
     LargeBinary,
+    Numeric,
     String,
     Text,
     Time,
@@ -24,7 +31,9 @@ from database import Base
 
 class User(Base):
 
-    __tablename__ = "users"
+    # MERGE NOTE: JWT-auth users live in `app_users` in the real database
+    # (his model used `users`, which is empty/absent there -> login fails).
+    __tablename__ = "app_users"
 
 
     pkid = Column(
@@ -89,13 +98,40 @@ class User(Base):
 # REAL COLUMNS: pkabid, abilities
 # ==================================================
 
+class UserAccountMap(Base):
+
+    # NEW table (not legacy) — maps a JWT app_users.pkid to the
+    # legacy AppUser.pkUserId code, so fkUserId audit columns on
+    # legacy tables can reflect who's actually logged in instead
+    # of a fixed placeholder. Needs to be created in the DB (e.g.
+    # Base.metadata.create_all, or a migration) before use.
+
+    __tablename__ = "user_account_map"
+
+    pkid = Column(Integer, primary_key=True, index=True)
+
+    fkAppUserId = Column(Integer, nullable=False, unique=True, index=True)
+
+    LegacyUserId = Column(String(100), nullable=False)
+
+    updated_at = Column(
+        DateTime,
+        nullable=True,
+        server_default=func.now(),
+        onupdate=func.now(),
+    )
+
+
+LEGACY_FALLBACK_USER_ID = "U0001"  # ADMIN — used until a mapping row exists
+
+
 class Ability(Base):
 
     __tablename__ = "hrabilities"
 
 
     pkABId = Column(
-        "pkabid",
+        "pkKAId",
         Integer,
         primary_key=True,
         index=True,
@@ -108,6 +144,27 @@ class Ability(Base):
         nullable=False,
         unique=True,
     )
+
+    # MERGE NOTE: the real table carries the same 5 audit columns as
+    # the sal* masters (Sync/SysDefined/DateTimestamp/fkUserId/
+    # LastStatus), all NOT NULL with no DB-level default -- the
+    # original model only had pk+label, which would fail on INSERT
+    # exactly like ShiftTiming's `SD` did.
+    Sync = Column(String(1), nullable=False, default="N")
+
+    SysDefined = Column(Boolean, nullable=False, default=False)
+
+    DateTimestamp = Column(
+        DateTime,
+        nullable=False,
+        default=func.now(),
+        onupdate=func.now(),
+    )
+
+    fkUserId = Column(String(5), nullable=False)
+
+    LastStatus = Column(String(10), nullable=False, default="Active")
+
 
 
 # ==================================================
@@ -136,6 +193,27 @@ class Location(Base):
         unique=True,
     )
 
+    # MERGE NOTE: the real table carries the same 5 audit columns as
+    # the sal* masters (Sync/SysDefined/DateTimestamp/fkUserId/
+    # LastStatus), all NOT NULL with no DB-level default -- the
+    # original model only had pk+label, which would fail on INSERT
+    # exactly like ShiftTiming's `SD` did.
+    Sync = Column(String(1), nullable=False, default="N")
+
+    SysDefined = Column(Boolean, nullable=False, default=False)
+
+    DateTimestamp = Column(
+        DateTime,
+        nullable=False,
+        default=func.now(),
+        onupdate=func.now(),
+    )
+
+    fkUserId = Column(String(5), nullable=False)
+
+    LastStatus = Column(String(10), nullable=False, default="Active")
+
+
 
 # ==================================================
 # HOBBY SQLALCHEMY MODEL
@@ -149,7 +227,7 @@ class Hobby(Base):
 
 
     pkHId = Column(
-        "pkhid",
+        "pkHOId",
         Integer,
         primary_key=True,
         index=True,
@@ -157,11 +235,32 @@ class Hobby(Base):
 
 
     Hobby = Column(
-        "hobby",
+        "Hobbies",
         String(200),
         nullable=False,
         unique=True,
     )
+
+    # MERGE NOTE: the real table carries the same 5 audit columns as
+    # the sal* masters (Sync/SysDefined/DateTimestamp/fkUserId/
+    # LastStatus), all NOT NULL with no DB-level default -- the
+    # original model only had pk+label, which would fail on INSERT
+    # exactly like ShiftTiming's `SD` did.
+    Sync = Column(String(1), nullable=False, default="N")
+
+    SysDefined = Column(Boolean, nullable=False, default=False)
+
+    DateTimestamp = Column(
+        DateTime,
+        nullable=False,
+        default=func.now(),
+        onupdate=func.now(),
+    )
+
+    fkUserId = Column(String(5), nullable=False)
+
+    LastStatus = Column(String(10), nullable=False, default="Active")
+
 
 
 # ==================================================
@@ -263,11 +362,32 @@ class MeetingType(Base):
 
 
     MeetingType = Column(
-        "meetingtype",
+        "Type",
         String(200),
         nullable=False,
         unique=True,
     )
+
+    # MERGE NOTE: the real table carries the same 5 audit columns as
+    # the sal* masters (Sync/SysDefined/DateTimestamp/fkUserId/
+    # LastStatus), all NOT NULL with no DB-level default -- the
+    # original model only had pk+label, which would fail on INSERT
+    # exactly like ShiftTiming's `SD` did.
+    Sync = Column(String(1), nullable=False, default="N")
+
+    SysDefined = Column(Boolean, nullable=False, default=False)
+
+    DateTimestamp = Column(
+        DateTime,
+        nullable=False,
+        default=func.now(),
+        onupdate=func.now(),
+    )
+
+    fkUserId = Column(String(5), nullable=False)
+
+    LastStatus = Column(String(10), nullable=False, default="Active")
+
 
 
 # ==================================================
@@ -419,11 +539,32 @@ class MeetingLocation(Base):
 
 
     MeetingLocation = Column(
-        "meetinglocation",
+        "Location",
         String(200),
         nullable=False,
         unique=True,
     )
+
+    # MERGE NOTE: the real table carries the same 5 audit columns as
+    # the sal* masters (Sync/SysDefined/DateTimestamp/fkUserId/
+    # LastStatus), all NOT NULL with no DB-level default -- the
+    # original model only had pk+label, which would fail on INSERT
+    # exactly like ShiftTiming's `SD` did.
+    Sync = Column(String(1), nullable=False, default="N")
+
+    SysDefined = Column(Boolean, nullable=False, default=False)
+
+    DateTimestamp = Column(
+        DateTime,
+        nullable=False,
+        default=func.now(),
+        onupdate=func.now(),
+    )
+
+    fkUserId = Column(String(5), nullable=False)
+
+    LastStatus = Column(String(10), nullable=False, default="Active")
+
 
 
 # ==================================================
@@ -585,6 +726,27 @@ class NatureOfWork(Base):
         unique=True,
     )
 
+    # ==============================================
+    # LEGACY AUDIT COLUMNS — NOT NULL on the real
+    # table, no DB-level default. Backend-injected;
+    # frontend/schema.py never supplies these.
+    # ==============================================
+
+    Sync = Column(String(1), nullable=False, default="N")
+
+    SysDefined = Column(Boolean, nullable=False, default=False)
+
+    DateTimestamp = Column(
+        DateTime,
+        nullable=False,
+        default=func.now(),
+        onupdate=func.now(),
+    )
+
+    fkUserId = Column(String(5), nullable=False)
+
+    LastStatus = Column(String(10), nullable=False, default="Active")
+
 
 # ==================================================
 # SALARY — SCHEDULE TYPE
@@ -611,6 +773,27 @@ class ScheduleType(Base):
         nullable=False,
         unique=True,
     )
+
+    # ==============================================
+    # LEGACY AUDIT COLUMNS — NOT NULL on the real
+    # table, no DB-level default. Backend-injected;
+    # frontend/schema.py never supplies these.
+    # ==============================================
+
+    Sync = Column(String(1), nullable=False, default="N")
+
+    SysDefined = Column(Boolean, nullable=False, default=False)
+
+    DateTimestamp = Column(
+        DateTime,
+        nullable=False,
+        default=func.now(),
+        onupdate=func.now(),
+    )
+
+    fkUserId = Column(String(5), nullable=False)
+
+    LastStatus = Column(String(10), nullable=False, default="Active")
 
 
 # ==================================================
@@ -639,6 +822,27 @@ class Religion(Base):
         unique=True,
     )
 
+    # ==============================================
+    # LEGACY AUDIT COLUMNS — NOT NULL on the real
+    # table, no DB-level default. Backend-injected;
+    # frontend/schema.py never supplies these.
+    # ==============================================
+
+    Sync = Column(String(1), nullable=False, default="N")
+
+    SysDefined = Column(Boolean, nullable=False, default=False)
+
+    DateTimestamp = Column(
+        DateTime,
+        nullable=False,
+        default=func.now(),
+        onupdate=func.now(),
+    )
+
+    fkUserId = Column(String(5), nullable=False)
+
+    LastStatus = Column(String(10), nullable=False, default="Active")
+
 
 # ==================================================
 # SALARY — CASTES
@@ -666,6 +870,27 @@ class Caste(Base):
         unique=True,
     )
 
+    # ==============================================
+    # LEGACY AUDIT COLUMNS — NOT NULL on the real
+    # table, no DB-level default. Backend-injected;
+    # frontend/schema.py never supplies these.
+    # ==============================================
+
+    Sync = Column(String(1), nullable=False, default="N")
+
+    SysDefined = Column(Boolean, nullable=False, default=False)
+
+    DateTimestamp = Column(
+        DateTime,
+        nullable=False,
+        default=func.now(),
+        onupdate=func.now(),
+    )
+
+    fkUserId = Column(String(5), nullable=False)
+
+    LastStatus = Column(String(10), nullable=False, default="Active")
+
 
 # ==================================================
 # SALARY — SKIN TONES
@@ -692,6 +917,27 @@ class SkinTone(Base):
         nullable=False,
         unique=True,
     )
+
+    # ==============================================
+    # LEGACY AUDIT COLUMNS — NOT NULL on the real
+    # table, no DB-level default. Backend-injected;
+    # frontend/schema.py never supplies these.
+    # ==============================================
+
+    Sync = Column(String(1), nullable=False, default="N")
+
+    SysDefined = Column(Boolean, nullable=False, default=False)
+
+    DateTimestamp = Column(
+        DateTime,
+        nullable=False,
+        default=func.now(),
+        onupdate=func.now(),
+    )
+
+    fkUserId = Column(String(5), nullable=False)
+
+    LastStatus = Column(String(10), nullable=False, default="Active")
 
 
 # ==================================================
@@ -730,6 +976,27 @@ class TaskStatus(Base):
         String(30),
         nullable=False,
     )
+
+    # ==============================================
+    # LEGACY AUDIT COLUMNS — NOT NULL on the real
+    # table, no DB-level default. Backend-injected;
+    # frontend/schema.py never supplies these.
+    # ==============================================
+
+    Sync = Column(String(1), nullable=False, default="N")
+
+    SysDefined = Column(Boolean, nullable=False, default=False)
+
+    DateTimestamp = Column(
+        DateTime,
+        nullable=False,
+        default=func.now(),
+        onupdate=func.now(),
+    )
+
+    fkUserId = Column(String(5), nullable=False)
+
+    LastStatus = Column(String(10), nullable=False, default="Active")
 
 
 # ==================================================
@@ -803,6 +1070,37 @@ class ShiftTiming(Base):
         nullable=False,
     )
 
+    # MERGE NOTE: `SD` exists on the real table (bit, NOT NULL, no
+    # default) but was never modeled by either developer -- inserts
+    # failed with a NULL-constraint error until this was added. Best
+    # guess from naming/position is a "spans two calendar days" flag
+    # for overnight shifts; create_shift_timing/update_shift_timing
+    # below derive it automatically as EndWork < StartWork. CONFIRM
+    # this is actually what SD means -- if it's something else, this
+    # needs to change.
+    SpansDay = Column("SD", Boolean, nullable=False)
+
+    # ==============================================
+    # LEGACY AUDIT COLUMNS — NOT NULL on the real
+    # table, no DB-level default. Backend-injected;
+    # frontend/schema.py never supplies these.
+    # ==============================================
+
+    Sync = Column(String(1), nullable=False, default="N")
+
+    SysDefined = Column(Boolean, nullable=False, default=False)
+
+    DateTimestamp = Column(
+        DateTime,
+        nullable=False,
+        default=func.now(),
+        onupdate=func.now(),
+    )
+
+    fkUserId = Column(String(5), nullable=False)
+
+    LastStatus = Column(String(10), nullable=False, default="Active")
+
 
 # ==================================================
 # SALARY — EMPLOYEE RELATION
@@ -812,23 +1110,13 @@ class ShiftTiming(Base):
 # COLUMNS: pkmrelid numeric(18), relativename varchar(50)
 # ==================================================
 
-class EmployeeRelation(Base):
-
-    __tablename__ = "salemprelation"
-
-    pkMRelId = Column(
-        "pkmrelid",
-        Integer,
-        primary_key=True,
-        index=True,
-    )
-
-    RelativeName = Column(
-        "relativename",
-        String(50),
-        nullable=False,
-        unique=True,
-    )
+# MERGE NOTE: the friend's `EmployeeRelation` class was removed. It
+# mapped to `salemprelation`, which is the SAME physical table as
+# `SalEmpRelation` (the relatives grid on Salary Employee Master, where
+# fkEmpId is NOT NULL). The Relationship master page really manages the
+# relationship *types* (Father, Mother, ...), which live in
+# `ContRelationship`. The employee_relation_* functions below keep their
+# original names/return shape but operate on ContRelationship.
 
 
 # ==================================================
@@ -836,26 +1124,29 @@ class EmployeeRelation(Base):
 # ==================================================
 
 def employee_relation_to_dict(item):
+    # API contract kept for the friend's Relationship.jsx: the row is
+    # now a ContRelationship, but is still exposed as pkMRelId /
+    # RelativeName so the frontend needs no change.
     if not item:
         return None
     return {
-        "pkMRelId": item.pkMRelId,
-        "RelativeName": item.RelativeName,
+        "pkMRelId": item.pkRelId,
+        "RelativeName": item.Relationship,
     }
 
 
 def get_employee_relations(db: Session):
     return (
-        db.query(EmployeeRelation)
-        .order_by(EmployeeRelation.pkMRelId)
+        db.query(ContRelationship)
+        .order_by(ContRelationship.pkRelId)
         .all()
     )
 
 
-def get_employee_relation_by_id(db: Session, item_id: int):
+def get_employee_relation_by_id(db: Session, item_id: str):
     return (
-        db.query(EmployeeRelation)
-        .filter(EmployeeRelation.pkMRelId == item_id)
+        db.query(ContRelationship)
+        .filter(ContRelationship.pkRelId == item_id)
         .first()
     )
 
@@ -864,9 +1155,9 @@ def employee_relation_exists(db: Session, value: str):
     if not value:
         return False
     return (
-        db.query(EmployeeRelation)
+        db.query(ContRelationship)
         .filter(
-            func.lower(EmployeeRelation.RelativeName)
+            func.lower(ContRelationship.Relationship)
             == value.strip().lower(),
         )
         .first()
@@ -874,38 +1165,37 @@ def employee_relation_exists(db: Session, value: str):
     )
 
 
-def employee_relation_exists_for_other(db: Session, value: str, item_id: int):
+def employee_relation_exists_for_other(db: Session, value: str, item_id: str):
     if not value:
         return False
     return (
-        db.query(EmployeeRelation)
+        db.query(ContRelationship)
         .filter(
-            func.lower(EmployeeRelation.RelativeName)
+            func.lower(ContRelationship.Relationship)
             == value.strip().lower(),
-            EmployeeRelation.pkMRelId != item_id,
+            ContRelationship.pkRelId != item_id,
         )
         .first()
         is not None
     )
 
 
-def create_employee_relation(db: Session, value: str):
-    row = EmployeeRelation(RelativeName=value.strip())
-    try:
-        db.add(row)
-        db.commit()
-        db.refresh(row)
-        return row
-    except Exception:
-        db.rollback()
-        raise
+def create_employee_relation(db: Session, value: str, fk_user_id: str = "U0001"):
+    # ContRelationship has a char(5) hand-assigned PK, so creation goes
+    # through the generic lookup creator (generates the next code).
+    return create_lookup_row(
+        db,
+        LOOKUP_TABLE_CONFIG["relations"],
+        value,
+        fk_user_id,
+    )
 
 
-def update_employee_relation(db: Session, item_id: int, value: str):
+def update_employee_relation(db: Session, item_id: str, value: str):
     row = get_employee_relation_by_id(db, item_id)
     if not row:
         return None
-    row.RelativeName = value.strip()
+    row.Relationship = value.strip()
     try:
         db.commit()
         db.refresh(row)
@@ -915,7 +1205,9 @@ def update_employee_relation(db: Session, item_id: int, value: str):
         raise
 
 
-def delete_employee_relation(db: Session, item_id: int):
+def delete_employee_relation(db: Session, item_id: str):
+    # May raise IntegrityError if SalEmpRelation.fkRelId rows still
+    # reference this relationship -- the route turns that into a 409.
     row = get_employee_relation_by_id(db, item_id)
     if not row:
         return None
@@ -930,12 +1222,13 @@ def delete_employee_relation(db: Session, item_id: int):
 
 
 # ==================================================
+# ==================================================
 # SALARY EMPLOYEE SQLALCHEMY MODEL
 # ==================================================
 
 class SalaryEmployee(Base):
 
-    __tablename__ = "SalaryEmployee"
+    __tablename__ = "SalEmployee"
 
 
     pkEmpId = Column(
@@ -1259,209 +1552,151 @@ class SalaryEmployee(Base):
         nullable=True,
     )
 
+    # ==============================================
+    # LEGACY SYSTEM COLUMNS
+    # NOT NULL in the real SalEmployee table with no
+    # DB-level default — these were previously unmapped,
+    # which caused every insert to fail. default= here
+    # is client-side (SQLAlchemy fills it in at INSERT
+    # time), so no frontend/schema.py changes are needed.
+    # ==================================================
+
+    Sync = Column(
+        String(1),
+        nullable=False,
+        default="N",
+    )
+
+    SysDefined = Column(
+        Boolean,
+        nullable=False,
+        default=False,
+    )
+
+    DateTimestamp = Column(
+        DateTime,
+        nullable=False,
+        default=func.now(),
+        onupdate=func.now(),
+    )
+
 
 # ==================================================
 # SALARY STRUCTURE SQLALCHEMY MODEL
 # ==================================================
 
 class SalaryStructure(Base):
+    __tablename__ = "SalStructureTest"
 
-    __tablename__ = "SalaryStructure"
-
-
+    # Legacy table: pkSSId is NOT an IDENTITY column -- the API allocates it
+    # (_next_salary_structure_id in route.py). SQLAlchemy treats a lone
+    # Numeric(x, 0) primary key as autoincrement and, when an explicit value
+    # is supplied, wraps the INSERT in SET IDENTITY_INSERT ON, which SQL
+    # Server rejects (error 8106) on a table with no identity property.
     pkSSId = Column(
-        Integer,
+        Numeric(18, 0),
         primary_key=True,
         index=True,
+        autoincrement=False,
     )
-
-    fkEmpId = Column(Integer, nullable=True)
-
-    SalStart = Column(DateTime, nullable=True)
-
-    Basic = Column(Float, nullable=True)
-
-    BType = Column(String(100), nullable=True)
-
-    Allowance = Column(Float, nullable=True)
-
-    TAllowance = Column(Float, nullable=True)
-
-    Travelling = Column(Float, nullable=True)
-
-    TTravelling = Column(Float, nullable=True)
-
-    Housing = Column(Float, nullable=True)
-
-    THousing = Column(Float, nullable=True)
-
-    Daily = Column(Float, nullable=True)
-
-    TDaily = Column(Float, nullable=True)
-
-    Incentive = Column(Float, nullable=True)
-
-    TIncentive = Column(Float, nullable=True)
-
-    Education = Column(Float, nullable=True)
-
-    TEducation = Column(Float, nullable=True)
-
-    Medical = Column(Float, nullable=True)
-
-    TMedical = Column(Float, nullable=True)
-
-    Other = Column(Float, nullable=True)
-
-    TOther = Column(Float, nullable=True)
-
-    OTI = Column(Float, nullable=True)
-
-    TOTI = Column(Float, nullable=True)
-
-    OTII = Column(Float, nullable=True)
-
-    TOTII = Column(Float, nullable=True)
-
-    RDayI = Column(Float, nullable=True)
-
-    RDayII = Column(Float, nullable=True)
-
-    PH = Column(Float, nullable=True)
-
-    SL = Column(Float, nullable=True)
-
-    CL = Column(Float, nullable=True)
-
-    UCL = Column(Float, nullable=True)
-
-    WH = Column(Float, nullable=True)
-
-    RWH = Column(Float, nullable=True)
-
-    BL = Column(Float, nullable=True)
-
-    BLD = Column(Float, nullable=True)
-
-    ARule = Column(Boolean, nullable=True)
-
-    OTB = Column(Boolean, nullable=True)
-
-    CalPT = Column(Boolean, nullable=True)
-
-    CalPF = Column(Boolean, nullable=True)
-
-    CalESIC = Column(Boolean, nullable=True)
-
-    CalTDS = Column(Boolean, nullable=True)
-
-    SlabTDS = Column(Boolean, nullable=True)
-
-    Revise = Column(Boolean, nullable=True)
-
+    fkEmpId = Column(Numeric(18, 0), nullable=False)
+    SalStart = Column(DateTime, nullable=False)
+    Basic = Column(Numeric(19, 4), nullable=False)
+    BType = Column(String(7), nullable=False)
+    Allowance = Column(Numeric(19, 4), nullable=True)
+    TAllowance = Column(String(5), nullable=False)
+    Travelling = Column(Numeric(19, 4), nullable=True)
+    TTravelling = Column(String(5), nullable=False)
+    Housing = Column(Numeric(19, 4), nullable=True)
+    THousing = Column(String(5), nullable=False)
+    Daily = Column(Numeric(19, 4), nullable=True)
+    TDaily = Column(String(5), nullable=False)
+    Incentive = Column(Numeric(19, 4), nullable=True)
+    TIncentive = Column(String(5), nullable=False)
+    Education = Column(Numeric(19, 4), nullable=True)
+    TEducation = Column(String(5), nullable=False)
+    Medical = Column(Numeric(19, 4), nullable=True)
+    TMedical = Column(String(5), nullable=False)
+    Other = Column(Numeric(19, 4), nullable=True)
+    TOther = Column(String(5), nullable=False)
+    OTI = Column(Numeric(19, 4), nullable=True)
+    TOTI = Column(Boolean, nullable=False)
+    OTII = Column(Numeric(19, 4), nullable=True)
+    TOTII = Column(Boolean, nullable=False)
+    RDayI = Column(String(10), nullable=False)
+    RDayII = Column(String(10), nullable=False)
+    PH = Column(Integer, nullable=False)
+    SL = Column(Numeric(10, 1), nullable=False)
+    CL = Column(Numeric(10, 1), nullable=False)
+    UCL = Column(Numeric(10, 1), nullable=False)
+    WH = Column(Numeric(18, 2), nullable=False)
+    RWH = Column(Numeric(18, 2), nullable=False)
+    BL = Column(Integer, nullable=False)
+    BLD = Column(Integer, nullable=False)
+    ARule = Column(String(10), nullable=False)
+    OTB = Column(Numeric(18, 0), nullable=False)
+    CalPT = Column(Boolean, nullable=False)
+    CalPF = Column(Boolean, nullable=False)
+    CalESIC = Column(Boolean, nullable=False)
+    CalTDS = Column(Boolean, nullable=False)
+    SlabTDS = Column(Integer, nullable=True)
+    Revise = Column(DateTime, nullable=False)
     ScanMB = Column(Boolean, nullable=True)
-
-    fkSAcctId = Column(String(100), nullable=True)
-
-    Remarks = Column(Text, nullable=True)
-
-    fkUserId = Column(String(100), nullable=True)
-
-    LastStatus = Column(String(100), nullable=True)
-
-    OtherBasic = Column(Float, nullable=True)
-
-    EOT = Column(Boolean, nullable=True)
-
-    EWHour = Column(Float, nullable=True)
-
-    LYEWHour = Column(Float, nullable=True)
-
-    fkLAcctId = Column(String(100), nullable=True)
-
-    MABasic = Column(Float, nullable=True)
-
-    EABasic = Column(Float, nullable=True)
-
-    IncentiveBasic = Column(Float, nullable=True)
-
-    DABasic = Column(Float, nullable=True)
-
-    HABasic = Column(Float, nullable=True)
-
-    TABasic = Column(Float, nullable=True)
-
-    AllowanceBasic = Column(Float, nullable=True)
-
-    fkFContId = Column(Integer, nullable=True)
-
-    fkTContId = Column(Integer, nullable=True)
-
-    SalGross = Column(Float, nullable=True)
-
-    fkIAcctId = Column(String(100), nullable=True)
-
-    AbPenalty = Column(Float, nullable=True)
-
-    Variant = Column(String(100), nullable=True)
-
-    PFA = Column(Float, nullable=True)
-
-    PFTA = Column(Float, nullable=True)
-
-    PFHA = Column(Float, nullable=True)
-
-    PFI = Column(Float, nullable=True)
-
-    PFEA = Column(Float, nullable=True)
-
-    PFMA = Column(Float, nullable=True)
-
-    PFOA = Column(Float, nullable=True)
-
-    RDVariant = Column(String(100), nullable=True)
-
-    Retention = Column(Float, nullable=True)
-
-    fkEmp1Id = Column(Integer, nullable=True)
-
-    fkEmp2Id = Column(Integer, nullable=True)
-
-    fkRAcctId = Column(String(100), nullable=True)
-
-    SalDaily = Column(Float, nullable=True)
-
-    SetPF = Column(Boolean, nullable=True)
-
-    Sandwich = Column(Boolean, nullable=True)
-
-    GHA = Column(Float, nullable=True)
-
-    RDA = Column(Float, nullable=True)
-
-    IORF = Column(Boolean, nullable=True)
-
-    OAOP = Column(Boolean, nullable=True)
-
+    fkSAcctId = Column(String(10), nullable=False)
+    Remarks = Column(String(100), nullable=False)
+    fkUserId = Column(String(5), nullable=False)
+    OtherBasic = Column(Boolean, nullable=False)
+    EOT = Column(Boolean, nullable=False)
+    EWHour = Column(Boolean, nullable=False)
+    LYEWHour = Column(Numeric(19, 2), nullable=False)
+    fkLAcctId = Column(String(10), nullable=False)
+    MABasic = Column(Boolean, nullable=False)
+    EABasic = Column(Boolean, nullable=False)
+    IncentiveBasic = Column(Boolean, nullable=False)
+    DABasic = Column(Boolean, nullable=False)
+    HABasic = Column(Boolean, nullable=False)
+    TABasic = Column(Boolean, nullable=False)
+    AllowanceBasic = Column(Boolean, nullable=False)
+    fkFContId = Column(String(10), nullable=True)
+    fkTContId = Column(String(10), nullable=True)
+    SalGross = Column(Numeric(19, 4), nullable=False)
+    fkIAcctId = Column(String(10), nullable=True)
+    AbPenalty = Column(Numeric(19, 4), nullable=False)
+    Variant = Column(Boolean, nullable=False)
+    PFA = Column(Boolean, nullable=False)
+    PFTA = Column(Boolean, nullable=False)
+    PFHA = Column(Boolean, nullable=False)
+    PFI = Column(Boolean, nullable=False)
+    PFEA = Column(Boolean, nullable=False)
+    PFMA = Column(Boolean, nullable=False)
+    PFOA = Column(Boolean, nullable=False)
+    RDVariant = Column(Boolean, nullable=False)
+    Retention = Column(Numeric(19, 4), nullable=True)
+    fkEmp1Id = Column(Numeric(18, 0), nullable=True)
+    fkEmp2Id = Column(Numeric(18, 0), nullable=True)
+    fkRAcctId = Column(String(10), nullable=True)
+    SalDaily = Column(Numeric(19, 4), nullable=True)
+    SetPF = Column(Boolean, nullable=False)
+    Sandwich = Column(Boolean, nullable=False)
+    GHA = Column(Boolean, nullable=False)
+    RDA = Column(Boolean, nullable=False)
+    IORF = Column(Boolean, nullable=False)
+    OAOP = Column(Boolean, nullable=False)
     LTimeROff = Column(Integer, nullable=True)
-
-    Latitude = Column(Float, nullable=True)
-
-    Longitude = Column(Float, nullable=True)
-
-    Radius = Column(Float, nullable=True)
-
-    TDSDeduct = Column(Integer, nullable=True)
-
-    MDeduction = Column(Float, nullable=True)
-
-    DedDescription = Column(Text, nullable=True)
-
-    fkDesId = Column(String(100), nullable=True)
+    Latitude = Column(Numeric(18, 6), nullable=True)
+    Longitude = Column(Numeric(18, 6), nullable=True)
+    Altitude = Column(Numeric(18, 6), nullable=True)
+    TDSDeduct = Column(Numeric(18, 0), nullable=True)
+    MDeduction = Column(Numeric(18, 2), nullable=True)
+    DedDescription = Column(String(100), nullable=True)
+    fkDesId = Column(String(5), nullable=True)
 
 
 # ==================================================
 # USER RIGHT SQLALCHEMY MODEL
+# GENERIC: "module" is a free-text string, so adding
+# a new master/section never requires a migration.
+# One row per (user, module) pair.
 # ==================================================
 
 class UserRight(Base):
@@ -2016,7 +2251,7 @@ def get_active_user_count(
 
         .filter(
 
-            User.is_active.is_(True),
+            User.is_active == True,  # noqa: E712 -- SQL Server rejects `IS 1`, needs `= 1`
 
             User.deleted_at.is_(None),
 
@@ -2592,11 +2827,16 @@ def create_ability(
 
     abilities: str,
 
+
+    fk_user_id: str = "U0001",
+
 ):
 
     ability = Ability(
 
         Abilities=abilities.strip(),
+
+        fkUserId=fk_user_id,
 
     )
 
@@ -2836,11 +3076,16 @@ def create_location(
 
     location: str,
 
+
+    fk_user_id: str = "U0001",
+
 ):
 
     new_location = Location(
 
         Location=location.strip(),
+
+        fkUserId=fk_user_id,
 
     )
 
@@ -3080,11 +3325,16 @@ def create_hobby(
 
     hobby: str,
 
+
+    fk_user_id: str = "U0001",
+
 ):
 
     new_hobby = Hobby(
 
         Hobby=hobby.strip(),
+
+        fkUserId=fk_user_id,
 
     )
 
@@ -3825,11 +4075,16 @@ def create_meeting_type(
 
     meeting_type: str,
 
+
+    fk_user_id: str = "U0001",
+
 ):
 
     new_meeting_type = MeetingType(
 
         MeetingType=meeting_type.strip(),
+
+        fkUserId=fk_user_id,
 
     )
 
@@ -5293,11 +5548,16 @@ def create_meeting_location(
 
     meeting_location: str,
 
+
+    fk_user_id: str = "U0001",
+
 ):
 
     new_meeting_location = MeetingLocation(
 
         MeetingLocation=meeting_location.strip(),
+
+        fkUserId=fk_user_id,
 
     )
 
@@ -6554,11 +6814,15 @@ def create_nature_of_work(
 
     value: str,
 
+    fk_user_id: str = "U0001",
+
 ):
 
     row = NatureOfWork(
 
         NatureOfWork=value.strip(),
+
+        fkUserId=fk_user_id,
 
     )
 
@@ -6794,11 +7058,15 @@ def create_schedule_type(
 
     value: str,
 
+    fk_user_id: str = "U0001",
+
 ):
 
     row = ScheduleType(
 
         Type=value.strip(),
+
+        fkUserId=fk_user_id,
 
     )
 
@@ -7034,11 +7302,15 @@ def create_religion(
 
     value: str,
 
+    fk_user_id: str = "U0001",
+
 ):
 
     row = Religion(
 
         Religion=value.strip(),
+
+        fkUserId=fk_user_id,
 
     )
 
@@ -7274,11 +7546,15 @@ def create_caste(
 
     value: str,
 
+    fk_user_id: str = "U0001",
+
 ):
 
     row = Caste(
 
         Caste=value.strip(),
+
+        fkUserId=fk_user_id,
 
     )
 
@@ -7514,11 +7790,15 @@ def create_skin_tone(
 
     value: str,
 
+    fk_user_id: str = "U0001",
+
 ):
 
     row = SkinTone(
 
         Colour=value.strip(),
+
+        fkUserId=fk_user_id,
 
     )
 
@@ -7697,6 +7977,8 @@ def create_task_status(
 
     cancel: bool = False,
 
+    fk_user_id: str = "U0001",
+
 ):
 
     row = TaskStatus(
@@ -7706,6 +7988,8 @@ def create_task_status(
         Finish=bool(finish),
 
         Cancel=bool(cancel),
+
+        fkUserId=fk_user_id,
 
     )
 
@@ -7990,6 +8274,8 @@ def create_shift_timing(
 
     total_break: float,
 
+    fk_user_id: str = "U0001",
+
 ):
 
     row = ShiftTiming(
@@ -8009,6 +8295,10 @@ def create_shift_timing(
         EndBreak=end_break,
 
         TotalBreak=total_break,
+
+        SpansDay=(end_work < start_work),
+
+        fkUserId=fk_user_id,
 
     )
 
@@ -8081,6 +8371,8 @@ def update_shift_timing(
 
     row.TotalBreak = total_break
 
+    row.SpansDay = end_work < start_work
+
 
     try:
 
@@ -8138,6 +8430,168 @@ def delete_shift_timing(
 # SALARY EMPLOYEE SERIALIZER
 # ==================================================
 
+# ==================================================
+# PHOTO HELPERS
+#
+# The Photo column is LargeBinary, but what is actually
+# stored in it varies:
+#
+#   1. Real image bytes (what the API writes now, after
+#      route.py decodes the incoming base64).
+#   2. ASCII base64 text stored AS bytes — rows written by
+#      the earlier version of the form, where Pydantic
+#      coerced the base64 string straight to utf-8 bytes.
+#   3. Legacy rows from the old SQL Server app, which may
+#      carry a wrapper header (e.g. OLE) before the real
+#      image starts.
+#
+# photo_to_data_url() handles all three so old and new rows
+# both render, and returns a data: URL that an <img src>
+# can use directly.
+# ==================================================
+
+PHOTO_SIGNATURES = (
+    (b"\xff\xd8\xff", "image/jpeg"),
+    (b"\x89PNG\r\n\x1a\n", "image/png"),
+    (b"GIF87a", "image/gif"),
+    (b"GIF89a", "image/gif"),
+    (b"BM", "image/bmp"),
+)
+
+
+# How far into a blob to look for an image signature before
+# giving up. Legacy OLE wrappers are small; this is a bound
+# so a corrupt blob can't cause a long scan.
+PHOTO_HEADER_SCAN_LIMIT = 512
+
+
+def _find_image_start(raw: bytes):
+
+    if not raw:
+
+        return None
+
+
+    for signature, mime in PHOTO_SIGNATURES:
+
+        offset = raw.find(
+            signature,
+            0,
+            PHOTO_HEADER_SCAN_LIMIT + len(signature),
+        )
+
+        if offset != -1:
+
+            return offset, mime
+
+
+    # WEBP: "RIFF" .... "WEBP"
+    offset = raw.find(
+        b"RIFF",
+        0,
+        PHOTO_HEADER_SCAN_LIMIT + 4,
+    )
+
+    if offset != -1 and raw[offset + 8:offset + 12] == b"WEBP":
+
+        return offset, "image/webp"
+
+
+    return None
+
+
+def photo_to_data_url(value):
+
+    if value is None:
+
+        return None
+
+
+    if isinstance(value, memoryview):
+
+        value = value.tobytes()
+
+
+    if isinstance(value, str):
+
+        value = value.encode(
+            "utf-8",
+            "ignore",
+        )
+
+
+    if not isinstance(value, bytes) or not value:
+
+        return None
+
+
+    # ----------------------------------------------
+    # CASE 1 / 3 — blob already contains image bytes
+    # ----------------------------------------------
+
+    found = _find_image_start(value)
+
+    if found:
+
+        offset, mime = found
+
+        encoded = base64.b64encode(
+            value[offset:]
+        ).decode("ascii")
+
+        return f"data:{mime};base64,{encoded}"
+
+
+    # ----------------------------------------------
+    # CASE 2 — blob is base64 TEXT (possibly a full
+    # data: URL) that was stored as bytes
+    # ----------------------------------------------
+
+    try:
+
+        text = value.decode("ascii").strip()
+
+    except UnicodeDecodeError:
+
+        return None
+
+
+    if text.startswith("data:"):
+
+        _, _, text = text.partition(",")
+
+
+    try:
+
+        decoded = base64.b64decode(
+            text,
+            validate=False,
+        )
+
+    except (
+        binascii.Error,
+        ValueError,
+    ):
+
+        return None
+
+
+    found = _find_image_start(decoded)
+
+    if not found:
+
+        return None
+
+
+    offset, mime = found
+
+    encoded = base64.b64encode(
+        decoded[offset:]
+    ).decode("ascii")
+
+    return f"data:{mime};base64,{encoded}"
+
+
 def salary_employee_to_dict(employee):
 
     if not employee:
@@ -8164,8 +8618,23 @@ def salary_employee_to_dict(employee):
             value = value.isoformat()
 
 
-        # Don't return binary image data in JSON
-        if isinstance(value, bytes):
+        if isinstance(value, Decimal):
+
+            value = (
+                int(value)
+                if value == value.to_integral_value()
+                else float(value)
+            )
+
+
+        # Photo comes back as a data: URL so the frontend
+        # can drop it straight into an <img src>. Any OTHER
+        # binary column is still omitted from JSON.
+        if column.name == "Photo":
+
+            value = photo_to_data_url(value)
+
+        elif isinstance(value, (bytes, memoryview)):
 
             value = None
 
@@ -8194,6 +8663,47 @@ def get_salary_employees(
 
         .all()
 
+    )
+
+
+def search_salary_employees(
+
+    db: Session,
+
+    query: str,
+
+    exclude_emp_id: int = None,
+
+    limit: int = 20,
+
+):
+    """
+    Backs the employee-picker used for the self-referencing
+    fkREmpId/fkW1EmpId/fkW2EmpId fields (referred-by, witness 1,
+    witness 2) — a search over existing employees by name or
+    code, not a lookup-master dropdown, since these values are
+    real employee records rather than reference data.
+    """
+
+    search = (
+        db.query(SalaryEmployee)
+        .filter(
+            (SalaryEmployee.Employee.ilike(f"%{query}%"))
+            | (SalaryEmployee.EmpCode.ilike(f"%{query}%"))
+        )
+    )
+
+    if exclude_emp_id is not None:
+
+        search = search.filter(
+            SalaryEmployee.pkEmpId != exclude_emp_id
+        )
+
+    return (
+        search
+        .order_by(SalaryEmployee.Employee.asc())
+        .limit(limit)
+        .all()
     )
 
 
@@ -8304,6 +8814,131 @@ def update_salary_employee(
         raise
 
 
+# ==================================================
+# STATUTORY IDENTIFIER UNIQUENESS CHECK
+# Used for PFNo (UAN), PANNo, Aadhar, ESICNo, AccountNo, and RTGS
+# (IFSC) -- all nullable/optional columns on SalEmployee, but when a
+# value IS provided it must be unique across employees. Comparison is
+# case-insensitive since schema.py's field validators already
+# uppercase these on the way in, but older rows written before that
+# validation existed may not be.
+# ==================================================
+
+def salary_employee_field_exists(
+
+    db: Session,
+
+    field_name: str,
+
+    value: str,
+
+    exclude_emp_id: int | None = None,
+
+) -> bool:
+
+    column = getattr(SalaryEmployee, field_name)
+
+    query = db.query(SalaryEmployee).filter(
+        func.upper(column) == value.upper()
+    )
+
+    if exclude_emp_id is not None:
+
+        query = query.filter(
+            SalaryEmployee.pkEmpId != exclude_emp_id
+        )
+
+    # NOTE: query.exists() -> db.query(...).scalar() compiles to a bare
+    # "SELECT EXISTS(...) AS anon_1", which Postgres/MySQL accept but
+    # SQL Server does not ("Incorrect syntax near 'EXISTS'") -- T-SQL
+    # only allows EXISTS inside a WHERE/CASE, not as a standalone
+    # select-list expression. .first() is not None is portable and
+    # avoids that construct entirely.
+    return query.first() is not None
+
+
+# ==================================================
+# EMPLOYEE CODE — RE-HIRE PERIOD LOOKUPS
+# ==================================================
+# Mirrors frmEmployee.ValidateFields. An EmpCode is reused across
+# separate stints for the same person (rehire), so it is NOT a simple
+# uniqueness constraint -- what's actually enforced is that no two
+# rows sharing an EmpCode have overlapping [DOJ, DOL] periods, and at
+# most one row per EmpCode has DOL still open (NULL). These return the
+# conflicting row (or None) rather than raising -- route.py builds the
+# actual message, matching how salary_employee_field_exists above
+# hands a bare bool back for the same reason.
+# ==================================================
+
+def find_employee_period_overlap(
+    db: Session,
+    emp_code: str,
+    on_date,
+    exclude_emp_id: int | None = None,
+):
+    """A CLOSED (DOJ and DOL both set) row sharing emp_code whose
+    period contains on_date. Matches the legacy
+    "'{date}' Between DOJ And DOL" check -- SQL BETWEEN is inclusive,
+    and (as in the original) a row with DOL still NULL is deliberately
+    excluded here since it can never satisfy a closed-range match."""
+
+    query = db.query(SalaryEmployee).filter(
+        SalaryEmployee.EmpCode == emp_code,
+        SalaryEmployee.DOJ.isnot(None),
+        SalaryEmployee.DOL.isnot(None),
+        SalaryEmployee.DOJ <= on_date,
+        SalaryEmployee.DOL >= on_date,
+    )
+
+    if exclude_emp_id is not None:
+        query = query.filter(SalaryEmployee.pkEmpId != exclude_emp_id)
+
+    return query.first()
+
+
+def find_employee_active_record(
+    db: Session,
+    emp_code: str,
+    exclude_emp_id: int | None = None,
+):
+    """The row sharing emp_code whose employment is still open
+    (DOL IS NULL), if any -- an EmpCode can only be reused once its
+    prior stint has a Leaving Date."""
+
+    query = db.query(SalaryEmployee).filter(
+        SalaryEmployee.EmpCode == emp_code,
+        SalaryEmployee.DOL.is_(None),
+    )
+
+    if exclude_emp_id is not None:
+        query = query.filter(SalaryEmployee.pkEmpId != exclude_emp_id)
+
+    return query.first()
+
+
+def get_salary_structure_date_bounds(
+    db: Session,
+    emp_id: int,
+):
+    """(earliest SalStart, latest Revise) across every Salary
+    Structure this employee has, or (None, None) with no rows.
+    Backs dtDOJ_Validating / dtDOL_Validating's bound checks against
+    SalStructure -- the SalAttendance half of those same legacy
+    handlers isn't included here; there's no ORM model for that table
+    yet (see route.py's caller)."""
+
+    min_start, max_revise = (
+        db.query(
+            func.min(SalaryStructure.SalStart),
+            func.max(SalaryStructure.Revise),
+        )
+        .filter(SalaryStructure.fkEmpId == emp_id)
+        .one()
+    )
+
+    return min_start, max_revise
+
+
 def delete_salary_employee(
 
     db: Session,
@@ -8361,6 +8996,15 @@ def salary_structure_to_dict(structure):
         if isinstance(value, datetime):
 
             value = value.isoformat()
+
+
+        if isinstance(value, Decimal):
+
+            value = (
+                int(value)
+                if value == value.to_integral_value()
+                else float(value)
+            )
 
 
         data[column.name] = value
@@ -8524,4 +9168,1263 @@ def delete_salary_structure(
 
         db.rollback()
 
+        raise
+
+
+# ==================================================
+# SALARY EMPLOYEE CHILD TABLES
+#
+# Mirrors the legacy SQL Server DDL:
+#   SalEmpContact   -> the "Phone, Fax, E-Mail" grid
+#   SalEmpRelation  -> the relatives grid
+#   SalEmpDocuments -> the "Certificates/Licenses
+#                      Produced in Original" grid
+#
+# All three FK back to SalEmployee.pkEmpId. Columns are
+# declared nullable here and defaulted/truncated in
+# route.py (same shim pattern already used for the parent
+# SalEmployee table), so a partially filled grid row can't
+# blow up against the tighter legacy constraints.
+#
+# The primary keys ARE auto-increment here (IDENTITY(1,1)
+# in the legacy DDL) — unlike SalEmployee.pkEmpId, which
+# is a plain integer the user supplies.
+# ==================================================
+
+class SalEmpContact(Base):
+
+    __tablename__ = "SalEmpContact"
+
+
+    pkContId = Column(
+        Integer,
+        primary_key=True,
+        index=True,
+        autoincrement=True,
+    )
+
+    fkEmpId = Column(
+        Integer,
+        index=True,
+        nullable=False,
+    )
+
+    # ContMOC.pkMOCId — "mode of contact" (phone/fax/email).
+    # No master table for this in the app yet, so it's a
+    # free-text code for now.
+    fkMOCId = Column(String(5), nullable=True)
+
+    Contact = Column(String(50), nullable=True)
+
+    Ext = Column(String(10), nullable=True)
+
+    SrNo = Column(Integer, nullable=True)
+
+
+class SalEmpRelation(Base):
+
+    __tablename__ = "SalEmpRelation"
+
+
+    pkMRelId = Column(
+        Integer,
+        primary_key=True,
+        index=True,
+        autoincrement=True,
+    )
+
+    fkEmpId = Column(
+        Integer,
+        index=True,
+        nullable=False,
+    )
+
+    RelativeName = Column(String(50), nullable=True)
+
+    # ContRelationship.pkRelId
+    fkRelId = Column(String(5), nullable=True)
+
+    DOB = Column(DateTime, nullable=True)
+
+    # ContQualification.pkQuaId
+    fkQuaId = Column(String(5), nullable=True)
+
+    # ContCommon.pkContId — school / college / university
+    fkSchId = Column(String(10), nullable=True)
+
+    # Marital status
+    MS = Column(String(15), nullable=True)
+
+    # Occupation / designation
+    fkDesId = Column(String(5), nullable=True)
+
+
+class SalEmpDocument(Base):
+
+    __tablename__ = "SalEmpDocuments"
+
+
+    pkDEmpId = Column(
+        Integer,
+        primary_key=True,
+        index=True,
+        autoincrement=True,
+    )
+
+    fkEmpId = Column(
+        Integer,
+        index=True,
+        nullable=False,
+    )
+
+    # DocTitle.pkDTId
+    fkDTId = Column(Integer, nullable=True)
+
+    # Stored filename on disk, NOT the original name. Capped
+    # at 100 to match the legacy nvarchar(100).
+    DocFile = Column(String(100), nullable=True)
+
+    ValidUntil = Column(DateTime, nullable=True)
+
+
+# ==================================================
+# CHILD ROW SERIALIZERS
+# ==================================================
+
+def _child_row_to_dict(row):
+
+    if not row:
+
+        return None
+
+
+    data = {}
+
+
+    for column in row.__table__.columns:
+
+        value = getattr(
+            row,
+            column.name,
+        )
+
+
+        if isinstance(value, datetime):
+
+            value = value.isoformat()
+
+
+        if isinstance(value, Decimal):
+
+            value = (
+                int(value)
+                if value == value.to_integral_value()
+                else float(value)
+            )
+
+
+        data[column.name] = value
+
+
+    return data
+
+
+def employee_contact_to_dict(row):
+
+    return _child_row_to_dict(row)
+
+
+def salemp_relation_to_dict(row):
+
+    return _child_row_to_dict(row)
+
+
+def employee_document_to_dict(row):
+
+    return _child_row_to_dict(row)
+
+
+# ==================================================
+# CONTACTS
+# ==================================================
+
+def get_employee_contacts(
+    db: Session,
+    emp_id: int,
+):
+
+    return (
+
+        db.query(SalEmpContact)
+
+        .filter(
+            SalEmpContact.fkEmpId == emp_id
+        )
+
+        .order_by(
+            SalEmpContact.SrNo,
+            SalEmpContact.pkContId,
+        )
+
+        .all()
+    )
+
+
+def replace_employee_contacts(
+    db: Session,
+    emp_id: int,
+    rows: list,
+):
+
+    # Grid semantics: the payload IS the full set of rows
+    # for this employee, so anything not sent is removed.
+
+    try:
+
+        (
+            db.query(SalEmpContact)
+            .filter(
+                SalEmpContact.fkEmpId == emp_id
+            )
+            .delete(
+                synchronize_session=False
+            )
+        )
+
+        for row in rows:
+
+            db.add(
+                SalEmpContact(
+                    fkEmpId=emp_id,
+                    **row,
+                )
+            )
+
+        db.commit()
+
+
+    except Exception:
+
+        db.rollback()
+
+        raise
+
+
+    return get_employee_contacts(
+        db,
+        emp_id,
+    )
+
+
+# ==================================================
+# RELATIONS
+# ==================================================
+
+def get_salemp_relations(
+    db: Session,
+    emp_id: int,
+):
+
+    return (
+
+        db.query(SalEmpRelation)
+
+        .filter(
+            SalEmpRelation.fkEmpId == emp_id
+        )
+
+        .order_by(
+            SalEmpRelation.pkMRelId
+        )
+
+        .all()
+    )
+
+
+def replace_employee_relations(
+    db: Session,
+    emp_id: int,
+    rows: list,
+):
+
+    try:
+
+        (
+            db.query(SalEmpRelation)
+            .filter(
+                SalEmpRelation.fkEmpId == emp_id
+            )
+            .delete(
+                synchronize_session=False
+            )
+        )
+
+        for row in rows:
+
+            db.add(
+                SalEmpRelation(
+                    fkEmpId=emp_id,
+                    **row,
+                )
+            )
+
+        db.commit()
+
+
+    except Exception:
+
+        db.rollback()
+
+        raise
+
+
+    return get_salemp_relations(
+        db,
+        emp_id,
+    )
+
+
+# ==================================================
+# DOCUMENTS
+#
+# Not a replace-all grid like the other two — each row
+# owns a file on disk, so rows are added and removed
+# individually.
+# ==================================================
+
+def get_employee_documents(
+    db: Session,
+    emp_id: int,
+):
+
+    return (
+
+        db.query(SalEmpDocument)
+
+        .filter(
+            SalEmpDocument.fkEmpId == emp_id
+        )
+
+        .order_by(
+            SalEmpDocument.pkDEmpId
+        )
+
+        .all()
+    )
+
+
+def get_employee_document(
+    db: Session,
+    emp_id: int,
+    document_id: int,
+):
+
+    return (
+
+        db.query(SalEmpDocument)
+
+        .filter(
+            SalEmpDocument.pkDEmpId == document_id,
+            SalEmpDocument.fkEmpId == emp_id,
+        )
+
+        .first()
+    )
+
+
+def create_employee_document(
+    db: Session,
+    emp_id: int,
+    document_data: dict,
+):
+
+    document = SalEmpDocument(
+        fkEmpId=emp_id,
+        **document_data,
+    )
+
+
+    try:
+
+        db.add(document)
+
+        db.commit()
+
+        db.refresh(document)
+
+        return document
+
+
+    except Exception:
+
+        db.rollback()
+
+        raise
+
+
+def delete_employee_document(
+    db: Session,
+    document,
+):
+
+    if not document:
+
+        return False
+
+
+    try:
+
+        db.delete(document)
+
+        db.commit()
+
+        return True
+
+
+    except Exception:
+
+        db.rollback()
+
+        raise
+
+
+def delete_employee_children(
+    db: Session,
+    emp_id: int,
+):
+
+    # Called before deleting the parent employee — the
+    # legacy FKs would otherwise block the delete.
+    # Returns the document rows so the caller can clean
+    # up their files on disk.
+
+    documents = get_employee_documents(
+        db,
+        emp_id,
+    )
+
+    removed = [
+        employee_document_to_dict(document)
+        for document in documents
+    ]
+
+
+    try:
+
+        for model in (
+            SalEmpContact,
+            SalEmpRelation,
+            SalEmpDocument,
+        ):
+
+            (
+                db.query(model)
+                .filter(
+                    model.fkEmpId == emp_id
+                )
+                .delete(
+                    synchronize_session=False
+                )
+            )
+
+        db.commit()
+
+
+    except Exception:
+
+        db.rollback()
+
+        raise
+
+
+    return removed
+
+# ==================================================
+# LOOKUP MASTER TABLE MODELS
+# These are the 12 legacy master/lookup tables referenced by
+# fk* columns on SalEmployee (and, per the "so many tables to
+# wire later" plan, eventually other legacy forms too).
+#
+# IMPORTANT — UNVERIFIED SCHEMA WARNING:
+# For each table we have confirmed (via INFORMATION_SCHEMA) only
+# the PK column, its data type, and the display/label column.
+# We do NOT have a full NOT-NULL/default column inventory the way
+# we eventually got for SalEmployee (which turned out to need
+# Sync/SysDefined/DateTimestamp). These models therefore ASSUME
+# the same three legacy audit columns exist here too, with the
+# same client-side defaults, as a best-effort guess pending
+# confirmation. If a table doesn't have one of these columns,
+# SQLAlchemy will simply fail to find that attribute on INSERT —
+# harmless — but if a table has *extra* NOT NULL columns we don't
+# know about, inserts will fail the same way the original
+# SalEmployee bug did. The generic lookup create route mirrors the
+# same DataError/IntegrityError debug-print block used for
+# SalEmployee for exactly this reason — check the console the
+# first time you create a row in each table.
+#
+# Char-typed primary keys (Title/Qualification/Department/
+# Designation/ContCommon/AcctAccount/IDSettings) are NOT
+# auto-increment — the legacy system hand-assigns short codes
+# (e.g. "U0001"). We don't know that code's exact generation
+# convention per table, so new-row codes are generated with a
+# best-effort heuristic (see generate_next_lookup_code below):
+# reuse the most common alpha prefix + zero-padding width seen in
+# the existing codes, incrementing the numeric tail. Confirm the
+# generated codes look right for at least one row per table before
+# relying on this in production.
+# ==================================================
+# --------------------------------------------------
+# MERGE NOTE: mine's SalCastes / SalReligion / SalSkinTones were
+# NOT ported. They map to the same physical tables (SQL Server
+# names are case-insensitive) as Caste / Religion / SkinTone
+# defined earlier in this file, so LOOKUP_TABLE_CONFIG below
+# points at those classes instead -- one SQLAlchemy class per
+# physical table, one write path. (SkinTone's PK attribute is
+# pkSkinId here, not pkSTId.)
+# --------------------------------------------------
+
+
+class ContTitle(Base):
+
+    # Confirmed real schema via INFORMATION_SCHEMA (session 2) — all
+    # 7 columns are NOT NULL, none have a DB-level default besides
+    # what's set here client-side. LastStatus has no known real
+    # values yet -- "Active" is a best-effort guess, confirm before
+    # relying on it (see HANDOFF Unresolved).
+
+    __tablename__ = "ContTitle"
+
+    pkTitId = Column(String(5), primary_key=True)
+    Title = Column(String(30), nullable=False)
+
+    Sync = Column(String(1), nullable=False, default="N")
+    SysDefined = Column(Boolean, nullable=False, default=False)
+    DateTimestamp = Column(
+        DateTime, nullable=False, default=func.now(), onupdate=func.now()
+    )
+    fkUserId = Column(String(5), nullable=False)
+    LastStatus = Column(String(20), nullable=False, default="Active")
+
+class ContQualification(Base):
+
+    __tablename__ = "ContQualification"
+
+    pkQuaId = Column(String(5), primary_key=True)
+    Qualification = Column(String(80), nullable=False)
+
+    Sync = Column(String(1), nullable=False, default="N")
+    SysDefined = Column(Boolean, nullable=False, default=False)
+    DateTimestamp = Column(
+        DateTime, nullable=False, default=func.now(), onupdate=func.now()
+    )
+    fkUserId = Column(String(5), nullable=False)
+    LastStatus = Column(String(20), nullable=False, default="Active")
+
+class ContRelationship(Base):
+
+    # "Relationship" lookup for the SalEmpRelation (relatives)
+    # grid's fkRelId column -- same char-typed PK / audit-column
+    # pattern as ContTitle above.
+
+    __tablename__ = "ContRelationship"
+
+    pkRelId = Column(String(5), primary_key=True)
+    Relationship = Column(String(50), nullable=False)
+
+    Sync = Column(String(1), nullable=False, default="N")
+    SysDefined = Column(Boolean, nullable=False, default=False)
+    DateTimestamp = Column(
+        DateTime, nullable=False, default=func.now(), onupdate=func.now()
+    )
+    fkUserId = Column(String(5), nullable=False)
+    LastStatus = Column(String(20), nullable=False, default="Active")
+
+class ContDepartment(Base):
+
+    __tablename__ = "ContDepartment"
+
+    pkDepId = Column(String(5), primary_key=True)
+    Department = Column(String(60), nullable=False)
+
+    Sync = Column(String(1), nullable=False, default="N")
+    SysDefined = Column(Boolean, nullable=False, default=False)
+    DateTimestamp = Column(
+        DateTime, nullable=False, default=func.now(), onupdate=func.now()
+    )
+    fkUserId = Column(String(5), nullable=False)
+    LastStatus = Column(String(20), nullable=False, default="Active")
+
+class ContDesignation(Base):
+
+    __tablename__ = "ContDesignation"
+
+    pkDesId = Column(String(5), primary_key=True)
+    Designation = Column(String(60), nullable=False)
+
+    Sync = Column(String(1), nullable=False, default="N")
+    SysDefined = Column(Boolean, nullable=False, default=False)
+    DateTimestamp = Column(
+        DateTime, nullable=False, default=func.now(), onupdate=func.now()
+    )
+    fkUserId = Column(String(5), nullable=False)
+    LastStatus = Column(String(20), nullable=False, default="Active")
+
+class ContMOC(Base):
+
+    # "Mode of Contact" lookup for the SalEmpContact (Phone/Fax/
+    # E-Mail) grid's fkMOCId column -- e.g. "Home", "Mobile",
+    # "Office No.", "E-Mail". The real table also has a fkMTId
+    # column (FK to ContMOCType, grouping each entry under a
+    # broader type like PHONE/MOBILE/FAX/E-MAIL/EPABX, shown as
+    # "Type" in the legacy picker) which is very likely NOT NULL.
+    # We don't have ContMOCType modeled and have no picker for it
+    # here, so -- same reasoning as AcctAccount above -- inline
+    # "add new" is turned off for this one rather than guessing a
+    # type grouping; existing entries still populate the dropdown.
+
+    __tablename__ = "ContMOC"
+
+    pkMOCId = Column(String(5), primary_key=True)
+    MOC = Column(String(50), nullable=False)
+
+    Sync = Column(String(1), nullable=False, default="N")
+    SysDefined = Column(Boolean, nullable=False, default=False)
+    DateTimestamp = Column(
+        DateTime, nullable=False, default=func.now(), onupdate=func.now()
+    )
+    fkUserId = Column(String(5), nullable=False)
+    LastStatus = Column(String(20), nullable=False, default="Active")
+
+class ContCommon(Base):
+
+    # "Bank Name" lookup. Real schema has 4 extra NOT NULL text
+    # columns with no DB default (Address/Region/Postfix/ClientId)
+    # -- defaulted to "" here so inline create doesn't violate them.
+    # Everything else on this table (fkCityId, Pincode, fkEmpId,
+    # fkAUserId, UserName/Password/Question/Answer) is nullable on
+    # the real table and intentionally left unmapped.
+
+    __tablename__ = "ContCommon"
+
+    pkContId = Column(String(10), primary_key=True)
+    ContactName = Column(String(100), nullable=False)
+
+    Sync = Column(String(1), nullable=False, default="N")
+    SysDefined = Column(Boolean, nullable=False, default=False)
+    DateTimestamp = Column(
+        DateTime, nullable=False, default=func.now(), onupdate=func.now()
+    )
+    fkUserId = Column(String(5), nullable=False)
+    LastStatus = Column(String(20), nullable=False, default="Active")
+
+    Address = Column(String(300), nullable=False, default="")
+    Region = Column(String(100), nullable=False, default="")
+    Postfix = Column(String(50), nullable=False, default="")
+    ClientId = Column(String(60), nullable=False, default="")
+
+class AcctAccount(Base):
+
+    # "Cash Account" lookup — real table is a 71-column chart of
+    # accounts with ~48 NOT NULL columns that have no DB default
+    # (tax registration numbers, GST flags, fkGrpId which is very
+    # likely its own FK to an Account Group table we haven't
+    # diagnosed, etc). Deliberately mapping ONLY pk + label here and
+    # keeping allow_create OFF for this table in LOOKUP_TABLE_CONFIG
+    # -- existing accounts still populate the dropdown fine (a
+    # mapped-subset SELECT works), but guessing zero/blank values
+    # into a real accounting table to satisfy those constraints
+    # risks corrupting ledger data. New accounts should go through a
+    # dedicated Accounts master screen, not an inline quick-add here.
+
+    __tablename__ = "AcctAccount"
+
+    pkAcctId = Column(String(10), primary_key=True)
+    Account = Column(String(100), nullable=False)
+    AcctCode = Column(String(20), nullable=False)
+    fkGrpId = Column(Integer, nullable=False)
+
+class IDSettings(Base):
+
+    # allow_create is False (fkSetId is auto-assigned on SalEmployee,
+    # not user-facing) -- only mapping what's needed for the read-
+    # only dropdown / for the DocMasRecords fallback lookup below.
+
+    __tablename__ = "IDSettings"
+
+    pkSetId = Column(String(5), primary_key=True)
+    Unit = Column(String(40), nullable=False)
+
+class SalAttendanceRules(Base):
+
+    # NEW table -- Attendance Rules was a hardcoded frontend list
+    # ("Rule I".."Rule V") on the Salary Structure form with no real
+    # backing master, unlike every other reference field there
+    # (Accounts, Designation). This gives it one, same shape as
+    # SalCastes/SalReligion/SalSkinTones above. pkARId is IDENTITY --
+    # see SalCastes comment above. Created automatically by
+    # Base.metadata.create_all in main.py, so no manual migration
+    # needed.
+    #
+    # SalStructureTest.ARule (String(10)) stores this table's pkARId
+    # as text, not the label -- same value/label split as every other
+    # LOOKUP_TABLE_CONFIG-backed field.
+
+    __tablename__ = "SalAttendanceRules"
+
+    pkARId = Column(Integer, primary_key=True)
+    ARule = Column(String(50), nullable=False)
+
+    Sync = Column(String(1), nullable=False, default="N")
+    SysDefined = Column(Boolean, nullable=False, default=False)
+    DateTimestamp = Column(
+        DateTime, nullable=False, default=func.now(), onupdate=func.now()
+    )
+    fkUserId = Column(String(5), nullable=False)
+    LastStatus = Column(String(20), nullable=False, default="Active")
+
+class DocMasRecords(Base):
+
+    # "Medical Document Ref." lookup. pkMDocId is IDENTITY -- see
+    # SalCastes comment above. fkSetId is NOT NULL with no DB
+    # default and is almost certainly a FK to IDSettings -- an empty
+    # string would violate that, so create_lookup_row looks up the
+    # first real IDSettings row at insert time and uses its code
+    # (see resolve_docmas_setid below). FileName/Remarks default to
+    # "" and Attached defaults to False since they're plain optional
+    # business fields with no sensible guess otherwise.
+
+    __tablename__ = "DocMasRecords"
+
+    pkMDocId = Column(Integer, primary_key=True)
+    Title = Column(String(100), nullable=False)
+
+    Sync = Column(String(1), nullable=False, default="N")
+    SysDefined = Column(Boolean, nullable=False, default=False)
+    DateTimestamp = Column(
+        DateTime, nullable=False, default=func.now(), onupdate=func.now()
+    )
+    fkUserId = Column(String(5), nullable=False)
+    LastStatus = Column(String(20), nullable=False, default="Active")
+
+    FileName = Column(String(200), nullable=False, default="")
+    Attached = Column(Boolean, nullable=False, default=False)
+    Remarks = Column(String(510), nullable=False, default="")
+    fkSetId = Column(String(5), nullable=False)
+
+class AppUserLegacy(Base):
+
+    # Legacy AppUser table — separate from app_users (JWT auth).
+    # Read-only here: fkUserId is an audit column auto-populated
+    # via resolve_legacy_user_id(), never a user-facing dropdown,
+    # so no create/update support is exposed for this table.
+
+    __tablename__ = "AppUser"
+
+    pkUserId = Column(String(5), primary_key=True)
+    UserName = Column(String(30), nullable=False)
+
+def resolve_default_set_id(db: Session) -> str:
+    """
+    Shared fallback for any NOT NULL fkSetId column that is a real FK
+    to IDSettings.pkSetId but has no user-facing picker (DocMasRecords
+    on document create, SalEmployee.fkSetId on employee create/update).
+    Falls back to the first real IDSettings row rather than a guessed
+    literal -- a previous SalEmployee default of the hardcoded string
+    "SET01" caused a live FK violation because that code didn't
+    actually exist in IDSettings. Raises if no IDSettings row exists
+    at all -- better to surface a clear 400 than silently write an
+    invalid code that will always fail the same way.
+    """
+
+    setting = db.query(IDSettings).order_by(IDSettings.pkSetId.asc()).first()
+
+    if not setting:
+
+        raise ValueError(
+            "No IDSettings row exists to satisfy fkSetId — add at "
+            "least one IDSettings row before creating employees or "
+            "documents."
+        )
+
+    return setting.pkSetId
+
+def resolve_docmas_setid(db: Session) -> str:
+    """
+    DocMasRecords.fkSetId is NOT NULL with no DB default and is very
+    likely a FK to IDSettings.pkSetId. Since new "Medical Document
+    Ref." rows are created inline from the employee form with no UI
+    for picking a unit/settings code, fall back to the first real
+    IDSettings row via resolve_default_set_id(). Kept as its own
+    named function for call-site clarity in LOOKUP_TABLE_CONFIG.
+    """
+
+    return resolve_default_set_id(db)
+
+# ==================================================
+# LOOKUP TABLE CONFIG MAP
+# Drives the generic /api/lookups/{table} endpoints. Keys are the
+# public slug used in the URL and from the frontend combobox.
+#
+# "is_identity_pk": True means the PK is a real SQL Server IDENTITY
+# column -- create_lookup_row must NOT set it explicitly and instead
+# reads the DB-assigned value back via refresh(). False (char PKs)
+# means create_lookup_row generates a code via
+# generate_next_lookup_code().
+#
+# "extra_defaults": literal column->value pairs already covered by
+# the model's own Column(default=...), listed here only for
+# reference -- create_lookup_row doesn't need to touch these.
+#
+# "extra_resolver": optional callable(db) -> {column: value} for
+# extra NOT NULL columns that need a *live* DB lookup rather than a
+# static default (currently only DocMasRecords.fkSetId).
+# ==================================================
+
+LOOKUP_TABLE_CONFIG = {
+
+    "titles": {
+        "model": ContTitle,
+        "pk_attr": "pkTitId",
+        "label_attr": "Title",
+        "is_identity_pk": False,
+        "allow_create": True,
+        # "mr", "Mr" and "Mr." are the same title -- match/dedupe
+        # ignoring case AND punctuation/spacing, not just case, so
+        # typing "mr" resolves to the existing "Mr." row instead of
+        # creating a near-duplicate. See lookup_label_exists below.
+        "ignore_punctuation": True,
+    },
+    "qualifications": {
+        "model": ContQualification,
+        "pk_attr": "pkQuaId",
+        "label_attr": "Qualification",
+        "is_identity_pk": False,
+        "allow_create": True,
+    },
+    "departments": {
+        "model": ContDepartment,
+        "pk_attr": "pkDepId",
+        "label_attr": "Department",
+        "is_identity_pk": False,
+        "allow_create": True,
+    },
+    "designations": {
+        "model": ContDesignation,
+        "pk_attr": "pkDesId",
+        "label_attr": "Designation",
+        "is_identity_pk": False,
+        "allow_create": True,
+    },
+    "relations": {
+        "model": ContRelationship,
+        "pk_attr": "pkRelId",
+        "label_attr": "Relationship",
+        "is_identity_pk": False,
+        "allow_create": True,
+    },
+    "banks": {
+        "model": ContCommon,
+        "pk_attr": "pkContId",
+        "label_attr": "ContactName",
+        "is_identity_pk": False,
+        "allow_create": True,
+    },
+    "contacts": {
+        "model": ContCommon,
+        "pk_attr": "pkContId",
+        "label_attr": "ContactName",
+        "is_identity_pk": False,
+        "allow_create": True,
+    },
+    "contact-modes": {
+        "model": ContMOC,
+        "pk_attr": "pkMOCId",
+        "label_attr": "MOC",
+        "is_identity_pk": False,
+        "allow_create": False,  # see ContMOC comment above
+    },
+    "accounts": {
+        "model": AcctAccount,
+        "pk_attr": "pkAcctId",
+        "label_attr": "Account",
+        "is_identity_pk": False,
+        "allow_create": True,  # frontend uses the dedicated account quick-create flow
+    },
+    "id-settings": {
+        "model": IDSettings,
+        "pk_attr": "pkSetId",
+        "label_attr": "Unit",
+        "is_identity_pk": False,
+        "allow_create": False,  # fkSetId is auto-assigned, not user-facing
+    },
+    "castes": {
+        "model": Caste,
+        "pk_attr": "pkCSId",
+        "label_attr": "Caste",
+        "is_identity_pk": True,
+        "allow_create": True,
+    },
+    "religions": {
+        "model": Religion,
+        "pk_attr": "pkRGId",
+        "label_attr": "Religion",
+        "is_identity_pk": True,
+        "allow_create": True,
+    },
+    "skin-tones": {
+        "model": SkinTone,
+        "pk_attr": "pkSkinId",
+        "label_attr": "Colour",
+        "is_identity_pk": True,
+        "allow_create": True,
+    },
+    "attendance-rules": {
+        "model": SalAttendanceRules,
+        "pk_attr": "pkARId",
+        "label_attr": "ARule",
+        "is_identity_pk": True,
+        "allow_create": True,
+    },
+    "documents": {
+        "model": DocMasRecords,
+        "pk_attr": "pkMDocId",
+        "label_attr": "Title",
+        "is_identity_pk": True,
+        "allow_create": True,
+        "extra_resolver": lambda db: {"fkSetId": resolve_docmas_setid(db)},
+    },
+    "app-users": {
+        "model": AppUserLegacy,
+        "pk_attr": "pkUserId",
+        "label_attr": "UserName",
+        "is_identity_pk": False,
+        "allow_create": False,  # fkUserId is auto-assigned, not user-facing
+    },
+}
+
+# ==================================================
+# USER ACCOUNT MAP — legacy fkUserId resolution
+# ==================================================
+
+
+def get_user_account_map(
+
+    db: Session,
+
+    app_user_pkid: int,
+
+):
+
+    return (
+        db.query(UserAccountMap)
+        .filter(UserAccountMap.fkAppUserId == app_user_pkid)
+        .first()
+    )
+
+def list_user_account_maps(
+
+    db: Session,
+
+):
+
+    return db.query(UserAccountMap).all()
+
+def upsert_user_account_map(
+
+    db: Session,
+
+    app_user_pkid: int,
+
+    legacy_user_id: str,
+
+):
+
+    mapping = get_user_account_map(db, app_user_pkid)
+
+    if mapping:
+
+        mapping.LegacyUserId = legacy_user_id
+
+    else:
+
+        mapping = UserAccountMap(
+            fkAppUserId=app_user_pkid,
+            LegacyUserId=legacy_user_id,
+        )
+
+        db.add(mapping)
+
+    try:
+
+        db.commit()
+        db.refresh(mapping)
+        return mapping
+
+    except Exception:
+
+        db.rollback()
+        raise
+
+def resolve_legacy_user_id(
+
+    db: Session,
+
+    app_user_pkid: int,
+
+) -> str:
+    """
+    Resolve the current JWT user (app_users.pkid) into the legacy
+    AppUser.pkUserId code, for populating fkUserId audit columns
+    on legacy tables. Falls back to LEGACY_FALLBACK_USER_ID (ADMIN)
+    if no mapping row exists yet -- a soft fallback, not an error,
+    so writes are never blocked by a missing mapping. Have an admin
+    create the mapping via the user-account-map endpoint to get
+    accurate audit trails per user.
+    """
+
+    if not app_user_pkid:
+
+        return LEGACY_FALLBACK_USER_ID
+
+    mapping = get_user_account_map(db, app_user_pkid)
+
+    if mapping and mapping.LegacyUserId:
+
+        return mapping.LegacyUserId
+
+    return LEGACY_FALLBACK_USER_ID
+
+# ==================================================
+# GENERIC LOOKUP MASTER CRUD
+# Backs the /api/lookups/{table} endpoints, driven by
+# LOOKUP_TABLE_CONFIG. One implementation for all 12 tables
+# instead of 12 near-identical CRUD sets.
+# ==================================================
+
+def _lookup_pk_column(config: dict):
+
+    return getattr(config["model"], config["pk_attr"])
+
+def _lookup_label_column(config: dict):
+
+    return getattr(config["model"], config["label_attr"])
+
+def lookup_row_to_dict(config: dict, row):
+
+    if row is None:
+
+        return None
+
+    return {
+        "value": getattr(row, config["pk_attr"]),
+        "label": getattr(row, config["label_attr"]),
+    }
+
+def get_lookup_rows(
+
+    db: Session,
+
+    config: dict,
+
+):
+
+    label_column = _lookup_label_column(config)
+
+    rows = (
+        db.query(config["model"])
+        .order_by(label_column.asc())
+        .all()
+    )
+
+    return [lookup_row_to_dict(config, row) for row in rows]
+
+def get_lookup_row_by_pk(
+
+    db: Session,
+
+    config: dict,
+
+    pk_value,
+
+):
+
+    return (
+        db.query(config["model"])
+        .filter(_lookup_pk_column(config) == pk_value)
+        .first()
+    )
+
+def _normalize_lookup_label(value: str) -> str:
+    """
+    Case AND punctuation/spacing-insensitive compare key -- "mr",
+    "Mr" and "Mr." all normalize to "mr". Used for tables configured
+    with "ignore_punctuation": True (currently just titles) so a
+    typed "mr" is recognized as the same title as a stored "Mr."
+    rather than slipping past the plain case-only check below and
+    creating a near-duplicate row.
+    """
+
+    return re.sub(
+        r"[^a-z0-9]+",
+        "",
+        (value or "").strip().lower(),
+    )
+
+def lookup_label_exists(
+
+    db: Session,
+
+    config: dict,
+
+    label: str,
+
+) -> bool:
+
+    if not label:
+
+        return False
+
+    label_column = _lookup_label_column(config)
+
+    if config.get("ignore_punctuation"):
+
+        normalized_target = _normalize_lookup_label(label)
+
+        if not normalized_target:
+
+            return False
+
+        # Small reference tables -- pulling every label and
+        # normalizing in Python is simpler and more reliable here
+        # than trying to replicate the same punctuation-stripping
+        # logic in a SQL Server expression.
+        existing_labels = [
+            value
+            for (value,) in db.query(label_column).all()
+        ]
+
+        return any(
+            _normalize_lookup_label(existing) == normalized_target
+            for existing in existing_labels
+        )
+
+    return (
+        db.query(config["model"])
+        .filter(func.lower(label_column) == label.strip().lower())
+        .first()
+        is not None
+    )
+
+def generate_next_lookup_code(
+
+    db: Session,
+
+    config: dict,
+
+) -> str:
+    """
+    Best-effort next code for char-typed legacy PKs (e.g. "T0006"
+    following "T0001".."T0005"). Reuses the most common alpha
+    prefix and zero-padding width seen among existing codes and
+    increments the numeric tail, then truncates to the column's
+    real max length (confirmed via INFORMATION_SCHEMA) so it never
+    overflows a char(5)/char(10) column. UNVERIFIED against the
+    real per-table convention -- check the first generated code in
+    each table against what the legacy system would have produced
+    before relying on this.
+    """
+
+    pk_column = _lookup_pk_column(config)
+
+    existing_codes = [
+        value
+        for (value,) in db.query(pk_column).all()
+        if value
+    ]
+
+    match = re.compile(r"^([A-Za-z]*)(\d+)$")
+
+    parsed = [
+        match.match(code)
+        for code in existing_codes
+    ]
+    parsed = [m for m in parsed if m]
+
+    max_length = (
+        config["model"].__table__.c[config["pk_attr"]].type.length
+        or 20
+    )
+
+    if not parsed:
+
+        # No parseable existing codes to learn a convention from --
+        # fall back to a plain running number, unpadded.
+        return str(len(existing_codes) + 1)[:max_length]
+
+    prefixes = Counter(m.group(1) for m in parsed)
+    prefix = prefixes.most_common(1)[0][0]
+
+    same_prefix = [m for m in parsed if m.group(1) == prefix]
+    width = max(len(m.group(2)) for m in same_prefix)
+    next_number = max(int(m.group(2)) for m in same_prefix) + 1
+
+    code = f"{prefix}{str(next_number).zfill(width)}"
+
+    return code[:max_length]
+
+def create_lookup_row(
+
+    db: Session,
+
+    config: dict,
+
+    label: str,
+
+    legacy_user_id: str,
+
+):
+
+    label = (label or "").strip()
+
+    row_kwargs = {
+        config["label_attr"]: label,
+    }
+
+    if not config["is_identity_pk"]:
+
+        # Char-typed PK -- generate a code. Identity (numeric) PKs
+        # must NOT be set explicitly; SQL Server assigns them and we
+        # read the value back after commit via db.refresh().
+        row_kwargs[config["pk_attr"]] = generate_next_lookup_code(
+            db, config
+        )
+
+    # fkUserId is NOT NULL on every one of these tables (confirmed
+    # via INFORMATION_SCHEMA) -- always the real logged-in user via
+    # resolve_legacy_user_id(), same as SalEmployee.
+    if hasattr(config["model"], "fkUserId"):
+
+        row_kwargs["fkUserId"] = legacy_user_id
+
+    # Extra NOT NULL columns that need a live DB lookup rather than
+    # a static Column(default=...) -- currently only
+    # DocMasRecords.fkSetId (see resolve_docmas_setid).
+    resolver = config.get("extra_resolver")
+
+    if resolver:
+
+        row_kwargs.update(resolver(db))
+
+    row = config["model"](**row_kwargs)
+
+    try:
+
+        db.add(row)
+        db.commit()
+        db.refresh(row)
+        return row
+
+    except Exception:
+
+        db.rollback()
         raise

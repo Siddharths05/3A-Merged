@@ -7,4 +7,13 @@ python-dotenv
 passlib
 bcrypt
 python-jose
-openpyxl
+openpyxlfastapi
+uvicorn
+sqlalchemy
+psycopg2-binary
+pydantic
+python-dotenv
+passlib
+bcrypt
+python-jose
+PyJWT

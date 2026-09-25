@@ -69,6 +69,16 @@ import ShiftTiming from "./Pages/Salary/ShiftTiming";
 
 
 // ==================================================
+// SALARY EMPLOYEE / SALARY STRUCTURE SCREENS
+// ==================================================
+
+import SalaryEmployeeMaster from "./Pages/Salary/SalaryEmployeeMaster";
+import SalaryEmployeeList from "./Pages/Salary/SalaryEmployeeList";
+import SalaryStructureMaster from "./Pages/Salary/SalaryStructureMaster";
+import SalaryStructureList from "./Pages/Salary/SalaryStructureList";
+
+
+// ==================================================
 // LAYOUT
 // ==================================================
 
@@ -364,6 +374,55 @@ export default function App() {
         />
 
 
+        {/* ==============================================
+            SALARY EMPLOYEE
+            /salary-employee        -> create form
+            /salary-employee/:id    -> edit form
+            /salary-employees       -> list (plural, as
+            linked from the form's "List" tab)
+        ============================================== */}
+
+        <Route
+          path="/salary-employee"
+          element={<SalaryEmployeeMaster />}
+        />
+
+
+        <Route
+          path="/salary-employee/:id"
+          element={<SalaryEmployeeMaster />}
+        />
+
+
+        <Route
+          path="/salary-employees"
+          element={<SalaryEmployeeList />}
+        />
+
+
+        {/* ==============================================
+            SALARY STRUCTURE
+            Same create / edit / list pattern as above.
+        ============================================== */}
+
+        <Route
+          path="/salary-structure"
+          element={<SalaryStructureMaster />}
+        />
+
+
+        <Route
+          path="/salary-structure/:id"
+          element={<SalaryStructureMaster />}
+        />
+
+
+        <Route
+          path="/salary-structures"
+          element={<SalaryStructureList />}
+        />
+
+
       </Route>
 
 
@@ -386,4 +445,4 @@ export default function App() {
 
   );
 
-}
+} 
